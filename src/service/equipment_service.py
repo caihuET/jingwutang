@@ -2,7 +2,8 @@
 import random
 import math
 from src.repository.equipment_repo import EquipmentRepository
-from src.utils.errors import GameException, ErrorCode
+from src.utils.errors import GameException
+from src.utils.constants import ErrorCode
 from src.utils.constants import ENHANCE_RATES, EquipSlot
 from src.models.equipment import PlayerEquipment
 

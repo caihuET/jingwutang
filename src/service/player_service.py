@@ -1,6 +1,7 @@
 """角色服务"""
 from src.utils.validators import validate_nickname, check_sensitive_words
-from src.utils.errors import GameException, ErrorCode
+from src.utils.errors import GameException
+from src.utils.constants import ErrorCode
 from src.repository.player_repo import PlayerRepository
 
 

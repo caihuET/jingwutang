@@ -6,7 +6,8 @@ from src.repository.player_repo import PlayerRepository
 from src.repository.equipment_repo import EquipmentRepository
 from src.repository.skill_repo import SkillRepository
 from src.models.battle_log import BattleLog
-from src.utils.errors import GameException, ErrorCode
+from src.utils.errors import GameException
+from src.utils.constants import ErrorCode
 from src.utils.constants import EXP_TABLE, BattleType, SkillType
 
 

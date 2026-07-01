@@ -1,7 +1,8 @@
 """认证服务"""
 from src.utils.security import hash_password, verify_password, create_token
 from src.utils.validators import validate_username, validate_password
-from src.utils.errors import GameException, ErrorCode
+from src.utils.errors import GameException
+from src.utils.constants import ErrorCode
 from src.repository.user_repo import UserRepository
 
 

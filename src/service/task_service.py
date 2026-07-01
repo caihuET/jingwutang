@@ -1,6 +1,7 @@
 """任务服务"""
 from src.repository.task_repo import TaskRepository
-from src.utils.errors import GameException, ErrorCode
+from src.utils.errors import GameException
+from src.utils.constants import ErrorCode
 
 
 class TaskService:

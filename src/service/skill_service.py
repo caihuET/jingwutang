@@ -1,6 +1,7 @@
 """技能服务"""
 from src.repository.skill_repo import SkillRepository
-from src.utils.errors import GameException, ErrorCode
+from src.utils.errors import GameException
+from src.utils.constants import ErrorCode
 
 
 class SkillService:
