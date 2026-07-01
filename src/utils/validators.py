@@ -10,8 +10,8 @@ def validate_username(username: str) -> bool:
 
 
 def validate_password(password: str) -> bool:
-    """校验密码: 8-20 位, 必须含字母和数字"""
-    if not password or len(password) < 8 or len(password) > 20:
+    """校验密码: 4-12 位英文和数字组合"""
+    if not password or len(password) < 4 or len(password) > 12:
         return False
     if not re.search(r"[a-zA-Z]", password):
         return False

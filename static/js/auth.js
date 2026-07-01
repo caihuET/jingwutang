@@ -70,7 +70,7 @@ async function handleRegister(e) {
     var confirm = document.getElementById('regConfirm').value;
     if (!username || !password || !confirm) { showError('请填写所有字段'); return; }
     if (password !== confirm) { showError('两次输入的密码不一致'); return; }
-    if (password.length < 8 || password.length > 20) { showError('密码长度需 8-20 位'); return; }
+    if (password.length < 4 || password.length > 12) { showError('密码长度需 4-12 位'); return; }
     showLoading();
     try {
         var res = await fetch(API_BASE + '/auth/register', {
