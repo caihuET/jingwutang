@@ -2,12 +2,12 @@ services:
   app:
     build: .
     environment:
-      DB_HOST: 172.17.0.1
+      DB_HOST: mysql
       DB_PORT: "3306"
       DB_USER: root
       DB_PASSWORD: Aa123,,.
       DB_NAME: jingwutang
-      REDIS_HOST: 172.17.0.1
+      REDIS_HOST: redis
       REDIS_PORT: "6379"
       JWT_SECRET: jingwutang-prod-secret-2026
       APP_ROOT_PATH: /game/jwt
