@@ -1,0 +1,24 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#2a1a1a,#1a1a2e);font-family:"Microsoft YaHei",sans-serif}
+.card{background:linear-gradient(180deg,#fff8e7,#f0e6d0);border:2px solid #c9a96e;border-radius:12px;padding:40px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#c9a96e,#8b1a1a,#c9a96e)}
+h1{text-align:center;font-size:32px;color:#8b1a1a;letter-spacing:8px;margin-bottom:4px}
+.sub{text-align:center;font-size:13px;color:#6b5b4e;letter-spacing:4px;margin-bottom:20px}
+.tabs{display:flex;margin-bottom:20px;border-bottom:2px solid #d4c5a9}
+.tab{flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:600;color:#a08a6e;cursor:pointer;transition:color .2s,border-color .2s;letter-spacing:4px;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab:hover{color:#8b1a1a}
+.tab.active{color:#8b1a1a;border-bottom-color:#8b1a1a}
+.tab-content{display:none}
+.tab-content.active{display:block}
+label{display:block;font-size:13px;color:#6b5b4e;margin-bottom:4px}
+input{width:100%;padding:10px 14px;border:1px solid #d4c5a9;border-radius:6px;font-size:15px;background:white;outline:none;margin-bottom:16px;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:#c9a96e;box-shadow:0 0 0 3px rgba(201,169,110,0.15)}
+.btn{width:100%;padding:10px;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:2px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;transition:background .2s}
+.btn:hover{background:linear-gradient(135deg,#b22222,#8b1a1a)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.error-msg{text-align:center;font-size:13px;color:#c0392b;margin-top:12px;min-height:20px;line-height:1.5;display:none}
+.error-msg.show{display:block}
+.loading-overlay{display:none;position:absolute;inset:0;background:rgba(240,230,208,.75);justify-content:center;align-items:center;z-index:10;border-radius:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:32px;height:32px;border:3px solid #d4c5a9;border-top-color:#8b1a1a;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}

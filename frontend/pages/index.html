@@ -4,29 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#2a1a1a,#1a1a2e);font-family:"Microsoft YaHei",sans-serif}
-.card{background:linear-gradient(180deg,#fff8e7,#f0e6d0);border:2px solid #c9a96e;border-radius:12px;padding:40px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#c9a96e,#8b1a1a,#c9a96e)}
-h1{text-align:center;font-size:32px;color:#8b1a1a;letter-spacing:8px;margin-bottom:4px}
-.sub{text-align:center;font-size:13px;color:#6b5b4e;letter-spacing:4px;margin-bottom:24px}
-label{display:block;font-size:13px;color:#6b5b4e;margin-bottom:4px}
-input{width:100%;padding:10px 14px;border:1px solid #d4c5a9;border-radius:6px;font-size:15px;background:white;outline:none;margin-bottom:16px}
-input:focus{border-color:#c9a96e;box-shadow:0 0 0 3px rgba(201,169,110,0.15)}
-.btn{width:100%;padding:10px;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:2px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e}
-.btn:hover{background:linear-gradient(135deg,#b22222,#8b1a1a)}
-</style>
+<link rel="stylesheet" href="/game/jwt/static/css/login.css">
 </head>
 <body>
-<div class="card" style="position:relative;overflow:hidden">
+<div class="card">
 <h1>精武堂</h1>
 <p class="sub">以武会友 · 仗剑天涯</p>
-<label>用户名</label>
-<input type="text" placeholder="请输入用户名" maxlength="16">
-<label>密码</label>
-<input type="password" placeholder="请输入密码">
-<button class="btn">登 录</button>
+<div class="tabs">
+<div class="tab active" data-target="loginTab">登 录</div>
+<div class="tab" data-target="registerTab">注 册</div>
 </div>
+<div id="loginTab" class="tab-content active">
+<form id="loginForm">
+<label>用户名</label>
+<input type="text" id="loginUsername" placeholder="请输入用户名" maxlength="16" required>
+<label>密码</label>
+<input type="password" id="loginPassword" placeholder="请输入密码" required>
+<button type="submit" class="btn">登 录</button>
+</form>
+</div>
+<div id="registerTab" class="tab-content">
+<form id="registerForm">
+<label>用户名</label>
+<input type="text" id="regUsername" placeholder="4-16位字母/数字/下划线" maxlength="16" required>
+<label>密码</label>
+<input type="password" id="regPassword" placeholder="8-20位，需包含字母和数字" required>
+<label>确认密码</label>
+<input type="password" id="regConfirm" placeholder="再次输入密码" required>
+<button type="submit" class="btn">注 册</button>
+</form>
+</div>
+<div id="errorMsg" class="error-msg"></div>
+<div id="loadingOverlay" class="loading-overlay">
+<div class="spinner"></div>
+</div>
+</div>
+<script src="/game/jwt/static/js/auth.js"></script>
 </body>
 </html>
