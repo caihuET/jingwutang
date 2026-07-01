@@ -32,3 +32,13 @@ def init_db():
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{config.DB_NAME}` CHARACTER SET utf8mb4")
         conn.close()
         Base.metadata.create_all(bind=engine)
+
+    # 运行迁移：补充 player_equipment 缺少的增强字段
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE player_equipment ADD COLUMN enhance_attack INT DEFAULT 0"))
+            conn.execute(text("ALTER TABLE player_equipment ADD COLUMN enhance_defense INT DEFAULT 0"))
+            conn.execute(text("ALTER TABLE player_equipment ADD COLUMN enhance_hp INT DEFAULT 0"))
+            conn.commit()
+    except Exception:
+        pass  # 列已存在时忽略

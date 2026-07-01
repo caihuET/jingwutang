@@ -186,6 +186,40 @@ class TestAdvanceCombat(unittest.TestCase):
         engine.execute()
         self.assertGreater(fast.speed, slow.speed)
 
+    def test_full_battle_with_player_stats(self):
+        """模拟完整战斗流程: 从玩家属性构建战斗单位到战斗结束"""
+        # 模拟 _build_player_unit 的输出
+        unit = BattleUnit(
+            unit_id=1, name="测试少侠", level=10,
+            hp=200, mp=100, attack=30, defense=15,
+            magic_attack=20, magic_defense=12, speed=15,
+            crit_rate=0.05, dodge_rate=0.05,
+            skills=[{"id": 1, "name": "测试拳", "skill_type": 2,
+                     "base_damage": 150, "mp_cost": 15, "cooldown": 0,
+                     "damage_type": 1}],
+            is_player=True,
+        )
+        engine = BattleEngine()
+        self.assertTrue(engine.setup_pve(unit, 1), "地图1(山贼甲)应能正常setup")
+        result = engine.execute()
+        self.assertIsNotNone(result.winner, "战斗应有胜者")
+        self.assertGreater(result.rounds, 0, "应有至少1回合")
+        self.assertGreater(len(result.log), 0, "应有战斗日志")
+        self.assertTrue(result.winner.is_player, "玩家属性远强于怪物, 应获胜")
+        self.assertIn(result.to_dict()["result"], ["win", "lose"], "result 应为 win 或 lose")
+        self.assertGreater(result.exp_gained, 0, "应有经验奖励")
+        self.assertGreater(result.gold_gained, 0, "应有金币奖励")
+
+    def test_all_maps_valid(self):
+        """验证所有地图均可正常setup"""
+        unit = BattleUnit(0, "玩家", 10, 200, 100, 30, 15, 20, 12, 15, 0.05, 0.05, [], True)
+        for map_id in [1, 2, 3, 4]:
+            engine = BattleEngine()
+            self.assertTrue(engine.setup_pve(unit, map_id),
+                            f"地图{map_id}({MONSTERS[map_id]['name']})应可setup")
+            result = engine.execute()
+            self.assertIsNotNone(result.winner, f"地图{map_id}战斗应有结果")
+
 
 if __name__ == "__main__":
     unittest.main()
