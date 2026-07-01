@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS player_tasks (
 CREATE TABLE IF NOT EXISTS battle_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     attacker_id BIGINT UNSIGNED NOT NULL,
-    defender_id BIGINT UNSIGNED NULL,
+    defender_id BIGINT NULL,
     battle_type TINYINT NOT NULL,
     result TINYINT NOT NULL,
     rounds INT NOT NULL,

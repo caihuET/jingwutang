@@ -42,3 +42,11 @@ def init_db():
             conn.commit()
     except Exception:
         pass  # 列已存在时忽略
+
+    # 运行迁移：battle_logs.defender_id 改为 signed（init.sql 误设为 UNSIGNED）
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE battle_logs MODIFY COLUMN defender_id BIGINT NULL"))
+            conn.commit()
+    except Exception:
+        pass
