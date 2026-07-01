@@ -1,0 +1,114 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei",sans-serif;background:#1a1a2e;color:#f0e6d0;min-height:100vh}
+
+/* 顶栏 */
+.header{background:linear-gradient(90deg,#2a1a1a,#3a2a2a,#2a1a1a);border-bottom:2px solid #c9a96e;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:22px;color:#c9a96e;letter-spacing:6px}
+.header .user-info{font-size:13px;color:#a08a6e}
+.btn-logout{padding:6px 16px;border:1px solid #c9a96e;border-radius:4px;background:transparent;color:#c9a96e;cursor:pointer;font-size:13px;transition:all .2s}
+.btn-logout:hover{background:#c9a96e;color:#1a1a2e}
+
+/* 布局 */
+.layout{display:flex;min-height:calc(100vh - 52px)}
+.sidebar{width:180px;background:#2a1a1a;border-right:1px solid #3a2a2a;padding:16px 0}
+.sidebar a{display:block;padding:12px 24px;color:#a08a6e;text-decoration:none;font-size:14px;letter-spacing:2px;transition:all .2s;border-left:3px solid transparent}
+.sidebar a:hover,.sidebar a.active{color:#c9a96e;background:rgba(201,169,110,.08);border-left-color:#c9a96e}
+.main{flex:1;padding:32px;max-width:960px;margin:0 auto;width:100%}
+
+/* 欢迎区域 */
+.welcome-card{background:linear-gradient(135deg,#fff8e7,#f0e6d0);border:1px solid #c9a96e;border-radius:8px;padding:32px;color:#4a3a2a;margin-bottom:24px}
+.welcome-card h2{font-size:20px;margin-bottom:8px;color:#8b1a1a;letter-spacing:4px}
+.welcome-card p{font-size:14px;color:#6b5b4e;line-height:1.8}
+.stats{display:flex;gap:16px;flex-wrap:wrap}
+.stat-card{background:rgba(255,248,231,.05);border:1px solid #3a2a2a;border-radius:8px;padding:20px;flex:1;min-width:140px;text-align:center}
+.stat-card .label{font-size:12px;color:#6b5b4e;margin-bottom:4px}
+.stat-card .value{font-size:24px;color:#c9a96e;font-weight:600}
+
+/* 通用组件 */
+.page-title{font-size:18px;color:#c9a96e;letter-spacing:4px;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid #3a2a2a}
+.card{border:1px solid #3a2a2a;border-radius:8px;padding:20px;margin-bottom:16px;background:rgba(255,248,231,.02)}
+.card-title{font-size:15px;color:#c9a96e;margin-bottom:12px;letter-spacing:2px}
+.card p{font-size:13px;color:#a08a6e;line-height:1.8}
+.flex{display:flex;flex-wrap:wrap;gap:12px}
+.flex-center{align-items:center}
+.gap-8{gap:8px}
+.mt-12{margin-top:12px}
+.mb-12{margin-bottom:12px}
+.text-center{text-align:center}
+.text-muted{color:#6b5b4e;font-size:13px}
+
+/* 按钮集 */
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:4px}
+.btn-secondary{background:#3a2a2a;color:#a08a6e;border:1px solid #4a3a3a}
+.btn-secondary:hover{background:#4a3a3a}
+.btn-success{background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none}
+.btn-success:hover{background:linear-gradient(135deg,#3a9d5a,#2d7d46)}
+.btn-danger{background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none}
+.btn-danger:hover{background:linear-gradient(135deg,#b22222,#8b1a1a)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* 表格 */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th,.data-table td{padding:10px 12px;text-align:left;border-bottom:1px solid #2a2a3a}
+.data-table th{color:#c9a96e;font-weight:600;background:#2a1a1a;font-size:12px;letter-spacing:1px}
+.data-table tr:hover{background:rgba(201,169,110,.04)}
+.data-table td{color:#d4c5a9}
+
+/* 品质色 */
+.q-1{color:#999} .q-2{color:#2ecc71} .q-3{color:#3498db} .q-4{color:#9b59b6} .q-5{color:#e67e22}
+.q-name-1{color:#999} .q-name-2{color:#27ae60} .q-name-3{color:#2980b9} .q-name-4{color:#8e44ad} .q-name-5{color:#d35400}
+
+/* 品质文本标签 */
+.quality-tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
+.quality-tag.q1{background:rgba(153,153,153,.15);color:#999}
+.quality-tag.q2{background:rgba(46,204,113,.15);color:#2ecc71}
+.quality-tag.q3{background:rgba(52,152,219,.15);color:#3498db}
+.quality-tag.q4{background:rgba(155,89,182,.15);color:#9b59b6}
+.quality-tag.q5{background:rgba(230,126,34,.15);color:#e67e22}
+
+/* 状态标签 */
+.status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px}
+.status-badge.active{background:rgba(46,204,113,.15);color:#2ecc71}
+.status-badge.done{background:rgba(52,152,219,.15);color:#3498db}
+.status-badge.locked{background:rgba(153,153,153,.15);color:#999}
+
+/* 战斗日志 */
+.battle-log{background:#0d0d1a;border:1px solid #3a2a2a;border-radius:6px;padding:16px;max-height:400px;overflow-y:auto;font-size:13px;line-height:1.9;font-family:monospace}
+.battle-log .round-header{color:#c9a96e;font-weight:600;margin-top:8px}
+.battle-log .action{color:#d4c5a9;padding-left:12px}
+.battle-log .crit{color:#e74c3c;font-weight:600}
+.battle-log .dodge{color:#3498db}
+.battle-log .dmg{color:#e67e22}
+.battle-log .heal{color:#2ecc71}
+
+/* 提示 */
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;font-size:13px;z-index:1000;display:none;animation:fadeIn .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.show{display:block}
+.toast.error{background:#5c0e0e;color:#f0e6d0;border:1px solid #8b1a1a}
+.toast.success{background:#1e5c32;color:#f0e6d0;border:1px solid #2d7d46}
+.toast.info{background:#2a2a5c;color:#f0e6d0;border:1px solid #3a3a7c}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* 加载 */
+.page-loading{text-align:center;padding:60px 20px;color:#6b5b4e;font-size:14px}
+.page-loading .spinner{width:32px;height:32px;border:3px solid #3a2a2a;border-top-color:#c9a96e;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 地图选择 */
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.map-card{border:1px solid #3a2a2a;border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;text-align:center}
+.map-card:hover{background:rgba(201,169,110,.08);border-color:#c9a96e}
+.map-card.selected{background:rgba(201,169,110,.12);border-color:#c9a96e}
+.map-card .map-name{font-size:14px;color:#c9a96e;margin-bottom:4px}
+.map-card .map-info{font-size:12px;color:#6b5b4e}
+
+/* 进度条 */
+.progress-bar{height:6px;background:#2a2a3a;border-radius:3px;overflow:hidden;margin:4px 0}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,#c9a96e,#8b1a1a);border-radius:3px;transition:width .3s}
+
+/* 模态框 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:100}
+.modal-overlay.show{display:flex}
+.modal-box{background:linear-gradient(180deg,#2a1a1a,#1a1a2e);border:1px solid #c9a96e;border-radius:8px;padding:24px;min-width:320px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.modal-box h3{color:#c9a96e;margin-bottom:12px;letter-spacing:2px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}

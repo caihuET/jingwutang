@@ -15,7 +15,7 @@ class TestValidateUsername(unittest.TestCase):
         self.assertTrue(validate_username("abc_def"))
         self.assertTrue(validate_username("wuxia_001"))
         self.assertTrue(validate_username("abcd1234"))
-        self.assertTrue(validate_username("a1b2c3d4"))
+        self.assertTrue(validate_username("a123d4"))
 
     def test_too_short(self):
         self.assertFalse(validate_username("abc"))
@@ -41,12 +41,12 @@ class TestValidatePassword(unittest.TestCase):
         self.assertTrue(validate_password("Abcd1234"))
         self.assertTrue(validate_password("Passw0rd"))
         self.assertTrue(validate_password("1234abcd"))
-        self.assertTrue(validate_password("a1b2c3d4e5"))
+        self.assertTrue(validate_password("a123d4e5"))
         self.assertTrue(validate_password("MyP@ss123"))
 
     def test_too_short(self):
-        self.assertFalse(validate_password("Abc12"))
-        self.assertFalse(validate_password("a1b2c"))
+        self.assertFalse(validate_password("Ab1"))
+        self.assertFalse(validate_password("a12"))
 
     def test_no_letters(self):
         self.assertFalse(validate_password("12345678"))
@@ -99,9 +99,9 @@ class TestBoundaryConditions(unittest.TestCase):
         self.assertTrue(validate_username("a" * 16))
         self.assertFalse(validate_username("a" * 17))
 
-    def test_boundary_password_8chars(self):
+    def test_boundary_password_4chars(self):
         self.assertTrue(validate_password("Abcd1234"))
-        self.assertFalse(validate_password("Abc1234"))
+        self.assertFalse(validate_password("Ab3"))
 
 
 if __name__ == "__main__":

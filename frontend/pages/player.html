@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>精武堂 - 角色信息</title>
+<link rel="stylesheet" href="/game/jwt/static/css/game.css">
+</head>
+<body>
+<div class="header"><h1>精 武 堂</h1><div class="user-info" id="userInfo">少侠</div><button class="btn-logout" onclick="handleLogout()">退出江湖</button></div>
+<div class="layout"><div class="sidebar" id="sidebar"></div>
+<div class="main">
+<div class="page-title">角 色 信 息</div>
+<div id="pageLoading" class="page-loading"><div class="spinner"></div>加载中...</div>
+<div id="pageContent" style="display:none">
+<div class="welcome-card"><h2 id="playerName">未知少侠</h2><p>江湖儿女，快意恩仇</p></div>
+<div class="stats">
+<div class="stat-card"><div class="label">等级</div><div class="value" id="playerLevel">-</div></div>
+<div class="stat-card"><div class="label">生命</div><div class="value" id="playerHp">-</div></div>
+<div class="stat-card"><div class="label">内力</div><div class="value" id="playerMp">-</div></div>
+<div class="stat-card"><div class="label">体力</div><div class="value" id="playerStamina">-</div></div>
+</div>
+<div class="card"><div class="card-title">详细属性</div>
+<table class="data-table"><tr><td>经验值</td><td id="playerExp">-</td><td>金币</td><td id="playerGold">-</td></tr>
+<tr><td>元宝</td><td id="playerIngot">-</td><td>声望</td><td id="playerRep">-</td></tr>
+<tr><td>战力</td><td id="playerPower" colspan="3">-</td></tr></table>
+</div></div></div></div>
+<div id="toast" class="toast"></div>
+<script src="/game/jwt/static/js/common.js"></script>
+<script src="/game/jwt/static/js/player.js"></script>
+</body>
+</html>
