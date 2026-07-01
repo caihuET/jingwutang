@@ -42,25 +42,6 @@ app.include_router(skill_router, prefix="/api/v1", tags=["技能"])
 app.include_router(task_router, prefix="/api/v1", tags=["任务"])
 
 
-@app.get("/")
-def root_page():
-    from fastapi.responses import HTMLResponse
-    html = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head><meta charset="UTF-8"><title>精武堂</title>
-<style>
-body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1a1a2e;color:#c9a96e;font-family:sans-serif;margin:0}
-.card{text-align:center;padding:40px;border:2px solid #c9a96e;border-radius:12px;background:linear-gradient(180deg,#fff8e7,#f0e6d0)}
-h1{font-size:36px;letter-spacing:8px;color:#8b1a1a}
-.btn{display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;text-decoration:none;border-radius:6px;margin:4px}
-</style></head>
-<body><div class="card">
-<h1>精武堂</h1>
-<p>服务器运行正常</p>
-<a class="btn" href="/game/jwt/api/v1/health">健康检查</a>
-</div></body></html>"""
-    return HTMLResponse(content=html)
-
 @app.get("/api/v1/health")
 def health_check():
     return {"code": 0, "data": {"status": "ok"}, "message": "success"}
