@@ -1,0 +1,40 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+_dst/
+_ref/
+*.rp
+data.db
+_*.py
+_*.txt
+
+# Docker
+.env
+
+# Design docs
+PRD.md
+DESIGN.md
+AGENTS.md
+
+# Test cache
+.pytest_cache/

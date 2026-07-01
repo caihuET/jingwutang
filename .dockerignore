@@ -1,0 +1,17 @@
+﻿# Docker ignore file
+.git/
+.gitignore
+__pycache__/
+*.pyc
+.agents/
+PRD.md
+DESIGN.md
+AGENTS.md
+_*
+_dst/
+frontend/pages/*.html
+!frontend/pages/index.html
+templates/auth/
+templates/game/
+static/css/
+static/js/
