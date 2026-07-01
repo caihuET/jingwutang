@@ -9,7 +9,7 @@
 body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;height:100vh;display:flex;flex-direction:column}
 .topbar{height:50px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);border-bottom:2px solid #c9a96e;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
 .topbar .logo{font-size:18px;font-weight:700;color:#c9a96e;letter-spacing:4px;margin-right:24px}
-.topbar .logo span{color:#b22222}
+.topbar .logo span{color:#c9a96e}
 .topbar .player{margin-left:auto;color:#c9a96e;font-size:13px}
 .game-body{display:flex;flex:1;overflow:hidden}
 .sidebar{width:200px;background:linear-gradient(180deg,#1e1e32,#151525);border-right:1px solid rgba(201,169,110,0.2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
@@ -89,16 +89,10 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="srow"><span>MP</span><span id="sMp">-</span></div>
 <div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
-<div class="nav"><a class="nav-item " href="game.html">主界面</a>
-<a class="nav-item " href="battle.html">历练</a>
-<a class="nav-item " href="equipment.html">装备</a>
-<a class="nav-item " href="skills.html">技能</a>
-<a class="nav-item " href="meridians.html">经脉</a>
-<a class="nav-item " href="tasks.html">任务</a>
-<a class="nav-item " href="ranking.html">排行</a>
-<a class="nav-item " href="shop.html">商城</a>
+<div class="nav">
+<div style="padding:12px 16px;color:#6b5b4e;font-size:12px;text-align:center">请先创建角色<br>后方可进入江湖</div>
 <a class="nav-item active" href="create.html">创建角色</a>
-</div>
+</div></div>
 </div>
 <div class="content">
 <div style="display:flex;align-items:center;justify-content:center;min-height:80vh">
@@ -119,8 +113,43 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div style="border:2px solid #d4c5a9;border-radius:6px;padding:10px;cursor:pointer"><div style="font-weight:700;color:#8b1a1a">丐帮</div><div style="font-size:11px;color:#666">均衡持续作战</div><span style="font-size:10px;color:white;background:#f57f17;padding:1px 6px;border-radius:8px;display:inline-block;margin-top:4px">均衡</span></div>
 <div style="border:2px solid #d4c5a9;border-radius:6px;padding:10px;cursor:pointer"><div style="font-weight:700;color:#8b1a1a">明教</div><div style="font-size:11px;color:#666">暴力输出狂战</div><span style="font-size:10px;color:white;background:#c62828;padding:1px 6px;border-radius:8px;display:inline-block;margin-top:4px">输出</span></div>
 </div>
-<a href="game.html" class="btn btn-p" style="width:100%;margin-top:8px">确认创建</a>
+<div style="margin:12px 0"><label style="font-size:12px;color:#6b5b4e">性别</label>
+<div style="display:flex;gap:16px;margin-top:6px">
+<label><input type="radio" name="gender" value="1" checked> 男</label>
+<label><input type="radio" name="gender" value="2"> 女</label></div></div>
+<div id="createError" style="text-align:center;font-size:13px;color:#c0392b;margin:8px 0;display:none"></div>
+<a href="#" class="btn btn-p" style="width:100%;margin-top:8px" id="createBtn" onclick="handleCreate();return false">确认创建</a>
 </div></div></div></div><script>
+(function(){
+  var grids=document.querySelectorAll('[style*="grid-template-columns:1fr 1fr 1fr"]');
+  if(grids.length<1)return;
+  var grid=grids[0];
+  var sel=1;
+  grid.querySelectorAll(':scope > div').forEach(function(d,i){
+    d.style.cursor='pointer';
+    d.onclick=function(){
+      grid.querySelectorAll(':scope > div').forEach(function(s){s.style.borderColor='#d4c5a9';s.style.background='';});
+      d.style.borderColor='#8b1a1a';d.style.background='rgba(139,26,26,0.03)';
+      sel=i+1;
+    };
+  });
+  window.handleCreate=function(){
+    var name=document.getElementById('createName').value.trim();
+    if(!name||name.length<2){var e=document.getElementById('createError');e.textContent='昵称至少2个字符';e.style.display='block';return;}
+    var gender=parseInt((document.querySelector('input[name="gender"]:checked')||{}).value||'1');
+    var uid=parseInt(localStorage.getItem('user_id'));
+    var btn=document.getElementById('createBtn');btn.textContent='创建中...';btn.style.opacity='0.5';
+    fetch('/game/jwt/api/v1/player/create',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
+      body:JSON.stringify({name:name,gender:gender,school_id:sel,user_id:uid})
+    }).then(function(r){return r.json()}).then(function(d){
+      if(d.code===0){localStorage.setItem('player_id',d.data.player_id);window.location.href='/game/jwt/game.html';}
+      else{var e=document.getElementById('createError');e.textContent=d.message||'创建失败';e.style.display='block';btn.textContent='确认创建';btn.style.opacity='1';}
+    }).catch(function(){var e=document.getElementById('createError');e.textContent='网络异常';e.style.display='block';btn.textContent='确认创建';btn.style.opacity='1';});
+  };
+})();
+</script>
+<script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
 var pid=localStorage.getItem('player_id')||1;
