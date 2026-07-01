@@ -51,7 +51,19 @@ async function handleLogin(e) {
         if (data.code === 0) {
             localStorage.setItem('token', data.data.token);
             localStorage.setItem('user_id', data.data.user_id);
-            window.location.href = '/game/jwt/game.html';
+            fetch(API_BASE + '/player/by_user?user_id=' + data.data.user_id, {
+                headers: {'Authorization': 'Bearer ' + data.data.token}
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(pd) {
+                if (pd.data && pd.data.player_id) {
+                    localStorage.setItem('player_id', pd.data.player_id);
+                    window.location.href = '/game/jwt/game.html';
+                } else {
+                    window.location.href = '/game/jwt/create.html';
+                }
+            })
+            .catch(function() { window.location.href = '/game/jwt/game.html'; });
         } else {
             showError(data.message || '登录失败');
         }

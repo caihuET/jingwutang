@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -78,15 +78,16 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <div class="logo">精武<span>堂</span></div>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav"><a class="nav-item " href="game.html">主界面</a>
 <a class="nav-item " href="battle.html">历练</a>
@@ -101,7 +102,59 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">任务</div>
-<div class="tabs"><div class="tab active">主线</div><div class="tab">日常</div><div class="tab">门派</div><div class="tab">成就</div></div>
-<div class="task-list">
-<div class="ti"><div><div style="font-weight:600;font-size:13px">初入江湖</div><div style="font-size:11px;color:#999">击败5个山贼</div><div style="font-size:11px;color:#999">经验+200 金币+100</div></div><div style="text-align:right"><div style="font-size:11px;color:#1565c0">3/5</div><div class="prog"><div class="f" style="width:60%"></div></div><span style="font-size:11px;color:#999">进行中</span></div></div>
-<div class="ti"><div><div style="font-weight:600;font-size:13px">拜入门派</div><div style="font-size:11px;color:#999">完成门派指引</div><div style="font-size:11px;color:#999">经验+500 修为+50</div></div><div style="text-align:right"><div style="font-size:11px;color:#1565c0">1/1</div><div class="prog"><div class="f" style="width:100%"></div></div><span class="btn btn-g" style="padding:3px 10px;font-size:11px">领取</span></div></div></div></div></div></body></html>
+<div class="tabs"><div class="tab active" data-type="" onclick="filterTasks(this,'')">全部</div><div class="tab" data-type="1" onclick="filterTasks(this,1)">主线</div><div class="tab" data-type="2" onclick="filterTasks(this,2)">日常</div><div class="tab" data-type="3" onclick="filterTasks(this,3)">门派</div></div>
+<div id="taskLoading">加载中...</div>
+<div id="taskContent" style="display:none">
+<div class="task-list" id="taskList"></div></div>
+<script>
+var pid=localStorage.getItem('player_id')||1;var curType='';
+function loadTasks(t){
+  curType=t||'';document.getElementById('taskLoading').style.display='block';document.getElementById('taskContent').style.display='none';
+  var url='/game/jwt/api/v1/task/list?player_id='+pid;if(curType)url+='&task_type='+curType;
+  fetch(url,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}}).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('taskLoading').style.display='none';document.getElementById('taskContent').style.display='block';
+    if(d.code!==0)return;
+    var tasks=d.data||[];var h='';
+    for(var i=0;i<tasks.length;i++){
+      var t=tasks[i];var pct=t.target>0?Math.round(t.progress/t.target*100):0;
+      var st={0:'进行中',1:'可领取',2:'已完成'}[t.status]||'未知';
+      h+='<div class="ti"><div><div style="font-weight:600;font-size:13px;color:#8b1a1a">'+t.name+'</div><div style="font-size:11px;color:#666;margin:2px 0">'+t.description+'</div><div style="font-size:11px;color:#999">进度：'+t.progress+'/'+t.target+'</div><div class="prog" style="width:120px"><div class="f" style="width:'+pct+'%"></div></div></div>';
+      h+='<div style="text-align:right"><div style="font-size:11px;color:'+(t.status===1?'#2ecc71':'#999')+'">'+st+'</div>';
+      if(t.status===1){h+='<span class="btn btn-g" style="padding:3px 10px;font-size:11px;cursor:pointer" onclick="claimTask('+t.id+','+t.task_id+')">领取</span>';}
+      h+='</div></div>';
+    }
+    document.getElementById('taskList').innerHTML=h||'<div style="color:#999;font-size:13px;padding:20px;text-align:center">暂无任务</div>';
+  });
+}
+function claimTask(id,taskId){
+  fetch('/game/jwt/api/v1/task/claim',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({task_id:taskId})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){alert('领取成功！经验+'+d.data.exp+' 金币+'+d.data.gold);loadTasks(curType);}
+    else{alert(d.message||'领取失败');}
+  });
+}
+function filterTasks(el,type){
+  document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active')});
+  if(el)el.classList.add('active');
+  loadTasks(type);
+}
+loadTasks();
+</script><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

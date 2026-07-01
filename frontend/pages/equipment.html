@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -78,15 +78,16 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <div class="logo">精武<span>堂</span></div>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav"><a class="nav-item " href="game.html">主界面</a>
 <a class="nav-item " href="battle.html">历练</a>
@@ -101,13 +102,67 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">装备</div>
-<div class="el">
-<div class="es"><div style="font-weight:600;font-size:13px;color:#8b1a1a;margin-bottom:6px">已穿戴</div>
-<div class="esi"><div style="font-size:11px;color:#999">武器</div><div class="q-purple" style="font-weight:600">青锋剑 +3</div></div>
-<div class="esi"><div style="font-size:11px;color:#999">防具</div><div class="q-blue" style="font-weight:600">玄铁甲 +1</div></div>
-<div class="esi"><div style="font-size:11px;color:#999">饰品</div><div class="q-blue" style="font-weight:600">白玉佩</div></div>
-<div class="esi"><div style="font-size:11px;color:#999">坐骑</div><div class="q-green" style="font-weight:600">黄驠马</div></div></div>
-<div><div style="font-weight:600;font-size:13px;color:#8b1a1a;margin-bottom:6px">背包</div>
-<div class="elist">
-<div class="ec"><div class="nr"><span class="q-green" style="font-weight:600">破风刀</span><span style="font-size:11px;color:#999">Lv.5</span></div><div style="font-size:11px;color:#666">外功+28</div><div style="margin-top:6px;display:flex;gap:4px"><span class="btn btn-p" style="padding:4px 10px;font-size:11px">穿戴</span><span class="btn btn-g" style="padding:4px 10px;font-size:11px">强化</span></div></div>
-<div class="ec"><div class="nr"><span class="q-gray" style="font-weight:600">锦云靴</span><span style="font-size:11px;color:#999">Lv.3</span></div><div style="font-size:11px;color:#666">外防+12</div><div style="margin-top:6px;display:flex;gap:4px"><span class="btn btn-p" style="padding:4px 10px;font-size:11px">穿戴</span></div></div></div></div></div></div></div></body></html>
+<div id="equipLoading">加载中...</div>
+<div id="equipContent" style="display:none">
+<div class="el"><div class="es"><div style="font-weight:600;font-size:13px;color:#8b1a1a;margin-bottom:6px">已穿戴</div><div id="equippedSlots"></div></div>
+<div class="elist" id="bagItems"></div></div></div>
+<div id="equipError" style="text-align:center;font-size:13px;color:#c0392b;margin:8px 0;display:none"></div>
+<script>
+var pid=localStorage.getItem('player_id')||1;
+function loadEquip(){
+  document.getElementById('equipLoading').style.display='block';document.getElementById('equipContent').style.display='none';
+  fetch('/game/jwt/api/v1/equipment/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  .then(function(r){return r.json()}).then(function(d){
+    document.getElementById('equipLoading').style.display='none';document.getElementById('equipContent').style.display='block';
+    if(d.code!==0){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'加载失败';return;}
+    var items=d.data||[];
+    var equipped=items.filter(function(i){return i.is_equipped===1});
+    var bag=items.filter(function(i){return i.is_equipped===0});
+    var slots={1:'武器',2:'防具',3:'饰品',4:'坐骑'};
+    var eh='';
+    for(var i=1;i<=4;i++){
+      var eq=equipped.find(function(e){return e.slot===i});
+      eh+='<div class="esi" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
+      if(eq){eh+='<div style="font-weight:600">'+eq.name+'</div><div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+['','普通','优秀','精良','史诗','传说'][eq.quality]||'未知'+'</div><div style="margin-top:4px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','unequip')">卸下</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','enhance')">强化</span></div>';}
+      else{eh+='<div style="color:#999">空</div>';}
+      eh+='</div>';
+    }
+    document.getElementById('equippedSlots').innerHTML=eh;
+    var bh='';
+    for(var i=0;i<bag.length;i++){
+      var e=bag[i];
+      bh+='<div class="ec"><div style="font-weight:600;color:#8b1a1a">'+e.name+'</div>';
+      bh+='<div class="nr"><span style="font-size:11px;color:#666">'+['','普通','优秀','精良','史诗','传说'][e.quality]||'未知'+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
+      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+','equip')">穿戴</span></div></div>';
+    }
+    document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">背包为空</div>';
+  }).catch(function(){document.getElementById('equipLoading').style.display='none';document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
+}
+function doAction(id,action){
+  var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance'};
+  fetch(urls[action]||urls.equip,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0||(d.data&&d.data.success!==false)){loadEquip();}
+    else{document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'操作失败';}
+  }).catch(function(){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
+}
+loadEquip();
+</script><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

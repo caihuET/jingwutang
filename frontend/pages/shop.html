@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -106,4 +106,10 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="sgrid">
 <div class="sitem"><div style="font-weight:600;font-size:13px;margin-top:6px">体力药剂(小)</div><div style="font-size:11px;color:#999;margin:2px 0">恢复 30 点体力</div><div class="price">5000 金币</div><div style="font-size:10px;color:#999">每日3次</div><span class="btn btn-p" style="padding:4px 12px;font-size:11px;margin-top:4px">购买</span></div>
 <div class="sitem"><div style="font-weight:600;font-size:13px;margin-top:6px">体力药剂(大)</div><div style="font-size:11px;color:#999;margin:2px 0">恢复 80 点体力</div><div class="price">20 元宝</div><div style="font-size:10px;color:#999">每日2次</div><span class="btn btn-p" style="padding:4px 12px;font-size:11px;margin-top:4px">购买</span></div>
-<div class="sitem"><div style="font-weight:600;font-size:13px;margin-top:6px">强化石</div><div style="font-size:11px;color:#999;margin:2px 0">装备强化材料</div><div class="price">3000 金币</div><div style="font-size:10px;color:#999">不限</div><span class="btn btn-p" style="padding:4px 12px;font-size:11px;margin-top:4px">购买</span></div></div></div></div></body></html>
+<div class="sitem"><div style="font-weight:600;font-size:13px;margin-top:6px">强化石</div><div style="font-size:11px;color:#999;margin:2px 0">装备强化材料</div><div class="price">3000 金币</div><div style="font-size:10px;color:#999">不限</div><span class="btn btn-p" style="padding:4px 12px;font-size:11px;margin-top:4px">购买</span></div></div></div></div><script>
+(function(){var t=localStorage.getItem('token');if(!t){window.location.href='/game/jwt/';}
+function h(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var tb=document.querySelector('.topbar');if(tb){var btn=document.createElement('button');btn.textContent='退出';btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';btn.onclick=h;tb.appendChild(btn);}
+})();
+</script>
+</body></html>

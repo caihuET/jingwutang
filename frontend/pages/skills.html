@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -78,15 +78,16 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <div class="logo">精武<span>堂</span></div>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav"><a class="nav-item " href="game.html">主界面</a>
 <a class="nav-item " href="battle.html">历练</a>
@@ -101,12 +102,63 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">技能</div>
+<div id="skillLoading">加载中...</div>
+<div id="skillContent" style="display:none">
 <div style="font-size:13px;color:#8b1a1a;font-weight:600;margin-bottom:8px">出战技能栏</div>
-<div class="slots">
-<div class="slot f" style="border-color:#c62828"><div style="font-size:11px;color:#999">槽位 1</div><div style="font-size:13px;font-weight:600;color:#8b1a1a">太和剑法</div><div style="font-size:11px;color:#999">Lv.3</div></div>
-<div class="slot f" style="border-color:#1565c0"><div style="font-size:11px;color:#999">槽位 2</div><div style="font-size:13px;font-weight:600;color:#8b1a1a">八卦掌</div><div style="font-size:11px;color:#999">Lv.2</div></div>
-<div class="slot f" style="border-color:#2e7d32"><div style="font-size:11px;color:#999">槽位 3</div><div style="font-size:13px;font-weight:600;color:#8b1a1a">梯云纵</div><div style="font-size:11px;color:#999">Lv.1</div></div>
-<div class="slot f" style="border-color:#c62828"><div style="font-size:11px;color:#999">槽位 4</div><div style="font-size:13px;font-weight:600;color:#8b1a1a">太极拳</div><div style="font-size:11px;color:#999">Lv.1</div></div></div>
-<div style="font-size:13px;color:#8b1a1a;font-weight:600;margin:12px 0 8px">全部技能</div>
-<div class="sgrid"><div class="sitem"><div style="display:flex;justify-content:space-between;font-size:13px"><strong>太和剑法</strong><span style="color:#c62828;font-weight:600;font-size:11px">外功</span></div><div style="font-size:11px;color:#999;margin-top:2px">熟练度 45/100</div></div>
-<div class="sitem"><div style="display:flex;justify-content:space-between;font-size:13px"><strong>八卦掌</strong><span style="color:#1565c0;font-weight:600;font-size:11px">内功</span></div><div style="font-size:11px;color:#999;margin-top:2px">熟练度 32/80</div></div></div></div></div></body></html>
+<div class="slots" id="skillSlots"></div>
+<div style="font-size:13px;color:#8b1a1a;font-weight:600;margin-bottom:8px;margin-top:12px">已学技能</div>
+<div class="sgrid" id="skillList"></div></div>
+<script>
+var pid=localStorage.getItem('player_id')||1;
+function loadSkills(){
+  document.getElementById('skillLoading').style.display='block';document.getElementById('skillContent').style.display='none';
+  fetch('/game/jwt/api/v1/skill/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  .then(function(r){return r.json()}).then(function(d){
+    document.getElementById('skillLoading').style.display='none';document.getElementById('skillContent').style.display='block';
+    if(d.code!==0)return;
+    var skills=d.data||[];
+    var slotted=skills.filter(function(s){return s.slot_position!==null});
+    var sh='';
+    for(var i=1;i<=4;i++){
+      var s=slotted.find(function(x){return x.slot_position===i});
+      sh+='<div class="slot '+(s?'f':'')+'" style="cursor:pointer" onclick="openSlotSel('+i+')">';
+      if(s){sh+='<div style="font-weight:700;font-size:14px;color:#8b1a1a">技能#'+s.skill_id+'</div><div style="font-size:11px;color:#666">Lv.'+s.level+'</div>';}
+      else{sh+='<div style="color:#999;font-size:11px">空</div>';}
+      sh+='</div>';
+    }
+    document.getElementById('skillSlots').innerHTML=sh;
+    var lh='';
+    for(var i=0;i<skills.length;i++){
+      var s=skills[i];
+      lh+='<div class="sitem"><div style="font-weight:700;color:#8b1a1a;font-size:14px">技能#'+s.skill_id+'</div>';
+      lh+='<div style="font-size:11px;color:#1565c0;font-weight:600;margin:2px 0">Lv.'+s.level+'</div>';
+      lh+='<div style="font-size:11px;color:#999">熟练度 '+s.proficiency+'</div>';
+      lh+='<div style="margin-top:4px;display:flex;gap:4px;justify-content:center"><span class="btn" style="padding:3px 10px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="openSlotSel('+(s.slot_position||1)+','+s.id+')">'+(s.slot_position?'出战':'设为出战')+'</span></div></div>';
+    }
+    document.getElementById('skillList').innerHTML=lh||'<div style="color:#999;font-size:13px">暂无技能</div>';
+  });
+}
+function openSlotSel(slotIdx,skillId){
+  if(skillId){fetch('/game/jwt/api/v1/skill/slot',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({skill_ids:[skillId]})}).then(function(r){return r.json()}).then(function(d){if(d.code===0)loadSkills();});}
+  else{loadSkills();}
+}
+loadSkills();
+</script><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

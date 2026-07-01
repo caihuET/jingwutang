@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -78,15 +78,16 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <div class="logo">精武<span>堂</span></div>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav"><a class="nav-item " href="game.html">主界面</a>
 <a class="nav-item active" href="battle.html">历练</a>
@@ -101,9 +102,73 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">历练</div>
-<div style="background:#1a1a2e;border:2px solid #a08040;border-radius:8px;padding:16px;color:#e0e0e0;font-size:13px;min-height:300px;line-height:1.8;font-family:monospace">
-<div style="display:flex;gap:16px;margin-bottom:12px;padding:8px;background:rgba(0,0,0,0.3);border-radius:4px;font-size:12px">
-<div style="flex:1"><div>剑指苍穹 HP</div><div style="height:8px;background:#333;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#c62828,#ff6b6b);border-radius:4px"></div></div><div>320/320</div></div>
-<div style="flex:1"><div>山贼甲 HP</div><div style="height:8px;background:#333;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#c62828,#ff6b6b);border-radius:4px"></div></div><div>100/100</div></div></div>
-<div style="color:#c9a96e;text-align:center;padding:20px 0">点击下方开始历练</div></div>
-<a href="battle.html" class="btn btn-p" style="margin-top:12px">开始历练</a></div></div></body></html>
+<div id="mapGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:12px"></div>
+<div id="battleArea" style="display:none;background:#1a1a2e;border:2px solid #a08040;border-radius:8px;padding:16px;color:#e0e0e0;font-size:13px;min-height:200px;line-height:2;font-family:monospace;margin-bottom:12px"></div>
+<button class="btn btn-p" style="margin-top:12px" id="battleBtn" onclick="startBattle()">开始历练</button>
+<script>
+var MONSTERS=[{name:"山贼甲",level:3,hp:60,exp:30,gold:15},{name:"山贼头目",level:5,hp:100,exp:60,gold:30},{name:"青云山贼",level:8,hp:150,exp:100,gold:45},{name:"山寇首领",level:12,hp:250,exp:180,gold:80}];
+var selectedMap=0;
+function renderMaps(){
+  var h='';var sel=false;
+  for(var i=0;i<MONSTERS.length;i++){
+    var m=MONSTERS[i];var j=i+1;
+    h+='<div class="map-item" style="border:2px solid '+(sel?'#8b1a1a':'#d4c5a9')+';border-radius:6px;padding:10px;cursor:pointer;text-align:center;background:'+(sel?'rgba(139,26,26,0.05)':'')+'" onclick="selectMap('+j+')">';
+    h+='<div style="font-weight:700;color:#8b1a1a;font-size:14px">'+m.name+'</div>';
+    h+='<div style="font-size:11px;color:#666;margin:2px 0">Lv.'+m.level+' HP:'+m.hp+'</div>';
+    h+='<div style="font-size:11px;color:#999">经验+'+m.exp+' 金币+'+m.gold+'</div>';
+    h+='</div>';
+  }
+  document.getElementById('mapGrid').innerHTML=h;
+}
+function selectMap(id){
+  selectedMap=id;
+  document.querySelectorAll('.map-item').forEach(function(d,i){d.style.borderColor='#d4c5a9';d.style.background='';if(i+1==id){d.style.borderColor='#8b1a1a';d.style.background='rgba(139,26,26,0.05)'}});
+}
+function startBattle(){
+  if(!selectedMap){alert('请选择目标');return;}
+  var area=document.getElementById('battleArea');
+  area.style.display='block';area.innerHTML='战斗中...';
+  document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';
+  fetch('/game/jwt/api/v1/battle/pve',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
+    body:JSON.stringify({map_id:selectedMap})
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';
+    if(d.code!==0){area.innerHTML='<div style="color:#e74c3c">'+d.message+'</div>';return;}
+    var r=d.data;var html='';
+    html+='<div style="text-align:center;color:'+(r.result==='win'?'#2ecc71':'#e74c3c')+';font-size:16px;font-weight:700;margin-bottom:8px">'+(r.result==='win'?'胜利！':'败北')+'</div>';
+    html+='<div style="color:#c9a96e;text-align:center;margin-bottom:8px">'+r.rounds+'回合 | 经验+'+r.exp_gained+' | 金币+'+r.gold_gained+'</div>';
+    for(var i=0;i<(r.log||[]).length;i++){
+      var rd=r.log[i];
+      html+='<div style="color:#c9a96e">— 第 '+rd.round+' 回合 —</div>';
+      for(var j=0;j<(rd.actions||[]).length;j++){
+        var a=rd.actions[j];
+        html+='<div style="padding-left:12px;color:#d4c5a9">'+a.actor+' 使出『'+a.skill+'』';
+        if(a.dodged){html+='，<span style="color:#3498db">被 '+a.target+' 闪避</span>';}
+        else{html+='，对 '+a.target+' 造成 <span style="color:#e67e22">'+a.damage+'</span> 点伤害'+(a.critical?' <span style="color:#e74c3c;font-weight:700">【暴击】</span>':'');}
+        html+='</div>';
+      }
+    }
+    area.innerHTML=html;
+  }).catch(function(){document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';area.innerHTML='<div style="color:#e74c3c">网络异常</div>';});
+}
+renderMaps();
+</script>op:12px">开始历练</a></div></div><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

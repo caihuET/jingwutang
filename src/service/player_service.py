@@ -11,6 +11,13 @@ class PlayerService:
     def __init__(self, db):
         self.repo = PlayerRepository(db)
 
+    def get_by_user(self, user_id: int) -> dict:
+        """按 user_id 查询角色"""
+        player = self.repo.get_by_user_id(user_id)
+        if not player:
+            return None
+        return {"player_id": player.id, "name": player.name, "level": player.level}
+
     def create(self, user_id: int, name: str, gender: int, school_id: int) -> dict:
         """创建角色"""
         if not validate_nickname(name):

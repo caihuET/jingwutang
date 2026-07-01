@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -78,15 +78,16 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <div class="logo">精武<span>堂</span></div>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav"><a class="nav-item " href="game.html">主界面</a>
 <a class="nav-item " href="battle.html">历练</a>
@@ -107,7 +108,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <p style="font-size:13px;color:#6b5b4e;margin-bottom:16px">开始你的江湖之旅</p>
 <div style="text-align:left">
 <label style="font-size:12px;color:#6b5b4e">角色昵称</label>
-<input style="width:100%;padding:8px 12px;border:1px solid #d4c5a9;border-radius:5px;font-size:14px;margin-bottom:14px" placeholder="2-8 个中文字符" maxlength="8">
+<input style="width:100%;padding:8px 12px;border:1px solid #d4c5a9;border-radius:5px;font-size:14px;margin-bottom:14px" id="createName" placeholder="2-8 个中文字符" maxlength="8">
 </div>
 <label style="font-size:12px;color:#6b5b4e;display:block;text-align:left">选择门派</label>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0">
@@ -119,4 +120,22 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div style="border:2px solid #d4c5a9;border-radius:6px;padding:10px;cursor:pointer"><div style="font-weight:700;color:#8b1a1a">明教</div><div style="font-size:11px;color:#666">暴力输出狂战</div><span style="font-size:10px;color:white;background:#c62828;padding:1px 6px;border-radius:8px;display:inline-block;margin-top:4px">输出</span></div>
 </div>
 <a href="game.html" class="btn btn-p" style="width:100%;margin-top:8px">确认创建</a>
-</div></div></div></div></body></html>
+</div></div></div></div><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

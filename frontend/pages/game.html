@@ -78,15 +78,16 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <div class="logo">精武<span>堂</span></div>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav"><a class="nav-item active" href="game.html">主界面</a>
 <a class="nav-item " href="battle.html">历练</a>
@@ -104,21 +105,48 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="grid">
 <div class="card"><div class="card-title">角色信息</div>
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
-<div style="font-size:36px">*</div>
-<div><div style="font-size:16px;font-weight:700">剑指苍穹</div><div style="font-size:12px;color:#666">Lv.15 武当 | 江湖新秀 | 战力 2850</div></div></div>
+<div style="font-size:36px" id="mAvatar">*</div>
+<div><div style="font-size:16px;font-weight:700" id="mName">-</div><div style="font-size:12px;color:#666" id="mInfo">-</div></div></div>
 <div class="attr">
-<div class="attr-item"><span>力量</span><span class="v">25</span></div>
-<div class="attr-item"><span>身法</span><span class="v">18</span></div>
-<div class="attr-item"><span>体质</span><span class="v">22</span></div>
-<div class="attr-item"><span>内力</span><span class="v">30</span></div></div></div>
+<div class="attr-item"><span>力量</span><span class="v" id="aStr">-</span></div>
+<div class="attr-item"><span>身法</span><span class="v" id="aIgi">-</span></div>
+<div class="attr-item"><span>体质</span><span class="v" id="aCon">-</span></div>
+<div class="attr-item"><span>内力</span><span class="v" id="aSpi">-</span></div></div></div>
 <div class="card"><div class="card-title">状态</div>
 <div class="attr">
-<div class="attr-item"><span>HP</span><span class="v">320/320</span></div>
-<div class="attr-item"><span>MP</span><span class="v">150/150</span></div>
-<div class="attr-item"><span>体力</span><span class="v">72/100</span></div>
-<div class="attr-item"><span>金币</span><span class="v">12500</span></div>
-<div class="attr-item"><span>元宝</span><span class="v">300</span></div>
-<div class="attr-item"><span>修为</span><span class="v">580</span></div></div></div>
+<div class="attr-item"><span>HP</span><span class="v" id="sHp2">-</span></div>
+<div class="attr-item"><span>MP</span><span class="v" id="sMp2">-</span></div>
+<div class="attr-item"><span>体力</span><span class="v" id="sStamina2">-</span></div>
+<div class="attr-item"><span>金币</span><span class="v" id="mGold">-</span></div>
+<div class="attr-item"><span>元宝</span><span class="v" id="mIngot">-</span></div>
+<div class="attr-item"><span>声望</span><span class="v" id="mRep">-</span></div></div></div>
 <div class="card"><div class="card-title">快捷操作</div>
 <div class="ql"><a href="battle.html" class="btn btn-p">历练</a><a href="ranking.html" class="btn btn-g">排行</a></div></div>
-<div class="card"><div class="card-title">消息</div><div style="font-size:13px;color:#666"><div>· 横扫千军 升到65级</div><div>· 月影清霜 获得史诗装备</div></div></div></div></div></div></body></html>
+<div class="card"><div class="card-title">消息</div><div style="font-size:13px;color:#666" id="newsArea"><div>· 欢迎来到精武堂</div></div></div></div></div></div>
+<script>
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');window.location.href='/game/jwt/';}
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0){window.location.href='/game/jwt/create.html';return}
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'少侠')+' Lv.'+(p.level||1);
+  document.getElementById('sName').textContent=p.name||'少侠';
+  document.getElementById('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  document.getElementById('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  document.getElementById('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  document.getElementById('sStamina').textContent=p.stamina||0;
+  document.getElementById('mName').textContent=p.name||'少侠';
+  document.getElementById('mInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  document.getElementById('mGold').textContent=p.gold||0;
+  document.getElementById('mIngot').textContent=p.ingot||0;
+  document.getElementById('mRep').textContent=p.reputation||0;
+  document.getElementById('sHp2').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  document.getElementById('sMp2').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  document.getElementById('sStamina2').textContent=(p.stamina||0)+'/100';
+})
+.catch(function(){document.getElementById('topPlayerInfo').textContent='加载失败'});
+</script>
+</body>
+</html>

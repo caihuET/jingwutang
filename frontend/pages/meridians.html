@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -107,4 +107,10 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="col"><div class="mn">督脉</div><div class="dot ok"></div><div class="dot ok"></div><div class="dot ok"></div><div class="dot cur"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">3/10</div></div>
 <div class="col"><div class="mn">冲脉</div><div class="dot ok"></div><div class="dot cur"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">1/10</div></div>
 <div class="col"><div class="mn">带脉</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">0/8</div></div>
-<div class="col"><div class="mn">阴维脉</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">0/8</div></div></div></div></div></body></html>
+<div class="col"><div class="mn">阴维脉</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">0/8</div></div></div></div></div><script>
+(function(){var t=localStorage.getItem('token');if(!t){window.location.href='/game/jwt/';}
+function h(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var tb=document.querySelector('.topbar');if(tb){var btn=document.createElement('button');btn.textContent='退出';btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';btn.onclick=h;tb.appendChild(btn);}
+})();
+</script>
+</body></html>

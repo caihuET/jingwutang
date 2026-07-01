@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -113,4 +113,10 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <tr><td>8</td><td>铁骨铮铮</td><td>45</td><td>少林</td><td>10200</td></tr>
 <tr><td>9</td><td>春风化雨</td><td>42</td><td>峨眉</td><td>9500</td></tr>
 <tr><td>10</td><td>暗影流光</td><td>38</td><td>唐门</td><td>8800</td></tr>
-</tbody></table></div></div></body></html>
+</tbody></table></div></div><script>
+(function(){var t=localStorage.getItem('token');if(!t){window.location.href='/game/jwt/';}
+function h(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var tb=document.querySelector('.topbar');if(tb){var btn=document.createElement('button');btn.textContent='退出';btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';btn.onclick=h;tb.appendChild(btn);}
+})();
+</script>
+</body></html>
