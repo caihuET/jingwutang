@@ -6,6 +6,12 @@ from config import config
 
 app = FastAPI(title="精武堂 API", root_path=config.APP_ROOT_PATH)
 
+@app.on_event("startup")
+def on_startup():
+    """应用启动时自动创建数据库表"""
+    from src.models.database import init_db
+    init_db()
+
 
 from fastapi.responses import JSONResponse
 import os

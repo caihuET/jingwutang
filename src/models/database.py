@@ -18,5 +18,17 @@ def get_db():
 
 
 def init_db():
-    """初始化数据库表"""
-    Base.metadata.create_all(bind=engine)
+    """初始化数据库：自动创建数据库和表"""
+    from sqlalchemy import text
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        import pymysql
+        conn = pymysql.connect(
+            host=config.DB_HOST, port=config.DB_PORT,
+            user=config.DB_USER, password=config.DB_PASSWORD,
+        )
+        with conn.cursor() as cursor:
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{config.DB_NAME}` CHARACTER SET utf8mb4")
+        conn.close()
+        Base.metadata.create_all(bind=engine)
