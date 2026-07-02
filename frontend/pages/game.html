@@ -158,13 +158,6 @@ if(parseInt(p.free_points)>0){
 })
 .catch(function(){document.getElementById('topPlayerInfo').textContent='加载失败'});
 
-window.alloc=function(attr){
-  var data={player_id:pid};
-  data[attr]=1;
-  fetch('/game/jwt/api/v1/player/allocate_attr',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('token')},body:JSON.stringify(data)})
-  .then(function(r){return r.json()})
-  .then(function(d){if(d.code===0){window.location.reload();}else{alert(d.message||'分配失败');}})
-  .catch(function(){alert('网络异常');});
-};
+
 </body>
 </html>
