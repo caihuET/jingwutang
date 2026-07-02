@@ -102,12 +102,13 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">历练</div>
+<div class="stamina-info" style="font-size:13px;color:#6b5b4e;margin-bottom:12px;padding:8px 12px;background:#fff8e7;border:1px solid #d4c5a9;border-radius:6px;display:flex;justify-content:space-between"><span>体力：<strong id="staCur">-</strong> / <strong id="staMax">-</strong></span><span>本次消耗：<strong>10</strong> 点</span></div>
 <div id="mapGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:12px"></div>
 <div id="battleArea" style="display:none;background:#1a1a2e;border:2px solid #a08040;border-radius:8px;padding:16px;color:#e0e0e0;font-size:13px;min-height:200px;line-height:2;font-family:monospace;margin-bottom:12px"></div>
-<button class="btn btn-p" style="margin-top:12px" id="battleBtn" onclick="startBattle()">开始历练</button>
+<div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-p" id="battleBtn" onclick="startBattle()">开始历练</button><button class="btn" id="skipBtn" onclick="skipBattle()" style="background:linear-gradient(135deg,#3a3a5c,#2a2a44);color:#c9a96e;opacity:0.6;cursor:not-allowed" disabled>跳过战斗</button></div>
 <script>
 var MONSTERS=[{name:"山贼甲",level:3,hp:60,exp:30,gold:15},{name:"山贼头目",level:5,hp:100,exp:60,gold:30},{name:"青云山贼",level:8,hp:150,exp:100,gold:45},{name:"山寇首领",level:12,hp:250,exp:180,gold:80}];
-var selectedMap=0;
+var selectedMap=0;var skipFlag=false;function skipBattle(){skipFlag=true;document.getElementById('skipBtn').disabled=true;}
 function renderMaps(){
   var h='';var sel=false;
   for(var i=0;i<MONSTERS.length;i++){
@@ -128,7 +129,7 @@ function startBattle(){
   if(!selectedMap){alert('请选择目标');return;}
   var area=document.getElementById('battleArea');
   area.style.display='block';area.innerHTML='战斗中...';
-  document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';
+  document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';document.getElementById('skipBtn').disabled=false;document.getElementById('skipBtn').style.opacity='1';document.getElementById('skipBtn').style.cursor='pointer';skipFlag=false;
   fetch('/game/jwt/api/v1/battle/pve',{
     method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
     body:JSON.stringify({map_id:selectedMap})
@@ -138,18 +139,7 @@ function startBattle(){
     var r=d.data;var html='';
     html+='<div style="text-align:center;color:'+(r.result==='win'?'#2ecc71':'#e74c3c')+';font-size:16px;font-weight:700;margin-bottom:8px">'+(r.result==='win'?'胜利！':'败北')+'</div>';
     html+='<div style="color:#c9a96e;text-align:center;margin-bottom:8px">'+r.rounds+'回合 | 经验+'+r.exp_gained+' | 金币+'+r.gold_gained+'</div>';
-    for(var i=0;i<(r.log||[]).length;i++){
-      var rd=r.log[i];
-      html+='<div style="color:#c9a96e">— 第 '+rd.round+' 回合 —</div>';
-      for(var j=0;j<(rd.actions||[]).length;j++){
-        var a=rd.actions[j];
-        html+='<div style="padding-left:12px;color:#d4c5a9">'+a.actor+' 使出『'+a.skill+'』';
-        if(a.dodged){html+='，<span style="color:#3498db">被 '+a.target+' 闪避</span>';}
-        else{html+='，对 '+a.target+' 造成 <span style="color:#e67e22">'+a.damage+'</span> 点伤害'+(a.critical?' <span style="color:#e74c3c;font-weight:700">【暴击】</span>':'');}
-        html+='</div>';
-      }
-    }
-    area.innerHTML=html;
+    var rounds=r.log||[];var ri=0;(function nr(){if(ri>=rounds.length||skipFlag){document.getElementById('skipBtn').disabled=true;document.getElementById('skipBtn').style.opacity='0.6';area.innerHTML+=html;return;}var rd=rounds[ri];area.innerHTML+='<div style="color:#c9a96e">— 第 '+rd.round+' 回合 —</div>';for(var j=0;j<(rd.actions||[]).length;j++){var a=rd.actions[j];area.innerHTML+='<div style="padding-left:12px;color:#d4c5a9">'+a.actor+'使出『'+a.skill+'』';if(a.dodged){area.innerHTML+='，<span style="color:#3498db">被 '+a.target+' 闪避</span>';}else{area.innerHTML+='，对 '+a.target+' 造成 <span style="color:#e67e22">'+a.damage+'</span> 点伤害'+(a.critical?' <span style="color:#e74c3c;font-weight:700">【暴击】</span>':'');}area.innerHTML+='</div>';}ri++;setTimeout(nr,500);})();
   }).catch(function(){document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';area.innerHTML='<div style="color:#e74c3c">网络异常</div>';});
 }
 renderMaps();

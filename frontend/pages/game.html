@@ -107,6 +107,9 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
 <div style="font-size:36px" id="mAvatar">*</div>
 <div><div style="font-size:16px;font-weight:700" id="mName">-</div><div style="font-size:12px;color:#666" id="mInfo">-</div></div></div>
+<div style="margin-top:4px"><span id="schoolTag" style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:12px;background:#fff8e7;border:1px solid #c9a96e;color:#8b1a1a">-</span></div>
+<div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin:6px 0;position:relative"><div id="expFill" style="height:100%;background:linear-gradient(90deg,#8b1a1a,#c9a96e);border-radius:4px;width:0%"></div></div>
+<div id="expText" style="font-size:11px;color:#6b5b4e;text-align:right">0 / 0</div>
 <div class="attr">
 <div class="attr-item"><span>力量</span><span class="v" id="aStr">-</span></div>
 <div class="attr-item"><span>身法</span><span class="v" id="aIgi">-</span></div>
@@ -136,7 +139,7 @@ var pid=localStorage.getItem('player_id')||1;fetch('/game/jwt/api/v1/player/info
   document.getElementById('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
   document.getElementById('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
   document.getElementById('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
-  document.getElementById('sStamina').textContent=p.stamina||0;
+  document.getElementById('sStamina').textContent=p.stamina||0;if(document.getElementById('schoolTag'))document.getElementById('schoolTag').textContent=p.school_name||'-';if(document.getElementById('expFill')){var pct=Math.min(100,(p.exp||0)/(p.exp_needed||1)*100);document.getElementById('expFill').style.width=pct+'%';}if(document.getElementById('expText'))document.getElementById('expText').textContent=(p.exp||0)+' / '+(p.exp_needed||0);if(document.getElementById('schoolTag'))document.getElementById('schoolTag').textContent=p.school_name||'-';if(document.getElementById('expFill')){var pct=Math.min(100,(p.exp||0)/(p.exp_needed||1)*100);document.getElementById('expFill').style.width=pct+'%';}if(document.getElementById('expText'))document.getElementById('expText').textContent=(p.exp||0)+' / '+(p.exp_needed||0);
   document.getElementById('mName').textContent=p.name||'少侠';
   document.getElementById('mInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
   document.getElementById('mGold').textContent=p.gold||0;

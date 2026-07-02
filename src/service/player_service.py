@@ -2,7 +2,9 @@
 from src.utils.validators import validate_nickname, check_sensitive_words
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
+from src.utils.constants import SchoolType, EXP_TABLE
 from src.repository.player_repo import PlayerRepository
+from datetime import datetime, timezone
 
 
 class PlayerService:
@@ -34,6 +36,7 @@ class PlayerService:
         player = self.repo.get_by_id(player_id)
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
+        self._apply_stamina_recovery(player)
         return {
             "name": player.name,
             "level": player.level,
@@ -47,4 +50,44 @@ class PlayerService:
             "ingot": player.ingot,
             "reputation": player.reputation,
             "combat_power": player.combat_power,
+            "school_name": SchoolType.NAMES.get(player.school_id, "未知"),
+            "exp_needed": EXP_TABLE[player.level] if player.level < 100 else 0,
+            "exp_progress": round(player.exp / EXP_TABLE[player.level] * 100, 1) if player.level < 100 and EXP_TABLE[player.level] > 0 else 0,
+            "max_stamina": self._get_max_stamina(player.level),
+        }
+
+    def _get_max_stamina(self, level: int) -> int:
+        return min(150, 100 + (level // 10) * 5)
+
+    def _apply_stamina_recovery(self, player):
+        """离线体力恢复 (每 5 分钟 1 点)"""
+        now = datetime.now(timezone.utc)
+        elapsed = max(0, int((now - player.updated_at).total_seconds()))
+        recovered = int(elapsed / 300)
+        if recovered > 0:
+            max_sta = self._get_max_stamina(player.level)
+            player.stamina = min(max_sta, player.stamina + recovered)
+            self.repo.db.commit()
+
+    def buy_stamina(self, player_id: int) -> dict:
+        """购买体力"""
+        player = self.repo.get_by_id(player_id)
+        if not player:
+            raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
+        if player.daily_stamina_bought >= 3:
+            raise GameException(ErrorCode.DAILY_LIMIT, "今日购买次数已用完")
+        prices = [50, 100, 150]
+        cost = prices[player.daily_stamina_bought]
+        if player.ingot < cost:
+            raise GameException(ErrorCode.INGOT_NOT_ENOUGH, "元宝不足")
+        player.ingot -= cost
+        player.stamina = min(self._get_max_stamina(player.level), player.stamina + 60)
+        player.daily_stamina_bought += 1
+        self.repo.db.commit()
+        return {
+            "stamina": player.stamina,
+            "max_stamina": self._get_max_stamina(player.level),
+            "ingot": player.ingot,
+            "bought_today": player.daily_stamina_bought,
+            "cost": cost,
         }

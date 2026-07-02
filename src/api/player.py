@@ -38,3 +38,14 @@ def get_player_by_user(user_id: int, db: Session = Depends(get_db)):
     """按用户ID查询角色"""
     result = PlayerService(db).get_by_user(user_id)
     return {"code": 0, "data": result, "message": "ok"}
+
+
+class BuyStaminaRequest(BaseModel):
+    player_id: int = 1
+
+
+@router.post("/player/buy_stamina")
+def buy_stamina(req: BuyStaminaRequest, db: Session = Depends(get_db)):
+    """购买体力"""
+    result = PlayerService(db).buy_stamina(req.player_id)
+    return {"code": 0, "data": result, "message": "购买成功"}
