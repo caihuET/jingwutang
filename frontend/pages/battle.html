@@ -143,7 +143,7 @@ function startBattle(){
   }).catch(function(){document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';area.innerHTML='<div style="color:#e74c3c">网络异常</div>';});
 }
 renderMaps();
-</script>op:12px">开始历练</a></div></div><script>
+</script></a></div></div><script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
 var pid=localStorage.getItem('player_id')||1;

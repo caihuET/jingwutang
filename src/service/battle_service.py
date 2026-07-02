@@ -107,11 +107,16 @@ class BattleService:
 
         # 出战技能
         skills_data = self.skill_repo.get_slotted_skills(player.id)
+        skill_ids = [ps.skill_id for ps in skills_data]
+        skill_defs = {}
+        if skill_ids:
+            for sd in self.db.query(SkillDefinition).filter(SkillDefinition.id.in_(skill_ids)).all():
+                skill_defs[sd.id] = sd.name
         skills = []
         for ps in skills_data:
             skills.append({
                 "id": ps.id,
-                "name": f"技能{ps.skill_id}",
+                "name": skill_defs.get(ps.skill_id, f"技能{ps.skill_id}"),
                 "skill_type": SkillType.PHYSICAL,
                 "base_damage": 100 + ps.level * 15,
                 "mp_cost": 10 + ps.level * 5,
