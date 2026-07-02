@@ -64,7 +64,7 @@ class TaskService:
                 })
         return result
 
-    def claim_rewarddef claim_reward(self, player_id: int, task_id: int) -> dict:
+    def claim_reward(self, player_id: int, task_id: int) -> dict:
         """领取任务奖励"""
         pt = self.repo.get_player_task_by_def(player_id, task_id)
         if not pt:
@@ -122,7 +122,7 @@ class TaskService:
         pt = self.repo.create_player_task(player_id, td)
         return {"task_id": pt.task_id, "status": pt.status}
 
-    def daily_refreshlf, player_id: int):
+    def daily_refresh(self, player_id: int):
         """每日刷新: 重置日常任务"""
         self.repo.delete_player_tasks(player_id, TaskType.DAILY)
         self.auto_assign_tasks(player_id)
