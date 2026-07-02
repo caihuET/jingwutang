@@ -28,6 +28,9 @@ class PlayerService:
             raise GameException(ErrorCode.NICKNAME_SENSITIVE, "昵称包含敏感词")
         if self.repo.get_by_name(name):
             raise GameException(ErrorCode.NICKNAME_EXISTS, "昵称已存在")
+        existing = self.repo.get_by_user_id(user_id)
+        if existing:
+            return {"player_id": existing.id}
         player = self.repo.create(user_id, name, gender, school_id)
         return {"player_id": player.id}
 
