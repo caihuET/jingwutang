@@ -74,6 +74,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .auth-card .btn{width:100%;margin-top:4px}
 @media(max-width:768px){.sidebar{display:none}.grid{grid-template-columns:1fr}.el{grid-template-columns:1fr}}
 </style>
+<script src="/game/jwt/static/js/common.js"></script>
 </head>
 <body>
 <div class="topbar">
@@ -162,6 +163,14 @@ fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'B
 });
 </script>
 
+<style>
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-content{background:white;border-radius:8px;padding:20px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+</style>
+<div id="slotModal" class="modal-overlay" onclick="closeModal()">
+<div class="modal-content" id="modalContent"></div>
+</div>
 <style>
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
