@@ -83,31 +83,6 @@ class TaskService:
             "reputation": td.reward_reputation if td else 0,
         }
 
-    def auto_assign_tasks(self, player_id: int, level: int = 1):
-        """自动分配任务"""
-        # 主线: 分配下一个未完成的主线
-        main_defs = self.repo.get_task_defs_by_type(TaskType.MAIN)
-        completed = set(pt.task_id for pt in self.repo.get_completed_tasks(player_id))
-        player_tasks = self.repo.get_player_tasks(player_id)
-        assigned = set(pt.task_id for pt in player_tasks)
-
-        for td in main_defs:
-            if td.id not in completed and td.id not in assigned:
-                self.repo.create_player_task(player_id, td)
-                break
-
-        # 日常: 分配未接取的
-        daily_defs = self.repo.get_task_defs_by_type(TaskType.DAILY)
-        for td in daily_defs:
-            if td.id not in assigned:
-                self.repo.create_player_task(player_id, td)
-
-        # 成就: 分配未接取的
-        achieve_defs = self.repo.get_task_defs_by_type(TaskType.ACHIEVEMENT)
-        for td in achieve_defs:
-            if td.id not in assigned:
-                self.repo.create_player_task(player_id, td)
-
     
     def accept_task(self, player_id: int, task_id: int) -> dict:
         """接受任务"""
@@ -121,8 +96,3 @@ class TaskService:
             raise GameException(ErrorCode.PARAM_INVALID, "任务已领取")
         pt = self.repo.create_player_task(player_id, td)
         return {"task_id": pt.task_id, "status": pt.status}
-
-    def daily_refresh(self, player_id: int):
-        """每日刷新: 重置日常任务"""
-        self.repo.delete_player_tasks(player_id, TaskType.DAILY)
-        self.auto_assign_tasks(player_id)

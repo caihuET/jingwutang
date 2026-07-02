@@ -1,4 +1,4 @@
-"""战斗服务"""
+﻿"""战斗服务"""
 import json
 import random
 from src.service.battle_engine import BattleEngine, BattleUnit, MONSTERS
@@ -135,3 +135,34 @@ class BattleService:
             skills=skills,
             is_player=True,
         )
+
+    def _drop_equipment(self, player_id: int, map_id: int) -> dict:
+        """战斗胜利后概率掉落装备"""
+        from src.models.equipment import EquipmentDefinition, PlayerEquipment
+        
+        DROP_RATES = {1: 0.15, 2: 0.25, 3: 0.35, 4: 0.50}
+        if random.random() > DROP_RATES.get(map_id, 0.15):
+            return None
+        
+        qm = {1: (1, 2), 2: (1, 3), 3: (2, 4), 4: (3, 5)}
+        q_min, q_max = qm.get(map_id, (1, 2))
+        quality = random.randint(q_min, q_max)
+        
+        defs = self.equip_repo.db.query(EquipmentDefinition).filter(
+            EquipmentDefinition.quality <= quality
+        ).all()
+        if not defs:
+            defs = self.equip_repo.db.query(EquipmentDefinition).all()
+        if not defs:
+            return None
+        
+        eq = random.choice(defs)
+        pe = PlayerEquipment(
+            player_id=player_id, equip_def_id=eq.id, slot=eq.slot,
+            quality=quality, is_equipped=0, enhance_level=0, durability=100,
+        )
+        self.equip_repo.db.add(pe)
+        self.equip_repo.db.commit()
+        
+        qn = {1: "粗糙", 2: "普通", 3: "精良", 4: "优秀", 5: "传说"}
+        return {"name": eq.name, "quality": qn.get(quality), "slot": eq.slot}

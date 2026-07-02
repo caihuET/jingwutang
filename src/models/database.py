@@ -65,3 +65,84 @@ def init_db():
                 logging.getLogger(__name__).info("任务数据初始化完成")
     except Exception:
         pass
+
+    # 修复任务定义乱码（从 init.sql 读取正确数据，按 sort_order 逐行 UPDATE）
+    try:
+        with engine.connect() as conn:
+            sql_text = open("migrations/init.sql", "r", encoding="utf-8").read()
+            si = sql_text.find("INSERT INTO task_definitions")
+            ei = sql_text.index(";", si) + 1
+            insert_sql = sql_text[si:ei]
+            vi = insert_sql.upper().find("VALUES") + 6
+            values_text = insert_sql[vi:].strip().strip(";").strip()
+            for row_text in values_text.split(")," + chr(10)):
+                row_text = row_text.strip().strip("(").strip(")").strip()
+                if not row_text:
+                    continue
+                parts = []
+                cur = ""
+                instr = False
+                for ch in row_text:
+                    if ch == "'":
+                        instr = not instr
+                        cur += ch
+                    elif ch == "," and not instr:
+                        parts.append(cur.strip())
+                        cur = ""
+                    else:
+                        cur += ch
+                if cur:
+                    parts.append(cur.strip())
+                if len(parts) >= 10:
+                    name = parts[0].strip("'")
+                    desc = parts[2].strip("'")
+                    sort_order = int(parts[-1])
+                    conn.execute(text(
+                        "UPDATE task_definitions SET name = :n, description = :d WHERE sort_order = :s"
+                    ), {"n": name, "d": desc, "s": sort_order})
+            conn.commit()
+    except Exception:
+        pass
+
+    # 初始化技能定义（如果表为空，从 init.sql 提取）
+    try:
+        with engine.connect() as conn:
+            cnt = conn.execute(text("SELECT COUNT(*) FROM skill_definitions")).scalar()
+            if cnt == 0:
+                sql_text = open("migrations/init.sql", "r", encoding="utf-8").read()
+                si = sql_text.find("INSERT INTO skill_definitions")
+                ei = sql_text.index(";", si) + 1
+                conn.execute(text(sql_text[si:ei]))
+                conn.commit()
+    except Exception:
+        pass
+
+    # 初始化装备定义（如果表为空）
+    try:
+        with engine.connect() as conn:
+            cnt = conn.execute(text("SELECT COUNT(*) FROM equipment_definitions")).scalar()
+            if cnt == 0:
+                conn.execute(text("""
+                    INSERT INTO equipment_definitions (name, slot, quality, level_required, base_attack, base_defense, base_hp) VALUES
+                    ("青铜短剑", 1, 1, 1, 8, 0, 0),
+                    ("粗布帽", 2, 1, 1, 0, 3, 5),
+                    ("麻布衣", 3, 1, 1, 0, 5, 10),
+                    ("破旧腰带", 4, 1, 1, 0, 2, 0),
+                    ("草鞋", 5, 1, 1, 0, 1, 0),
+                    ("木项链", 6, 1, 1, 1, 0, 5),
+                    ("铁剑", 1, 2, 5, 18, 0, 0),
+                    ("青铜盔", 2, 2, 5, 0, 8, 12),
+                    ("皮甲", 3, 2, 5, 0, 12, 25),
+                    ("铁腰带", 4, 2, 5, 0, 5, 0),
+                    ("布靴", 5, 2, 5, 0, 3, 0),
+                    ("银项链", 6, 2, 5, 3, 0, 10),
+                    ("精钢剑", 1, 3, 15, 35, 0, 0),
+                    ("精钢盔", 2, 3, 15, 0, 15, 25),
+                    ("锁子甲", 3, 3, 15, 0, 22, 50),
+                    ("虎皮带", 4, 3, 15, 0, 8, 0),
+                    ("鹿皮靴", 5, 3, 15, 0, 6, 0),
+                    ("翡翠项链", 6, 3, 15, 8, 0, 20)
+                """))
+                conn.commit()
+    except Exception:
+        pass
