@@ -28,6 +28,8 @@ class PlayerService:
         user = UserRepository(self.repo.db).get_by_id(user_id)
         if not user:
             raise GameException(ErrorCode.TOKEN_INVALID, "登录已过期，请重新登录")
+        if self.repo.get_by_user_id(user_id):
+            raise GameException(ErrorCode.PARAM_INVALID, "你已创建过角色，请直接进入游戏")
         if not validate_nickname(name):
             raise GameException(ErrorCode.PARAM_INVALID, "昵称格式不正确")
         if not check_sensitive_words(name):
