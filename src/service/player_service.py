@@ -15,10 +15,20 @@ class PlayerService:
 
     def get_by_user(self, user_id: int) -> dict:
         """按 user_id 查询角色"""
-        player = self.repo.get_by_user_id(user_id)
-        if not player:
-            return None
-        return {"player_id": player.id, "name": player.name, "level": player.level}
+        from sqlalchemy import text
+        try:
+            row = self.repo.db.execute(text("SELECT id, name, level FROM players WHERE user_id = :uid"), {"uid": user_id}).fetchone()
+            if row:
+                return {"player_id": int(row[0]), "name": row[1], "level": row[2]}
+        except:
+            pass
+        try:
+            player = self.repo.get_by_user_id(user_id)
+            if player:
+                return {"player_id": player.id, "name": player.name, "level": player.level}
+        except:
+            pass
+        return None
 
     def create(self, user_id: int, name: str, gender: int, school_id: int) -> dict:
         """创建角色"""

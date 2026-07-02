@@ -50,3 +50,18 @@ def init_db():
             conn.commit()
     except Exception:
         pass
+
+    # 初始化任务数据（如果表为空）
+    try:
+        with engine.connect() as conn:
+            cnt = conn.execute(text("SELECT COUNT(*) FROM task_definitions")).scalar()
+            if cnt == 0:
+                sql = open("migrations/init.sql", "r", encoding="utf-8").read()
+                i = sql.find("INSERT INTO task_definitions")
+                j = sql.index(";", i) + 1
+                conn.execute(text(sql[i:j]))
+                conn.commit()
+                import logging
+                logging.getLogger(__name__).info("任务数据初始化完成")
+    except Exception:
+        pass
