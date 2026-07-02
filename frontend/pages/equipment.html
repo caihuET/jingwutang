@@ -141,7 +141,7 @@ function loadEquipment(){
 }
 function doAction(id,action){
   var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance'};
-  fetch(urls[action]||urls.equip,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
+  fetch((urls[action]||urls.equip)+'?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0||(d.data&&d.data.success!==false)){loadEquipment();}
     else{document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'操作失败';}
