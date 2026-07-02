@@ -132,7 +132,7 @@ function startBattle(){
   document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';document.getElementById('skipBtn').disabled=false;document.getElementById('skipBtn').style.opacity='1';document.getElementById('skipBtn').style.cursor='pointer';skipFlag=false;
   fetch('/game/jwt/api/v1/battle/pve',{
     method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
-    body:JSON.stringify({map_id:selectedMap})
+    body:JSON.stringify({map_id:selectedMap,player_id:parseInt(localStorage.getItem('player_id'))||1})
   }).then(function(r){return r.json()}).then(function(d){
     document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';
     if(d.code!==0){area.innerHTML='<div style="color:#e74c3c">'+d.message+'</div>';return;}

@@ -10,9 +10,10 @@ router = APIRouter()
 
 class BattleRequest(BaseModel):
     map_id: int
+    player_id: int = 1
 
 
 @router.post("/battle/pve")
-def pve_battle(req: BattleRequest, player_id: int = 1, db: Session = Depends(get_db)):
-    result = BattleService(db).pve_battle(player_id, req.map_id)
+def pve_battle(req: BattleRequest, db: Session = Depends(get_db)):
+    result = BattleService(db).pve_battle(req.player_id, req.map_id)
     return {"code": 0, "data": result, "message": "ok"}
