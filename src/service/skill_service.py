@@ -9,10 +9,17 @@ class SkillService:
         self.repo = SkillRepository(db)
 
     def get_skills(self, player_id: int) -> list:
+        from src.models.skill import SkillDefinition
         skills = self.repo.get_player_skills(player_id)
+        skill_ids = [s.skill_id for s in skills]
+        defs = {}
+        if skill_ids:
+            for d in self.repo.db.query(SkillDefinition).filter(SkillDefinition.id.in_(skill_ids)).all():
+                defs[d.id] = d.name
         return [{
             "id": s.id,
             "skill_id": s.skill_id,
+            "name": defs.get(s.skill_id, f"技能{s.skill_id}"),
             "level": s.level,
             "proficiency": s.proficiency,
             "slot_position": s.slot_position,
