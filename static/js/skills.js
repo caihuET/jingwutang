@@ -32,7 +32,7 @@ function renderSlotGrid(slotted, allSkills) {
         var s = slotted.find(function(x) { return x.slot_position === i; });
         html += '<div class="stat-card" style="min-width:140px;cursor:pointer" onclick="openSlotSelector(' + i + ')">';
         html += '<div class="label">技能槽 ' + i + '</div>';
-        if (s) { html += '<div class="value" style="font-size:16px">s.name || s.name || '技能#' + s.skill_id + '</div><div class="label">Lv.' + s.level + '</div>'; }
+        if (s) { html += '<div class="value" style="font-size:16px">s.name || s.name || s.name || s.name || s.name || s.name || '技能#' + s.skill_id + '</div><div class="label">Lv.' + s.level + '</div>'; }
         else { html += '<div class="value" style="font-size:14px;color:#6b5b4e">- 空 -</div>'; }
         html += '</div>';
     }
@@ -48,7 +48,7 @@ function renderLearned(skills) {
     var html = '<table class="data-table"><tr><th>技能</th><th>等级</th><th>熟练度</th><th>操作</th></tr>';
     for (var i = 0; i < skills.length; i++) {
         var s = skills[i];
-        html += '<tr><td>s.name || s.name || '技能#' + s.skill_id + '</td><td>Lv.' + s.level + '</td><td>' + s.proficiency + '</td>';
+        html += '<tr><td>s.name || s.name || s.name || s.name || s.name || s.name || '技能#' + s.skill_id + '</td><td>Lv.' + s.level + '</td><td>' + s.proficiency + '</td>';
         html += '<td><button class="btn btn-sm btn-secondary" onclick="openSlotSelector(0,' + s.id + ')">设为出战</button></td></tr>';
     }
     html += '</table>';
@@ -61,7 +61,7 @@ function openSlotSelector(slotIdx, skillId) {
     html += '<table class="data-table"><tr><th>技能</th><th>等级</th><th>熟练度</th><th>选择</th></tr>';
     for (var i = 0; i < skills.length; i++) {
         var s = skills[i];
-        html += '<tr><td>s.name || s.name || '技能#' + s.skill_id + '</td><td>Lv.' + s.level + '</td><td>' + s.proficiency + '</td>';
+        html += '<tr><td>s.name || s.name || s.name || s.name || s.name || s.name || '技能#' + s.skill_id + '</td><td>Lv.' + s.level + '</td><td>' + s.proficiency + '</td>';
         var checked = s.slot_position === slotIdx ? 'checked' : '';
         html += '<td><input type="radio" name="slotSkill" value="' + s.id + '" ' + checked + '></td></tr>';
     }
