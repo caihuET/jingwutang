@@ -124,7 +124,7 @@ function loadEquipment(){
     for(var i=1;i<=4;i++){
       var eq=equipped.find(function(e){return e.slot===i});
       eh+='<div class="esi" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
-      if(eq){eh+='<div style="font-weight:600">'+eq.name+'</div><div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(['','普通','优秀','精良','史诗','传说'][eq.quality]||'未知')+'</div><div style="margin-top:4px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','unequip')">卸下</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','enhance')">强化</span></div>';}
+      if(eq){eh+='<div style="font-weight:600">'+eq.name+'</div><div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(['','普通','优秀','精良','史诗','传说'][eq.quality]||'未知')+'</div><div style="margin-top:4px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',&#39;unequip&#39;)">卸下</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',&#39;enhance&#39;)">强化</span></div>';}
       else{eh+='<div style="color:#999">空</div>';}
       eh+='</div>';
     }
@@ -134,7 +134,7 @@ function loadEquipment(){
       var e=bag[i];
       bh+='<div class="ec"><div style="font-weight:600;color:#8b1a1a">'+e.name+'</div>';
       bh+='<div class="nr"><span style="font-size:11px;color:#666">'+(['','普通','优秀','精良','史诗','传说'][e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
-      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+','equip')">装备</span></div></div>';
+      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',&#39;equip&#39;)">装备</span></div></div>';
     }
     document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">暂无装备</div>';
   }).catch(function(){document.getElementById('equipLoading').style.display='none';document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
