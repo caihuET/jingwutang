@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>装备 | 精武堂</title>
+<title>瑁呭 | 绮炬鍫?/title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;height:100vh;display:flex;flex-direction:column}
@@ -77,9 +77,9 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </head>
 <body>
 <div class="topbar">
-<div class="logo">精武<span>堂</span></div>
-<div class="player" id="topPlayerInfo">加载中...</div>
-<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
+<div class="logo">绮炬<span>鍫?/span></div>
+<div class="player" id="topPlayerInfo">鍔犺浇涓?..</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">閫€鍑?/button>
 </div>
 <div class="game-body">
 <div class="sidebar">
@@ -87,44 +87,44 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="stats">
 <div class="srow"><span>HP</span><span id="sHp">-</span></div>
 <div class="srow"><span>MP</span><span id="sMp">-</span></div>
-<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
+<div class="srow"><span>浣撳姏</span><span id="sStamina">-</span></div>
 </div>
-<div class="nav"><a class="nav-item " href="game.html">主界面</a>
-<a class="nav-item " href="battle.html">历练</a>
-<a class="nav-item active" href="equipment.html">装备</a>
-<a class="nav-item " href="skills.html">技能</a>
-<a class="nav-item " href="meridians.html">经脉</a>
-<a class="nav-item " href="tasks.html">任务</a>
-<a class="nav-item " href="ranking.html">排行</a>
-<a class="nav-item " href="shop.html">商城</a>
-<a class="nav-item " href="create.html">创建角色</a>
+<div class="nav"><a class="nav-item " href="game.html">涓荤晫闈?/a>
+<a class="nav-item " href="battle.html">鍘嗙粌</a>
+<a class="nav-item active" href="equipment.html">瑁呭</a>
+<a class="nav-item " href="skills.html">鎶€鑳?/a>
+<a class="nav-item " href="meridians.html">缁忚剦</a>
+<a class="nav-item " href="tasks.html">浠诲姟</a>
+<a class="nav-item " href="ranking.html">鎺掕</a>
+<a class="nav-item " href="shop.html">鍟嗗煄</a>
+<a class="nav-item " href="create.html">鍒涘缓瑙掕壊</a>
 </div>
 </div>
 <div class="content">
-<div class="page-title">装备</div>
-<div id="equipLoading">加载中...</div>
+<div class="page-title">瑁呭</div>
+<div id="equipLoading">鍔犺浇涓?..</div>
 <div id="equipContent" style="display:none">
-<div class="el"><div class="es"><div style="font-weight:600;font-size:13px;color:#8b1a1a;margin-bottom:6px">已穿戴</div><div id="equippedSlots"></div></div>
+<div class="el"><div class="es"><div style="font-weight:600;font-size:13px;color:#8b1a1a;margin-bottom:6px">宸茬┛鎴?/div><div id="equippedSlots"></div></div>
 <div class="elist" id="bagItems"></div></div></div>
 <div id="equipError" style="text-align:center;font-size:13px;color:#c0392b;margin:8px 0;display:none"></div>
 <script>
 var pid=localStorage.getItem('player_id')||1;
-function loadEquip(){
+function loadEquipment(){
   document.getElementById('equipLoading').style.display='block';document.getElementById('equipContent').style.display='none';
   fetch('/game/jwt/api/v1/equipment/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     document.getElementById('equipLoading').style.display='none';document.getElementById('equipContent').style.display='block';
-    if(d.code!==0){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'加载失败';return;}
+    if(d.code!==0){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'鍔犺浇澶辫触';return;}
     var items=d.data||[];
     var equipped=items.filter(function(i){return i.is_equipped===1});
     var bag=items.filter(function(i){return i.is_equipped===0});
-    var slots={1:'武器',2:'防具',3:'饰品',4:'坐骑'};
+    var slots={1:'姝﹀櫒',2:'闃插叿',3:'楗板搧',4:'鍧愰獞'};
     var eh='';
     for(var i=1;i<=4;i++){
       var eq=equipped.find(function(e){return e.slot===i});
       eh+='<div class="esi" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
-      if(eq){eh+='<div style="font-weight:600">'+eq.name+'</div><div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+['','普通','优秀','精良','史诗','传说'][eq.quality]||'未知'+'</div><div style="margin-top:4px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','unequip')">卸下</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','enhance')">强化</span></div>';}
-      else{eh+='<div style="color:#999">空</div>';}
+      if(eq){eh+='<div style="font-weight:600">'+eq.name+'</div><div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+['','鏅€?,'浼樼','绮捐壇','鍙茶瘲','浼犺'][eq.quality]||'鏈煡'+'</div><div style="margin-top:4px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','unequip')">鍗镐笅</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+','enhance')">寮哄寲</span></div>';}
+      else{eh+='<div style="color:#999">绌?/div>';}
       eh+='</div>';
     }
     document.getElementById('equippedSlots').innerHTML=eh;
@@ -132,21 +132,21 @@ function loadEquip(){
     for(var i=0;i<bag.length;i++){
       var e=bag[i];
       bh+='<div class="ec"><div style="font-weight:600;color:#8b1a1a">'+e.name+'</div>';
-      bh+='<div class="nr"><span style="font-size:11px;color:#666">'+['','普通','优秀','精良','史诗','传说'][e.quality]||'未知'+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
-      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+','equip')">穿戴</span></div></div>';
+      bh+='<div class="nr"><span style="font-size:11px;color:#666">'+['','鏅€?,'浼樼','绮捐壇','鍙茶瘲','浼犺'][e.quality]||'鏈煡'+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
+      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+','equip')">绌挎埓</span></div></div>';
     }
-    document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">背包为空</div>';
-  }).catch(function(){document.getElementById('equipLoading').style.display='none';document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
+    document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">鑳屽寘涓虹┖</div>';
+  }).catch(function(){document.getElementById('equipLoading').style.display='none';document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='缃戠粶寮傚父';});
 }
 function doAction(id,action){
   var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance'};
   fetch(urls[action]||urls.equip,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0||(d.data&&d.data.success!==false)){loadEquip();}
-    else{document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'操作失败';}
-  }).catch(function(){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
+    if(d.code===0||(d.data&&d.data.success!==false)){loadEquipment();}
+    else{document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'鎿嶄綔澶辫触';}
+  }).catch(function(){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='缃戠粶寮傚父';});
 }
-loadEquip();
+loadEquipment();
 </script><script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
@@ -159,7 +159,7 @@ fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'B
   document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
   var el=function(i){return document.getElementById(i)};
   if(el('sName'))el('sName').textContent=p.name||'-';
-  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 鎴樺姏 '+(p.combat_power||0);
   if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
   if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
   if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
