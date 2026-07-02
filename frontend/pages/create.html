@@ -133,7 +133,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 })();
 </script>
 <script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}var uid=parseInt(localStorage.getItem('user_id'));if(uid){fetch('/game/jwt/api/v1/player/by_user?user_id='+uid,{headers:{'Authorization':'Bearer '+token}}).then(function(r){return r.json()}).then(function(d){if(d.data&&d.data.player_id){localStorage.setItem('player_id',d.data.player_id);window.location.href='/game/jwt/game.html';}});}
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
 var pid=localStorage.getItem('player_id')||1;
 fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
