@@ -37,6 +37,9 @@ class TaskService:
     def get_tasks(self, player_id: int, task_type: int = None) -> list:
         """获取玩家任务列表"""
         tasks = self.repo.get_player_tasks(player_id, task_type)
+        if not tasks:
+            self.auto_assign_tasks(player_id)
+            tasks = self.repo.get_player_tasks(player_id, task_type)
         result = []
         for pt in tasks:
             td = self.repo.get_task_def(pt.task_id)
