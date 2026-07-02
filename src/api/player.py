@@ -44,6 +44,21 @@ class BuyStaminaRequest(BaseModel):
     player_id: int = 1
 
 
+class AllocateAttributeRequest(BaseModel):
+    player_id: int
+    strength: int = 0
+    agility: int = 0
+    constitution: int = 0
+    spirit: int = 0
+
+
+@router.post("/player/allocate_attr")
+def allocate_attribute(req: AllocateAttributeRequest, db: Session = Depends(get_db)):
+    """分配属性点"""
+    result = PlayerService(db).allocate_attribute(req.player_id, req.strength, req.agility, req.constitution, req.spirit)
+    return {"code": 0, "data": result, "message": "分配成功"}
+
+
 @router.post("/player/buy_stamina")
 def buy_stamina(req: BuyStaminaRequest, db: Session = Depends(get_db)):
     """购买体力"""

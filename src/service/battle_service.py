@@ -1,4 +1,4 @@
-﻿"""战斗服务"""
+"""战斗服务"""
 import json
 import random
 from src.service.battle_engine import BattleEngine, BattleUnit, MONSTERS
@@ -52,6 +52,7 @@ class BattleService:
             while player.level < 100 and player.exp >= EXP_TABLE[player.level]:
                 player.exp -= EXP_TABLE[player.level]
                 player.level += 1
+                player.free_points += 5
                 leveled_up = True
 
         self.db.commit()
@@ -100,11 +101,26 @@ class BattleService:
             "speed": 10 + player.level,
         }
 
+        # 属性加成
+        attr = self.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player.id).first()
+        if attr:
+            base_stats["attack"] += max(0, (attr.strength - 10) * 0.5)
+            base_stats["speed"] += max(0, (attr.agility - 10) * 0.3)
+            base_stats["magic_attack"] += max(0, (attr.spirit - 10) * 0.3)
+            base_stats["magic_defense"] += max(0, (attr.spirit - 10) * 0.3)
+
         # 装备加成
         equipped = self.equip_repo.get_equipped(player.id)
+        hp_bonus = 0
         for eq in equipped:
             base_stats["attack"] += getattr(eq, "enhance_attack", 0) or 0
             base_stats["defense"] += getattr(eq, "enhance_defense", 0) or 0
+            hp_bonus += getattr(eq, "enhance_hp", 0) or 0
+        max_hp_extra = 0
+        max_mp_extra = 0
+        if attr:
+            max_hp_extra = max(0, (attr.constitution - 10) * 5)
+            max_mp_extra = max(0, (attr.spirit - 10) * 3)
 
         # 出战技能
         skills_data = self.skill_repo.get_slotted_skills(player.id)
@@ -129,8 +145,8 @@ class BattleService:
             unit_id=player.id,
             name=player.name,
             level=player.level,
-            hp=player.max_hp,
-            mp=player.max_mp,
+            hp=player.max_hp + int(max_hp_extra) + hp_bonus,
+            mp=player.max_mp + int(max_mp_extra),
             attack=base_stats["attack"],
             defense=base_stats["defense"],
             magic_attack=base_stats["magic_attack"],

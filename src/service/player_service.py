@@ -3,6 +3,7 @@ from src.utils.validators import validate_nickname, check_sensitive_words
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import SchoolType, EXP_TABLE
+from src.models.player_attr import PlayerAttribute
 from src.repository.player_repo import PlayerRepository
 from datetime import datetime
 
@@ -43,6 +44,9 @@ class PlayerService:
             return {"player_id": existing.id}
         player = self.repo.create(user_id, name, gender, school_id)
         self._assign_school_skills(player.id, school_id)
+        attr = PlayerAttribute(player_id=player.id)
+        self.repo.db.add(attr)
+        self.repo.db.commit()
         return {"player_id": player.id}
 
     
@@ -62,12 +66,39 @@ class PlayerService:
             self.repo.db.add(sp)
         self.repo.db.commit()
 
+    def allocate_attribute(self, player_id: int, strength: int = 0, agility: int = 0, constitution: int = 0, spirit: int = 0) -> dict:
+        """分配属性点"""
+        player = self.repo.get_by_id(player_id)
+        if not player:
+            raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
+        total = strength + agility + constitution + spirit
+        if total > player.free_points:
+            raise GameException(ErrorCode.PARAM_INVALID, "自由属性点不足")
+        attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
+        if not attr:
+            attr = PlayerAttribute(player_id=player_id)
+            self.repo.db.add(attr)
+        attr.strength += strength
+        attr.agility += agility
+        attr.constitution += constitution
+        attr.spirit += spirit
+        player.free_points -= total
+        self.repo.db.commit()
+        return {
+            "strength": attr.strength,
+            "agility": attr.agility,
+            "constitution": attr.constitution,
+            "spirit": attr.spirit,
+            "free_points": player.free_points,
+        }
+
     def get_info(self, player_id: int) -> dict:
         """获取角色信息"""
         player = self.repo.get_by_id(player_id)
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
         self._apply_stamina_recovery(player)
+        attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         return {
             "name": player.name,
             "level": player.level,
@@ -85,6 +116,11 @@ class PlayerService:
             "exp_needed": EXP_TABLE[player.level] if player.level < 100 else 0,
             "exp_progress": round(player.exp / EXP_TABLE[player.level] * 100, 1) if player.level < 100 and EXP_TABLE[player.level] > 0 else 0,
             "max_stamina": self._get_max_stamina(player.level),
+            "free_points": player.free_points,
+            "strength": attr.strength if attr else 10,
+            "agility": attr.agility if attr else 10,
+            "constitution": attr.constitution if attr else 10,
+            "spirit": attr.spirit if attr else 10,
         }
 
     def _get_max_stamina(self, level: int) -> int:
