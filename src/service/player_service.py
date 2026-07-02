@@ -4,6 +4,7 @@ from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import SchoolType, EXP_TABLE
 from src.repository.player_repo import PlayerRepository
+from src.repository.user_repo import UserRepository
 from datetime import datetime, timezone
 
 
@@ -24,6 +25,9 @@ class PlayerService:
         """创建角色"""
         if not user_id or user_id <= 0:
             raise GameException(ErrorCode.PARAM_INVALID, "登录已过期，请重新登录")
+        user = UserRepository(self.repo.db).get_by_id(user_id)
+        if not user:
+            raise GameException(ErrorCode.TOKEN_INVALID, "登录已过期，请重新登录")
         if not validate_nickname(name):
             raise GameException(ErrorCode.PARAM_INVALID, "昵称格式不正确")
         if not check_sensitive_words(name):
