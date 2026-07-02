@@ -120,7 +120,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
     var name=document.getElementById('createName').value.trim();
     if(!name||name.length<2){var e=document.getElementById('createError');e.textContent='昵称至少2个字符';e.style.display='block';return;}
     var gender=1;
-    var uid=parseInt(localStorage.getItem('user_id'));
+    var uid=parseInt(localStorage.getItem('user_id'));if(!uid||isNaN(uid)){var e=document.getElementById('createError');e.textContent='登录已过期，请重新登录';e.style.display='block';return;}
     var btn=document.getElementById('createBtn');btn.textContent='创建中...';btn.style.opacity='0.5';
     fetch('/game/jwt/api/v1/player/create',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},

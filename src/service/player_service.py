@@ -22,6 +22,8 @@ class PlayerService:
 
     def create(self, user_id: int, name: str, gender: int, school_id: int) -> dict:
         """创建角色"""
+        if not user_id or user_id <= 0:
+            raise GameException(ErrorCode.PARAM_INVALID, "登录已过期，请重新登录")
         if not validate_nickname(name):
             raise GameException(ErrorCode.PARAM_INVALID, "昵称格式不正确")
         if not check_sensitive_words(name):
