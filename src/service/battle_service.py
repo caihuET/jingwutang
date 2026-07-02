@@ -8,6 +8,7 @@ from src.repository.skill_repo import SkillRepository
 from src.models.battle_log import BattleLog
 from src.utils.errors import GameException
 from src.models.skill import SkillDefinition
+from src.models.player_attr import PlayerAttribute
 from src.utils.constants import ErrorCode
 from src.utils.constants import EXP_TABLE, BattleType, SkillType
 from src.service.task_service import TaskService
