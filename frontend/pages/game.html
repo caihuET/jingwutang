@@ -117,11 +117,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div style="font-size:12px;color:#8b1a1a;margin-top:4px" id="freePointsDisplay">自由属性点: <strong>0</strong></div>
 <div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin:6px 0;position:relative"><div id="expFill" style="height:100%;background:linear-gradient(90deg,#8b1a1a,#c9a96e);border-radius:4px;width:0%"></div></div>
 <div id="expText" style="font-size:11px;color:#6b5b4e;text-align:right">0 / 0</div>
-<div class="attr">
-<div class="attr-item"><span>力量</span><span class="v" id="aStr">-</span></div>
-<div class="attr-item"><span>身法</span><span class="v" id="aIgi">-</span></div>
-<div class="attr-item"><span>体质</span><span class="v" id="aCon">-</span></div>
-<div class="attr-item"><span>内力</span><span class="v" id="aSpi">-</span></div></div></div>
+</div>
 <div class="card"><div class="card-title">状态</div>
 <div class="attr">
 <div class="attr-item"><span>HP</span><span class="v" id="sHp2">-</span></div>
@@ -135,7 +131,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="card"><div class="card-title">消息</div><div style="font-size:13px;color:#666" id="newsArea"><div>· 欢迎来到精武堂</div></div></div></div></div></div>
 <script>
 function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');window.location.href='/game/jwt/';}
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+window.alloc=function(attr){var data={player_id:pid};data[attr]=1;fetch('/game/jwt/api/v1/player/allocate_attr',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify(data)}).then(function(r){return r.json()}).then(function(d){if(d.code===0){window.location.reload();}else{alert(d.message||'分配失败');}}).catch(function(){alert('网络异常');});};var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 var pid=localStorage.getItem('player_id')||1;fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
 .then(function(r){return r.json()})
 .then(function(d){
@@ -160,6 +156,8 @@ if(parseInt(p.free_points)>0){
   document.getElementById('addCon').style.display='inline';document.getElementById('addSpi').style.display='inline';
 }
 })
+.catch(function(){document.getElementById('topPlayerInfo').textContent='加载失败'});
+
 window.alloc=function(attr){
   var data={player_id:pid};
   data[attr]=1;
@@ -168,7 +166,5 @@ window.alloc=function(attr){
   .then(function(d){if(d.code===0){window.location.reload();}else{alert(d.message||'分配失败');}})
   .catch(function(){alert('网络异常');});
 };
-.catch(function(){document.getElementById('topPlayerInfo').textContent='加载失败'});
-</script>
 </body>
 </html>
