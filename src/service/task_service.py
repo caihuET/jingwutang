@@ -35,34 +35,41 @@ class TaskService:
             self.repo.update_progress(pt.id, pt.progress + value)
 
     def get_tasks(self, player_id: int, task_type: int = None) -> list:
-        """获取玩家任务列表"""
-        tasks = self.repo.get_player_tasks(player_id, task_type)
-        if not tasks:
-            self.auto_assign_tasks(player_id)
-            tasks = self.repo.get_player_tasks(player_id, task_type)
+        """获取所有任务（可用+已领取）"""
+        from src.models.task import TaskDefinition
+        q = self.repo.db.query(TaskDefinition)
+        if task_type:
+            q = q.filter(TaskDefinition.task_type == task_type)
+        defs = q.order_by(TaskDefinition.sort_order).all()
+        pts = self.repo.get_player_tasks(player_id)
+        pt_map = {pt.task_id: pt for pt in pts}
         result = []
-        for pt in tasks:
-            td = self.repo.get_task_def(pt.task_id)
-            result.append({
-                "id": pt.id,
-                "task_id": pt.task_id,
-                "name": td.name if td else "未知",
-                "description": td.description if td else "",
-                "progress": pt.progress,
-                "target": pt.target,
-                "status": pt.status,
-                "rewards": {
-                    "exp": td.reward_exp if td else 0,
-                    "gold": td.reward_gold if td else 0,
-                    "reputation": td.reward_reputation if td else 0,
-                }
-            })
+        for td in defs:
+            pt = pt_map.get(td.id)
+            if pt:
+                result.append({
+                    "id": pt.id, "task_id": td.id, "name": td.name,
+                    "description": td.description,
+                    "progress": pt.progress, "target": pt.target,
+                    "status": pt.status, "accepted": True,
+                    "rewards": {"exp": td.reward_exp, "gold": td.reward_gold, "reputation": td.reward_reputation},
+                })
+            else:
+                result.append({
+                    "id": None, "task_id": td.id, "name": td.name,
+                    "description": td.description,
+                    "progress": 0, "target": td.requirement_value,
+                    "status": -1, "accepted": False,
+                    "rewards": {"exp": td.reward_exp, "gold": td.reward_gold, "reputation": td.reward_reputation},
+                })
         return result
 
-    def claim_reward(self, player_id: int, task_id: int) -> dict:
+    def claim_rewarddef claim_reward(self, player_id: int, task_id: int) -> dict:
         """领取任务奖励"""
-        pt = self.repo.get_player_tasks(player_id)
-        pt = next((t for t in pt if t.task_id == task_id), None)
+        pt = self.repo.get_player_task_by_def(player_id, task_id)
+        if not pt:
+            pt = self.repo.get_player_tasks(player_id)
+            pt = next((t for t in pt if t.task_id == task_id), None)
         if not pt:
             raise GameException(ErrorCode.PARAM_INVALID, "任务不存在")
         if pt.status != 1:
@@ -101,7 +108,21 @@ class TaskService:
             if td.id not in assigned:
                 self.repo.create_player_task(player_id, td)
 
-    def daily_refresh(self, player_id: int):
+    
+    def accept_task(self, player_id: int, task_id: int) -> dict:
+        """接受任务"""
+        td = self.repo.get_task_def(task_id)
+        if not td:
+            from src.utils.errors import GameException
+            from src.utils.constants import ErrorCode
+            raise GameException(ErrorCode.PARAM_INVALID, "任务不存在")
+        existing = self.repo.get_player_task_by_def(player_id, task_id)
+        if existing:
+            raise GameException(ErrorCode.PARAM_INVALID, "任务已领取")
+        pt = self.repo.create_player_task(player_id, td)
+        return {"task_id": pt.task_id, "status": pt.status}
+
+    def daily_refreshlf, player_id: int):
         """每日刷新: 重置日常任务"""
         self.repo.delete_player_tasks(player_id, TaskType.DAILY)
         self.auto_assign_tasks(player_id)

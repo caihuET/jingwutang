@@ -9,6 +9,7 @@ from src.models.battle_log import BattleLog
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import EXP_TABLE, BattleType, SkillType
+from src.service.task_service import TaskService
 
 
 class BattleService:
@@ -54,6 +55,15 @@ class BattleService:
 
         self.db.commit()
 
+        # 任务进度更新
+        ts = TaskService(self.db)
+        ts.check_progress(player_id, "pve_battle", 1)
+        if map_id in (2, 4):
+            ts.check_progress(player_id, "kill_boss", 1)
+        if is_win and leveled_up:
+            ts.check_progress(player_id, "reach_level", player.level)
+        drop_name = self._drop_equipment(player_id, map_id) if is_win else None
+
         # 保存战斗日志
         log = BattleLog(
             attacker_id=player_id,
@@ -75,6 +85,7 @@ class BattleService:
             "exp_gained": exp_gain,
             "gold_gained": gold_gain,
             "stamina_consumed": 10,
+            "drop_item": drop_name,
         }
 
     def _build_player_unit(self, player) -> BattleUnit:

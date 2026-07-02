@@ -8,6 +8,10 @@ from src.service.task_service import TaskService
 router = APIRouter()
 
 
+class AcceptRequest(BaseModel):
+    task_id: int
+
+
 @router.get("/task/list")
 def get_tasks(task_type: int = None, player_id: int = 1, db: Session = Depends(get_db)):
     return {"code": 0, "data": TaskService(db).get_tasks(player_id, task_type), "message": "ok"}
@@ -20,4 +24,10 @@ class ClaimRequest(BaseModel):
 @router.post("/task/claim")
 def claim_reward(req: ClaimRequest, player_id: int = 1, db: Session = Depends(get_db)):
     result = TaskService(db).claim_reward(player_id, req.task_id)
+    return {"code": 0, "data": result, "message": "领取成功"}
+
+
+@router.post("/task/accept")
+def accept_task(req: AcceptRequest, player_id: int = 1, db: Session = Depends(get_db)):
+    result = TaskService(db).accept_task(player_id, req.task_id)
     return {"code": 0, "data": result, "message": "领取成功"}

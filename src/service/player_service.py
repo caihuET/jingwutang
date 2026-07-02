@@ -42,7 +42,25 @@ class PlayerService:
         if existing:
             return {"player_id": existing.id}
         player = self.repo.create(user_id, name, gender, school_id)
+        self._assign_school_skills(player.id, school_id)
         return {"player_id": player.id}
+
+    
+    def _assign_school_skills(self, player_id: int, school_id: int):
+        """分配门派技能"""
+        from src.models.skill import SkillDefinition, PlayerSkill
+        skills = self.repo.db.query(SkillDefinition).filter(
+            SkillDefinition.school_id == school_id
+        ).all()
+        for i, sd in enumerate(skills):
+            slot = i + 1 if i < 4 else None
+            sp = PlayerSkill(
+                player_id=player_id, skill_id=sd.id,
+                level=1, proficiency=0,
+                slot_position=slot, is_learned=1,
+            )
+            self.repo.db.add(sp)
+        self.repo.db.commit()
 
     def get_info(self, player_id: int) -> dict:
         """获取角色信息"""

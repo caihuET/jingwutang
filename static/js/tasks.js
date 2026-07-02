@@ -30,7 +30,7 @@ function renderTasks(tasks) {
     for (var i = 0; i < tasks.length; i++) {
         var t = tasks[i];
         var pct = t.target > 0 ? Math.round(t.progress / t.target * 100) : 0;
-        var statusText = {0:'进行中',1:'可领取',2:'已完成'};
+        var statusText = {'-1':'待领取','0':'进行中','1':'可领取','2':'已完成'};
         var statusCls = {0:'locked',1:'active',2:'done'};
         html += '<div class="card">';
         html += '<div class="flex flex-center" style="justify-content:space-between">';
@@ -42,13 +42,13 @@ function renderTasks(tasks) {
         html += '<div class="flex flex-center" style="justify-content:space-between">';
         html += '<span class="text-muted">进度：' + t.progress + '/' + t.target + '</span>';
         html += '<span class="text-muted">经验+' + (t.rewards&&t.rewards.exp||0) + ' 金币+' + (t.rewards&&t.rewards.gold||0) + '</span>';
-        if (t.status === 1) { html += '<button class="btn btn-sm btn-success" onclick="claimTask(' + t.id + ',' + t.task_id + ')">领取奖励</button>'; }
+        if (t.status === -1) { html += '<button class="btn btn-sm btn-p" style="padding:3px 10px;font-size:11px;cursor:pointer;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px" onclick="acceptTask(t.id,t.task_id)">领取任务</button>'; } if (t.status === 1) { html += '<button class="btn btn-sm btn-success" onclick="claimTask(' + t.id + ',' + t.task_id + ')">领取奖励</button>'; }
         html += '</div></div>';
     }
     document.getElementById('taskList').innerHTML = html;
 }
 
-function claimTask(id, taskId) {
+function acceptTask(id,taskId){showToast('领取中...','info');fetch('/game/jwt/api/v1/task/accept',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({task_id:taskId})}).then(function(r){return r.json()}).then(function(d){if(d.code===0){showToast('领取成功','success');loadTasks(curType);}else{showToast(d.message||'领取失败','error');}}).catch(function(){showToast('网络异常','error');});}function claimTask(id, taskId) {
     showToast('领取中...', 'info');
     fetch(API_BASE + '/task/claim', {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},

@@ -5,6 +5,7 @@ from src.repository.equipment_repo import EquipmentRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import ENHANCE_RATES, EquipSlot
+from src.service.task_service import TaskService
 from src.models.equipment import PlayerEquipment
 
 
@@ -38,6 +39,7 @@ class EquipmentService:
             raise GameException(ErrorCode.EQUIP_NOT_FOUND)
         eq.is_equipped = 1
         self.repo.db.commit()
+        TaskService(self.repo.db).check_progress(player_id, "equip_item", 1)
         return True
 
     def unequip(self, player_id: int, equip_id: int) -> bool:
@@ -69,4 +71,6 @@ class EquipmentService:
                 eq.enhance_level = max(0, eq.enhance_level - 1)
 
         self.repo.db.commit()
+        if success:
+            TaskService(self.repo.db).check_progress(player_id, "enhance_equip", 1)
         return {"success": success, "new_level": eq.enhance_level}
