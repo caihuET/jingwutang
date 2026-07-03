@@ -163,6 +163,7 @@ fetch("/game/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"B
   var hps=document.querySelector(".sidebar .stats .srow:nth-child(1) span:last-child");if(hps)hps.textContent=p.hp+"/"+ehp;
   var mps=document.querySelector(".sidebar .stats .srow:nth-child(2) span:last-child");if(mps)mps.textContent=p.mp+"/"+p.max_mp;
   var sts=document.querySelector(".sidebar .stats .srow:nth-child(3) span:last-child");if(sts)sts.textContent=p.stamina;
+  var tp=document.querySelector(".topbar .player");if(tp)tp.textContent=p.name+" Lv."+p.level;
   loadMeridians();
 });
 (function(){var t=localStorage.getItem("token");if(!t){window.location.href="/game/jwt/";}
