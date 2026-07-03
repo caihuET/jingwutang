@@ -1,4 +1,4 @@
-"""战斗服务"""
+﻿"""战斗服务"""
 import json
 import random
 from src.service.battle_engine import BattleEngine, BattleUnit, MONSTERS
@@ -44,7 +44,6 @@ class BattleService:
         exp_gain = result.exp_gained
         gold_gain = result.gold_gained
         is_win = result.winner and result.winner.is_player
-
         if is_win:
             player.exp += exp_gain
             player.gold += gold_gain
@@ -54,10 +53,15 @@ class BattleService:
                 player.exp -= EXP_TABLE[player.level]
                 player.level += 1
                 player.free_points += 5
+                player.max_hp += 20
+                player.max_mp += 10
+                player.hp = player.max_hp
+                player.mp = player.max_mp
                 leveled_up = True
 
+        # 重新计算战力
+        player.combat_power = self._calc_combat_power(player)
         self.db.commit()
-
         # 任务进度更新
         ts = TaskService(self.db)
         ts.check_progress(player_id, "pve_battle", 1)
@@ -90,6 +94,28 @@ class BattleService:
             "stamina_consumed": 10,
             "drop_item": drop_name,
         }
+
+    def _calc_combat_power(self, player) -> int:
+        """计算角色战力"""
+        attr = self.db.query(PlayerAttribute).filter(
+            PlayerAttribute.player_id == player.id
+        ).first()
+        hp = player.max_hp
+        level_power = player.level * 10
+        str_power = (attr.strength if attr else 10) * 2
+        agi_power = (attr.agility if attr else 10) * 1
+        con_power = (attr.constitution if attr else 10) * 3
+        spi_power = (attr.spirit if attr else 10) * 2
+        equipped = self.equip_repo.get_equipped(player.id)
+        eq_attack = 0
+        eq_defense = 0
+        eq_hp = 0
+        for eq in equipped:
+            eq_attack += getattr(eq, "enhance_attack", 0) or 0
+            eq_defense += getattr(eq, "enhance_defense", 0) or 0
+            eq_hp += getattr(eq, "enhance_hp", 0) or 0
+        equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
+        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power)
 
     def _build_player_unit(self, player) -> BattleUnit:
         """从数据库角色构建战斗单元"""

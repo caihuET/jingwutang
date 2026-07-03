@@ -37,6 +37,15 @@ class EquipmentService:
         eq = self.repo.get_by_id(equip_id)
         if not eq or eq.player_id != player_id:
             raise GameException(ErrorCode.EQUIP_NOT_FOUND)
+        # 先卸下同槽位的已装备物品
+        old_equipped = self.repo.db.query(PlayerEquipment).filter(
+            PlayerEquipment.player_id == player_id,
+            PlayerEquipment.slot == eq.slot,
+            PlayerEquipment.is_equipped == 1,
+            PlayerEquipment.id != equip_id,
+        ).all()
+        for old in old_equipped:
+            old.is_equipped = 0
         eq.is_equipped = 1
         self.repo.db.commit()
         TaskService(self.repo.db).check_progress(player_id, "equip_item", 1)

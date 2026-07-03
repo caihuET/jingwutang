@@ -99,6 +99,7 @@ class PlayerService:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
         self._apply_stamina_recovery(player)
         attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
+        combat_power = self._calc_combat_power(player)
         return {
             "name": player.name,
             "level": player.level,
@@ -111,7 +112,7 @@ class PlayerService:
             "gold": player.gold,
             "ingot": player.ingot,
             "reputation": player.reputation,
-            "combat_power": player.combat_power,
+            "combat_power": combat_power,
             "school_name": SchoolType.NAMES.get(player.school_id, "未知"),
             "exp_needed": EXP_TABLE[player.level] if player.level < 100 else 0,
             "exp_progress": round(player.exp / EXP_TABLE[player.level] * 100, 1) if player.level < 100 and EXP_TABLE[player.level] > 0 else 0,
@@ -158,3 +159,25 @@ class PlayerService:
             "bought_today": player.daily_stamina_bought,
             "cost": cost,
         }
+    def _calc_combat_power(self, player) -> int:
+        """计算角色战力"""
+        from src.repository.equipment_repo import EquipmentRepository
+        attr = self.repo.db.query(PlayerAttribute).filter(
+            PlayerAttribute.player_id == player.id
+        ).first()
+        level_power = player.level * 10
+        str_power = (attr.strength if attr else 10) * 2
+        agi_power = (attr.agility if attr else 10) * 1
+        con_power = (attr.constitution if attr else 10) * 3
+        spi_power = (attr.spirit if attr else 10) * 2
+        equip_repo = EquipmentRepository(self.repo.db)
+        equipped = equip_repo.get_equipped(player.id)
+        eq_attack = 0
+        eq_defense = 0
+        eq_hp = 0
+        for eq in equipped:
+            eq_attack += getattr(eq, "enhance_attack", 0) or 0
+            eq_defense += getattr(eq, "enhance_defense", 0) or 0
+            eq_hp += getattr(eq, "enhance_hp", 0) or 0
+        equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
+        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power)
