@@ -90,6 +90,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="srow"><span>MP</span><span id="sMp">-</span></div>
 <div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
+<div class="nav">
 <a class="nav-item " href="battle.html">历练</a>
 <a class="nav-item active" href="equipment.html">装备</a>
 <a class="nav-item " href="skills.html">技能</a>
@@ -118,14 +119,37 @@ function loadEquipment(){
     var items=d.data||[];
     var equipped=items.filter(function(i){return i.is_equipped===1});
     var bag=items.filter(function(i){return i.is_equipped===0});
-    var slots={1:'武器',2:'防具',3:'饰品',4:'坐骑'};
-    var eh='';
+        // 动态显示已装备物品，支持任意槽位值
+    var slotNames={1:"武器",2:"防具",3:"饰品",4:"坐骑"};
+    var eh="";
+    // 先显示标准槽位 (1-4)
     for(var i=1;i<=4;i++){
       var eq=equipped.find(function(e){return e.slot===i});
       eh+='<div class="esi" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
-      if(eq){eh+='<div style="font-weight:600">'+eq.name+'</div><div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(['','普通','优秀','精良','史诗','传说'][eq.quality]||'未知')+'</div><div style="margin-top:4px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',&#39;unequip&#39;)">卸下</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',&#39;enhance&#39;)">强化</span></div>';}
-      else{eh+='<div style="color:#999">空</div>';}
-      eh+='</div>';
+      if(eq){
+        eh+='<div style="font-weight:600">'+eq.name+'</div>';
+        eh+='<div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说")[eq.quality]||"未知")+'</div>';
+        eh+='<div style="margin-top:4px;display:flex;gap:4px">';
+        eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',\'unequip\')">卸下</span>';
+        eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',\'enhance\')">强化</span>';
+        eh+="</div>";
+      }else{
+        eh+='<div style="color:#999">'+(slotNames[i]||"槽位"+i)+'</div>';
+      }
+      eh+="</div>";
+    }
+    // 显示非标准槽位的已装备物品
+    for(var j=0;j<equipped.length;j++){
+      var e=equipped[j];
+      if(e.slot<1||e.slot>4){
+        eh+='<div class="esi" style="border-style:solid;border-color:#c9a96e">';
+        eh+='<div style="font-weight:600">'+e.name+'</div>';
+        eh+='<div style="font-size:11px;color:#666">槽位'+e.slot+' | +'+(e.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说")[e.quality]||"未知")+'</div>';
+        eh+='<div style="margin-top:4px;display:flex;gap:4px">';
+        eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'unequip\')">卸下</span>';
+        eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'enhance\')">强化</span>';
+        eh+="</div></div>";
+      }
     }
     document.getElementById('equippedSlots').innerHTML=eh;
     var bh='';

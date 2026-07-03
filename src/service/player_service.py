@@ -98,6 +98,7 @@ class PlayerService:
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
         self._apply_stamina_recovery(player)
+        self._apply_level_hp_mp(player)
         attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         combat_power = self._calc_combat_power(player)
         return {
@@ -159,6 +160,27 @@ class PlayerService:
             "bought_today": player.daily_stamina_bought,
             "cost": cost,
         }
+
+    def _apply_level_hp_mp(self, player):
+        """根据等级自动修正 HP/MP 上限（每级 +20HP / +10MP）"""
+        expected_hp = 100 + max(0, player.level - 1) * 20
+        expected_mp = 50 + max(0, player.level - 1) * 10
+        need_commit = False
+        if player.max_hp < expected_hp:
+            player.max_hp = expected_hp
+            need_commit = True
+        if player.max_mp < expected_mp:
+            player.max_mp = expected_mp
+            need_commit = True
+        if player.hp > player.max_hp:
+            player.hp = player.max_hp
+            need_commit = True
+        if player.mp > player.max_mp:
+            player.mp = player.max_mp
+            need_commit = True
+        if need_commit:
+            self.repo.db.commit()
+
     def _calc_combat_power(self, player) -> int:
         """计算角色战力"""
         from src.repository.equipment_repo import EquipmentRepository
