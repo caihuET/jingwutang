@@ -100,16 +100,62 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">经脉</div>
-<div style="font-size:12px;color:#666;margin-bottom:10px">修为: 580</div>
-<div class="mer">
-<div class="col"><div class="mn">任脉</div><div class="dot ok"></div><div class="dot ok"></div><div class="dot ok"></div><div class="dot ok"></div><div class="dot ok"></div><div class="dot cur"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">5/12</div></div>
-<div class="col"><div class="mn">督脉</div><div class="dot ok"></div><div class="dot ok"></div><div class="dot ok"></div><div class="dot cur"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">3/10</div></div>
-<div class="col"><div class="mn">冲脉</div><div class="dot ok"></div><div class="dot cur"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">1/10</div></div>
-<div class="col"><div class="mn">带脉</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">0/8</div></div>
-<div class="col"><div class="mn">阴维脉</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="font-size:10px;color:#666;margin-top:4px">0/8</div></div></div></div></div><script>
+<div id="merRep" style="font-size:12px;color:#666;margin-bottom:10px">修为: 加载中...</div>
+<div id="merLoading" style="font-size:12px;color:#666">加载中...</div>
+<div class="mer" id="merGrid"></div>
+<div id="merMsg" style="font-size:12px;color:#8b1a1a;margin-top:8px;text-align:center;display:none"></div>
+</div>
+<script>
+var pid=localStorage.getItem('player_id')||1;
+function loadMeridians(){
+  document.getElementById('merLoading').style.display='block';
+  fetch('/game/jwt/api/v1/meridian/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  .then(function(r){return r.json()}).then(function(d){
+    document.getElementById('merLoading').style.display='none';
+    if(d.code!==0)return;
+    var meridians=d.data||[];
+    var h='';
+    for(var i=0;i<meridians.length;i++){
+      var m=meridians[i];var cp=m.current_acupoint;
+      h+='<div class="col"><div class="mn">'+m.name+'</div>';
+      for(var j=0;j<m.acupoints.length;j++){
+        var a=m.acupoints[j];
+        var cls='dot';
+        if(a.unlocked)cls+=' ok';
+        else if(j==cp)cls+=' cur';
+        h+='<div class="'+cls+'" title="'+a.name+'|HP+'+a.bonus_hp+' ATK+'+a.bonus_attack+' DEF+'+a.bonus_defense+(a.bonus_speed?' SPD+'+a.bonus_speed:'')+'" onclick="doBreakthrough('+m.meridian_id+')"></div>';
+      }
+      h+='<div style="font-size:10px;color:#666;margin-top:4px">'+cp+'/'+m.acupoint_count+'</div>';
+      if(cp<m.acupoint_count){
+        var next=m.acupoints[cp];
+        if(next)h+='<div class="btn btn-p" style="padding:2px 6px;font-size:10px;margin-top:4px;cursor:pointer" onclick="doBreakthrough('+m.meridian_id+')">突破('+next.reputation_cost+')</div>';
+      }else{
+        h+='<div style="font-size:10px;color:#2ecc71;margin-top:4px">已圆满</div>';
+      }
+      h+='</div>';
+    }
+    document.getElementById('merGrid').innerHTML=h||'<div style="color:#999">暂无经脉数据</div>';
+  }).catch(function(){document.getElementById('merLoading').style.display='none';document.getElementById('merGrid').innerHTML='<div style="color:#c0392b">加载失败</div>';});
+}
+function doBreakthrough(mid){
+  var msg=document.getElementById('merMsg');
+  msg.style.display='block';msg.textContent='突破中...';
+  fetch('/game/jwt/api/v1/meridian/breakthrough?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({meridian_id:mid})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){
+      loadMeridians();
+      // Update reputation display
+      if(d.data&&d.data.reputation_left!==undefined){document.getElementById('merRep').textContent='修为: '+d.data.reputation_left;}
+      msg.style.display='none';
+    }else{
+      msg.textContent=d.message||'突破失败';
+    }
+  }).catch(function(){msg.textContent='网络异常';});
+}
 (function(){var t=localStorage.getItem('token');if(!t){window.location.href='/game/jwt/';}
 function h(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
 var tb=document.querySelector('.topbar');if(tb){var btn=document.createElement('button');btn.textContent='退出';btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';btn.onclick=h;tb.appendChild(btn);}
 })();
+loadMeridians();
 </script>
 </body></html>
