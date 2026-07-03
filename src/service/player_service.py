@@ -99,6 +99,7 @@ class PlayerService:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
         self._apply_stamina_recovery(player)
         self._apply_level_hp_mp(player)
+        self._check_new_skills(player)
         attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         combat_power = self._calc_combat_power(player)
         return {
@@ -178,6 +179,34 @@ class PlayerService:
         if player.mp > player.max_mp:
             player.mp = player.max_mp
             need_commit = True
+        if need_commit:
+            self.repo.db.commit()
+
+    def _check_new_skills(self, player):
+        """根据等级解锁新技能"""
+        from src.models.skill import SkillDefinition, PlayerSkill
+        defs = self.repo.db.query(SkillDefinition).filter(
+            SkillDefinition.school_id == player.school_id
+        ).order_by(SkillDefinition.id).all()
+        need_commit = False
+        for i, sd in enumerate(defs):
+            # 前2个技能Lv1解锁，之后每5级解锁一个
+            if i < 2:
+                required = 1
+            else:
+                required = (i - 1) * 5
+            if player.level >= required:
+                existing = self.repo.db.query(PlayerSkill).filter(
+                    PlayerSkill.player_id == player.id,
+                    PlayerSkill.skill_id == sd.id
+                ).first()
+                if not existing:
+                    ps = PlayerSkill(
+                        player_id=player.id, skill_id=sd.id,
+                        level=1, proficiency=0, is_learned=1,
+                    )
+                    self.repo.db.add(ps)
+                    need_commit = True
         if need_commit:
             self.repo.db.commit()
 

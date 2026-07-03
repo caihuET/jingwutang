@@ -65,12 +65,17 @@ class BattleService:
 
         # 技能熟练度增长（已装备技能每场战斗+1）
         slotted = self.skill_repo.get_slotted_skills(player.id)
-        for ps in slotted:
-            ps.proficiency += 1
-            if ps.proficiency >= 100:
-                ps.proficiency = 0
-                ps.level += 1
-        if slotted:
+        all_skills = self.skill_repo.get_player_skills(player.id)
+        for ps in all_skills:
+            is_slotted = (ps.slot_position is not None)
+            ps.proficiency += 2 if is_slotted else 1
+            # 每20点熟练度可升1级（满级20）
+            level_up_times = ps.proficiency // 20
+            if level_up_times > 0 and ps.level < 20:
+                level_gain = min(level_up_times, 20 - ps.level)
+                ps.level += level_gain
+                ps.proficiency -= level_gain * 20
+        if all_skills:
             self.db.commit()
         # 任务进度更新
         ts = TaskService(self.db)
