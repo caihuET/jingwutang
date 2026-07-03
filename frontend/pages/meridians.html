@@ -106,56 +106,73 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div id="merMsg" style="font-size:12px;color:#8b1a1a;margin-top:8px;text-align:center;display:none"></div>
 </div>
 <script>
-var pid=localStorage.getItem('player_id')||1;
-function loadMeridians(){
-  document.getElementById('merLoading').style.display='block';
-  fetch('/game/jwt/api/v1/meridian/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+var pid=localStorage.getItem(\'player_id\')||1;
+function updateSidebar(){
+  fetch(\'/game/jwt/api/v1/player/info?player_id=\'+pid,{headers:{\'Authorization\':\'Bearer \'+localStorage.getItem(\'token\')}})
   .then(function(r){return r.json()}).then(function(d){
-    document.getElementById('merLoading').style.display='none';
     if(d.code!==0)return;
+    var p=d.data;
+    if(document.getElementById(\'merRep\'))document.getElementById(\'merRep\').textContent=\'\\u4fee\\u4e3a: \'+(p.reputation||0);
+    // Update sidebar
+    var tb=document.querySelector(\'.topbar .player\');if(tb)tb.textContent=p.name+\' Lv.\'+p.level;
+    var nm=document.querySelector(\'.sidebar .profile .name\');if(nm)nm.textContent=p.name;
+    var inf=document.querySelector(\'.sidebar .profile .info\');if(inf)inf.textContent=\'Lv.\'+p.level+\' | \'+p.school_name+\' | \\u6218\\u529b \'+(p.combat_power||0);
+    var hp=document.querySelector(\'.sidebar .stats .srow:nth-child(1) span:last-child\');if(hp)hp.textContent=p.hp+\'/\'+p.max_hp;
+    var mp=document.querySelector(\'.sidebar .stats .srow:nth-child(2) span:last-child\');if(mp)mp.textContent=p.mp+\'/\'+p.max_mp;
+    var st=document.querySelector(\'.sidebar .stats .srow:nth-child(3) span:last-child\');if(st)st.textContent=p.stamina;
+  });
+}
+function loadMeridians(){
+  var ld=document.getElementById(\'merLoading\');
+  if(ld)ld.style.display=\'block\';
+  fetch(\'/game/jwt/api/v1/meridian/list?player_id=\'+pid,{headers:{\'Authorization\':\'Bearer \'+localStorage.getItem(\'token\')}})
+  .then(function(r){return r.json()}).then(function(d){
+    if(ld)ld.style.display=\'none\';
+    var grid=document.getElementById(\'merGrid\');
+    if(!grid)return;
+    if(d.code!==0){grid.innerHTML=\'<div style="color:#c0392b">\\u52a0\\u8f7d\\u5931\\u8d25: \'+d.message+\'</div>\';return;}
     var meridians=d.data||[];
-    var h='';
+    var h=\'\';
     for(var i=0;i<meridians.length;i++){
       var m=meridians[i];var cp=m.current_acupoint;
-      h+='<div class="col"><div class="mn">'+m.name+'</div>';
+      h+=\'<div class="col"><div class="mn">\'+m.name+\'</div>\';
       for(var j=0;j<m.acupoints.length;j++){
-        var a=m.acupoints[j];
-        var cls='dot';
-        if(a.unlocked)cls+=' ok';
-        else if(j==cp)cls+=' cur';
-        h+='<div class="'+cls+'" title="'+a.name+'|HP+'+a.bonus_hp+' ATK+'+a.bonus_attack+' DEF+'+a.bonus_defense+(a.bonus_speed?' SPD+'+a.bonus_speed:'')+'" onclick="doBreakthrough('+m.meridian_id+')"></div>';
+        var a=m.acupoints[j];var cls=\'dot\';
+        if(a.unlocked)cls+=\' ok\';
+        else if(j==cp)cls+=\' cur\';
+        h+=\'<div class="\'+cls+\'" title="\'+a.name+\'|HP+\'+a.bonus_hp+\' ATK+\'+a.bonus_attack+\' DEF+\'+a.bonus_defense+(a.bonus_speed?\' SPD+\'+a.bonus_speed:\'\')+\'" onclick="doBreakthrough(\'+m.meridian_id+\')"></div>\';
       }
-      h+='<div style="font-size:10px;color:#666;margin-top:4px">'+cp+'/'+m.acupoint_count+'</div>';
+      h+=\'<div style="font-size:10px;color:#666;margin-top:4px">\'+cp+\'/\'+m.acupoint_count+\'</div>\';
       if(cp<m.acupoint_count){
         var next=m.acupoints[cp];
-        if(next)h+='<div class="btn btn-p" style="padding:2px 6px;font-size:10px;margin-top:4px;cursor:pointer" onclick="doBreakthrough('+m.meridian_id+')">突破('+next.reputation_cost+')</div>';
+        if(next)h+=\'<div class="btn btn-p" style="padding:2px 6px;font-size:10px;margin-top:4px;cursor:pointer" onclick="doBreakthrough(\'+m.meridian_id+\')">\\u7a81\\u7834(\'+next.reputation_cost+\')</div>\';
       }else{
-        h+='<div style="font-size:10px;color:#2ecc71;margin-top:4px">已圆满</div>';
+        h+=\'<div style="font-size:10px;color:#2ecc71;margin-top:4px">\\u5df2\\u5706\\u6ee1</div>\';
       }
-      h+='</div>';
+      h+=\'</div>\';
     }
-    document.getElementById('merGrid').innerHTML=h||'<div style="color:#999">暂无经脉数据</div>';
-  }).catch(function(){document.getElementById('merLoading').style.display='none';document.getElementById('merGrid').innerHTML='<div style="color:#c0392b">加载失败</div>';});
+    grid.innerHTML=h||\'<div style="color:#999">\\u6682\\u65e0\\u7ecf\\u8109\\u6570\\u636e</div>\';
+  }).catch(function(){if(ld)ld.style.display=\'none\';var grid=document.getElementById(\'merGrid\');if(grid)grid.innerHTML=\'<div style="color:#c0392b">\\u7f51\\u7edc\\u5f02\\u5e38</div>\';});
 }
 function doBreakthrough(mid){
-  var msg=document.getElementById('merMsg');
-  msg.style.display='block';msg.textContent='突破中...';
-  fetch('/game/jwt/api/v1/meridian/breakthrough?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({meridian_id:mid})})
+  var msg=document.getElementById(\'merMsg\');
+  if(msg){msg.style.display=\'block\';msg.textContent=\'\\u7a81\\u7834\\u4e2d...\';}
+  fetch(\'/game/jwt/api/v1/meridian/breakthrough?player_id=\'+pid,{method:\'POST\',headers:{\'Content-Type\':\'application/json\',\'Authorization\':\'Bearer \'+localStorage.getItem(\'token\')},body:JSON.stringify({meridian_id:mid})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){
       loadMeridians();
-      // Update reputation display
-      if(d.data&&d.data.reputation_left!==undefined){document.getElementById('merRep').textContent='修为: '+d.data.reputation_left;}
-      msg.style.display='none';
+      if(msg)msg.style.display=\'none\';
+      if(d.data&&d.data.reputation_left!==undefined&&document.getElementById(\'merRep\'))document.getElementById(\'merRep\').textContent=\'\\u4fee\\u4e3a: \'+d.data.reputation_left;
     }else{
-      msg.textContent=d.message||'突破失败';
+      if(msg)msg.textContent=d.message||\'\\u7a81\\u7834\\u5931\\u8d25\';
     }
-  }).catch(function(){msg.textContent='网络异常';});
+  }).catch(function(){if(msg)msg.textContent=\'\\u7f51\\u7edc\\u5f02\\u5e38\';});
 }
-(function(){var t=localStorage.getItem('token');if(!t){window.location.href='/game/jwt/';}
-function h(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
-var tb=document.querySelector('.topbar');if(tb){var btn=document.createElement('button');btn.textContent='退出';btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';btn.onclick=h;tb.appendChild(btn);}
+(function(){var t=localStorage.getItem(\'token\');if(!t){window.location.href=\'/game/jwt/\';}
+function h(){localStorage.removeItem(\'token\');localStorage.removeItem(\'user_id\');localStorage.removeItem(\'player_id\');window.location.href=\'/game/jwt/\';}
+var tb=document.querySelector(\'.topbar\');if(tb){var btn=document.createElement(\'button\');btn.textContent=\'\\u9000\\u51fa\';btn.style.cssText=\'background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px\';btn.onclick=h;tb.appendChild(btn);}
 })();
+updateSidebar();
 loadMeridians();
 </script>
 </body></html>
