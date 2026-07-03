@@ -43,10 +43,12 @@ class BattleService:
         # 发放奖励
         exp_gain = result.exp_gained
         gold_gain = result.gold_gained
+        reputation_gain = max(1, exp_gain // 10)  # 修为 = 经验/10
         is_win = result.winner and result.winner.is_player
         if is_win:
             player.exp += exp_gain
             player.gold += gold_gain
+            player.reputation += reputation_gain
             # 检查升级
             leveled_up = False
             while player.level < 100 and player.exp >= EXP_TABLE[player.level]:
@@ -106,6 +108,7 @@ class BattleService:
             "log": result.log,
             "exp_gained": exp_gain,
             "gold_gained": gold_gain,
+            "reputation_gained": reputation_gain,
             "stamina_consumed": 10,
             "drop_item": drop_name,
         }

@@ -66,6 +66,7 @@ class TaskService:
 
     def claim_reward(self, player_id: int, task_id: int) -> dict:
         """领取任务奖励"""
+        from src.models.player import Player
         pt = self.repo.get_player_task_by_def(player_id, task_id)
         if not pt:
             pt = self.repo.get_player_tasks(player_id)
@@ -75,6 +76,12 @@ class TaskService:
         if pt.status != 1:
             raise GameException(ErrorCode.PARAM_INVALID, "任务未完成")
         td = self.repo.get_task_def(task_id)
+        # 发放奖励
+        player = self.repo.db.query(Player).filter(Player.id == player_id).first()
+        if player and td:
+            player.exp += td.reward_exp or 0
+            player.gold += td.reward_gold or 0
+            player.reputation += td.reward_reputation or 0
         pt.status = 2
         self.repo.db.commit()
         return {
