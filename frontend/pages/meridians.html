@@ -121,10 +121,11 @@ function loadMeridians(){
       var m=ms[i];var cp=m.current_acupoint;
       h+="<div class=col><div class=mn>"+m.name+"</div>";
       for(var j=0;j<m.acupoints.length;j++){
-        var a=m.acupoints[j];var cls="dot";
-        if(a.unlocked)cls+=" ok";
-        else if(j==cp)cls+=" cur";
-        h+="<div class="+cls+" title="+a.name+"|HP+"+a.bonus_hp+" ATK+"+a.bonus_attack+" DEF+"+a.bonus_defense+" onclick=doBreakthrough("+m.meridian_id+")></div>";
+        var a=m.acupoints[j];var st="width:18px;height:18px;border-radius:50%;margin:3px auto;border:2px solid transparent;cursor:pointer";
+        if(a.unlocked)st+=";background:#c9a96e;border-color:#a08040";
+        else if(j==cp)st+=";border-color:#8b1a1a";
+        else st+=";background:#e0e0e0";
+        h+="<div style="+st+" title="+a.name+"|HP+"+a.bonus_hp+" ATK+"+a.bonus_attack+" DEF+"+a.bonus_defense+" onclick=doBreakthrough("+m.meridian_id+")></div>";
       }
       h+="<div style=font-size:10px;color:#666;margin-top:4px>"+cp+"/"+m.acupoint_count+"</div>";
       if(cp<m.acupoint_count&&m.acupoints[cp]){
