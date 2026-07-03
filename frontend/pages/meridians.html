@@ -100,6 +100,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">经脉</div>
+<div id="merTotals" style="font-size:11px;color:#666;margin-bottom:6px"></div>
 <div id="merRep" style="font-size:12px;color:#666;margin-bottom:10px">修为: 加载中...</div>
 <div id="merLoading" style="font-size:12px;color:#666">加载中...</div>
 <div class="mer" id="merGrid"></div>
@@ -123,7 +124,7 @@ function loadMeridians(){
         var a=m.acupoints[j];var cls="dot";
         if(a.unlocked)cls+=" ok";
         else if(j==cp)cls+=" cur";
-        h+="<div class="+cls+" title="+a.name+"|HP+"+a.bonus_hp+" onclick=doBreakthrough("+m.meridian_id+")></div>";
+        h+="<div class="+cls+" title="+a.name+"|HP+"+a.bonus_hp+" ATK+"+a.bonus_attack+" DEF+"+a.bonus_defense+" onclick=doBreakthrough("+m.meridian_id+")></div>";
       }
       h+="<div style=font-size:10px;color:#666;margin-top:4px>"+cp+"/"+m.acupoint_count+"</div>";
       if(cp<m.acupoint_count&&m.acupoints[cp]){
@@ -134,6 +135,12 @@ function loadMeridians(){
       h+="</div>";
     }
     g.innerHTML=h||"<div style=color:#999>暂无经脉数据</div>";
+  var th=0;var ta=0;var td=0;var ts=0;
+  for(var i=0;i<ms.length;i++){var m=ms[i];
+    for(var j=0;j<m.current_acupoint;j++){var a=m.acupoints[j];
+      th+=a.bonus_hp;ta+=a.bonus_attack;td+=a.bonus_defense;ts+=a.bonus_speed;}}
+  var tb=document.getElementById("merTotals");
+  if(tb)tb.textContent="经脉加成: HP+"+th+" ATK+"+ta+" DEF+"+td+" SPD+"+ts;
   }).catch(function(){if(ld)ld.style.display="none";var g=document.getElementById("merGrid");if(g)g.innerHTML="<div style=color:#c0392b>网络异常</div>";});
 }
 function doBreakthrough(mid){

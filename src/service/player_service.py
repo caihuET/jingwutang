@@ -101,6 +101,7 @@ class PlayerService:
         self._apply_level_hp_mp(player)
         self._check_new_skills(player)
         self._check_new_tasks(player)
+        meridian_bonuses = self._calc_meridian_bonuses(player_id)
         attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         combat_power = self._calc_combat_power(player)
         return {
@@ -125,6 +126,10 @@ class PlayerService:
             "agility": attr.agility if attr else 10,
             "constitution": attr.constitution if attr else 10,
             "spirit": attr.spirit if attr else 10,
+            "meridian_bonus_hp": meridian_bonuses["hp"],
+            "meridian_bonus_attack": meridian_bonuses["attack"],
+            "meridian_bonus_defense": meridian_bonuses["defense"],
+            "meridian_bonus_speed": meridian_bonuses["speed"],
         }
 
     def _get_max_stamina(self, level: int) -> int:
@@ -275,4 +280,29 @@ class PlayerService:
             eq_defense += getattr(eq, "enhance_defense", 0) or 0
             eq_hp += getattr(eq, "enhance_hp", 0) or 0
         equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
-        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power)
+        # 经脉加成
+        meridian = self._calc_meridian_bonuses(player.id)
+        meridian_power = meridian["attack"] + meridian["defense"] * 2 + meridian["hp"] // 2
+        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power + meridian_power)
+
+    def _calc_meridian_bonuses(self, player_id: int) -> dict:
+        """计算经脉加成总和"""
+        from src.models.meridian import MeridianAcupoint
+        from src.repository.meridian_repo import MeridianRepository
+        repo = MeridianRepository(self.repo.db)
+        pms = repo.get_all_player_meridians(player_id)
+        total_hp = 0
+        total_atk = 0
+        total_def = 0
+        total_spd = 0
+        for pm in pms:
+            acupoints = self.repo.db.query(MeridianAcupoint).filter(
+                MeridianAcupoint.meridian_id == pm.meridian_id,
+                MeridianAcupoint.position <= pm.current_acupoint
+            ).all()
+            for ap in acupoints:
+                total_hp += ap.bonus_hp
+                total_atk += ap.bonus_attack
+                total_def += ap.bonus_defense
+                total_spd += ap.bonus_speed
+        return {"hp": total_hp, "attack": total_atk, "defense": total_def, "speed": total_spd}
