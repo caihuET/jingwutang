@@ -157,6 +157,12 @@ fetch("/game/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"B
   if(d.code!==0)return;
   var p=d.data;
   if(document.getElementById("merRep"))document.getElementById("merRep").textContent="修为: "+(p.reputation||0);
+  var sn=document.querySelector(".sidebar .profile .name");if(sn)sn.textContent=p.name;
+  var si=document.querySelector(".sidebar .profile .info");if(si)si.textContent="Lv."+p.level+" | "+p.school_name+" | 战力 "+(p.combat_power||0);
+  var ehp=p.effective_max_hp||p.max_hp;
+  var hps=document.querySelector(".sidebar .stats .srow:nth-child(1) span:last-child");if(hps)hps.textContent=p.hp+"/"+ehp;
+  var mps=document.querySelector(".sidebar .stats .srow:nth-child(2) span:last-child");if(mps)mps.textContent=p.mp+"/"+p.max_mp;
+  var sts=document.querySelector(".sidebar .stats .srow:nth-child(3) span:last-child");if(sts)sts.textContent=p.stamina;
   loadMeridians();
 });
 (function(){var t=localStorage.getItem("token");if(!t){window.location.href="/game/jwt/";}

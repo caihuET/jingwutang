@@ -130,6 +130,8 @@ class PlayerService:
             "meridian_bonus_attack": meridian_bonuses["attack"],
             "meridian_bonus_defense": meridian_bonuses["defense"],
             "meridian_bonus_speed": meridian_bonuses["speed"],
+            "effective_max_hp": player.max_hp + meridian_bonuses["hp"],
+            "effective_max_mp": player.max_mp,
         }
 
     def _get_max_stamina(self, level: int) -> int:

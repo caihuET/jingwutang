@@ -137,6 +137,28 @@ class BattleService:
 
     def _build_player_unit(self, player) -> BattleUnit:
         """从数据库角色构建战斗单元"""
+        # 经脉加成
+        meridian_hp = 0
+        meridian_atk = 0
+        meridian_def = 0
+        meridian_spd = 0
+        try:
+            from src.models.meridian import MeridianAcupoint
+            from src.repository.meridian_repo import MeridianRepository
+            mer_repo = MeridianRepository(self.db)
+            pms = mer_repo.get_all_player_meridians(player.id)
+            for pm in pms:
+                acups = self.db.query(MeridianAcupoint).filter(
+                    MeridianAcupoint.meridian_id == pm.meridian_id,
+                    MeridianAcupoint.position <= pm.current_acupoint
+                ).all()
+                for ap in acups:
+                    meridian_hp += ap.bonus_hp
+                    meridian_atk += ap.bonus_attack
+                    meridian_def += ap.bonus_defense
+                    meridian_spd += ap.bonus_speed
+        except Exception:
+            pass
         # 基础属性
         base_stats = {
             "attack": 10 + player.level * 2,
@@ -190,13 +212,13 @@ class BattleService:
             unit_id=player.id,
             name=player.name,
             level=player.level,
-            hp=player.max_hp + int(max_hp_extra) + hp_bonus,
+            hp=player.max_hp + int(max_hp_extra) + hp_bonus + meridian_hp,
             mp=player.max_mp + int(max_mp_extra),
-            attack=base_stats["attack"],
-            defense=base_stats["defense"],
+            attack=base_stats["attack"] + int(meridian_atk),
+            defense=base_stats["defense"] + int(meridian_def),
             magic_attack=base_stats["magic_attack"],
             magic_defense=base_stats["magic_defense"],
-            speed=base_stats["speed"],
+            speed=base_stats["speed"] + int(meridian_spd),
             crit_rate=0.05,
             dodge_rate=0.05,
             skills=skills,
