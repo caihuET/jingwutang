@@ -33,3 +33,9 @@ def unequip_item(req: EquipAction, player_id: int = 1, db: Session = Depends(get
 def enhance_item(req: EquipAction, player_id: int = 1, db: Session = Depends(get_db)):
     result = EquipmentService(db).enhance(player_id, req.equip_id)
     return {"code": 0, "data": result, "message": "强化完成"}
+
+@router.post("/equipment/sell")
+def sell_item(req: EquipAction, player_id: int = 1, db: Session = Depends(get_db)):
+    """出售装备"""
+    result = EquipmentService(db).sell(player_id, req.equip_id)
+    return {"code": 0, "data": result, "message": "出售成功"}

@@ -62,6 +62,16 @@ class BattleService:
         # 重新计算战力
         player.combat_power = self._calc_combat_power(player)
         self.db.commit()
+
+        # 技能熟练度增长（已装备技能每场战斗+1）
+        slotted = self.skill_repo.get_slotted_skills(player.id)
+        for ps in slotted:
+            ps.proficiency += 1
+            if ps.proficiency >= 100:
+                ps.proficiency = 0
+                ps.level += 1
+        if slotted:
+            self.db.commit()
         # 任务进度更新
         ts = TaskService(self.db)
         ts.check_progress(player_id, "pve_battle", 1)

@@ -157,13 +157,13 @@ function loadEquipment(){
       var e=bag[i];
       bh+='<div class="ec"><div style="font-weight:600;color:#8b1a1a">'+e.name+'</div>';
       bh+='<div class="nr"><span style="font-size:11px;color:#666">'+(['','普通','优秀','精良','史诗','传说'][e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
-      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',&#39;equip&#39;)">装备</span></div></div>';
+      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',&#39;equip&#39;)">装备</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#7f8c8d,#555);color:#c9a96e;border:none;border-radius:4px;cursor:pointer;margin-left:4px" onclick="doAction('+e.id+',&#39;sell&#39;)">出售</span></div></div>';
     }
     document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">暂无装备</div>';
   }).catch(function(){document.getElementById('equipLoading').style.display='none';document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
 }
 function doAction(id,action){
-  var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance'};
+  var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance',sell:'/game/jwt/api/v1/equipment/sell'};
   fetch((urls[action]||urls.equip)+'?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0||(d.data&&d.data.success!==false)){loadEquipment();}

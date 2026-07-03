@@ -83,3 +83,21 @@ class EquipmentService:
         if success:
             TaskService(self.repo.db).check_progress(player_id, "enhance_equip", 1)
         return {"success": success, "new_level": eq.enhance_level}
+
+    def sell(self, player_id: int, equip_id: int) -> dict:
+        """出售装备（获得金币）"""
+        from src.models.player import Player
+        eq = self.repo.get_by_id(equip_id)
+        if not eq or eq.player_id != player_id:
+            raise GameException(ErrorCode.EQUIP_NOT_FOUND)
+        if eq.is_equipped:
+            raise GameException(ErrorCode.PARAM_INVALID, "请先卸下装备再出售")
+        player = self.repo.db.query(Player).filter(Player.id == player_id).first()
+        if not player:
+            raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
+        # 根据品质和强化等级计算售价
+        price = 10 + max(0, eq.quality - 1) * 20 + eq.enhance_level * 50
+        player.gold += price
+        self.repo.db.delete(eq)
+        self.repo.db.commit()
+        return {"gold_gained": price, "total_gold": player.gold}
