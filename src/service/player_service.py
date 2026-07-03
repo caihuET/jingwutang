@@ -100,6 +100,7 @@ class PlayerService:
         self._apply_stamina_recovery(player)
         self._apply_level_hp_mp(player)
         self._check_new_skills(player)
+        self._check_new_tasks(player)
         attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         combat_power = self._calc_combat_power(player)
         return {
@@ -209,6 +210,38 @@ class PlayerService:
                     need_commit = True
         if need_commit:
             self.repo.db.commit()
+
+    def _check_new_tasks(self, player):
+        """根据等级自动领取任务"""
+        from src.models.task import TaskDefinition, PlayerTask
+        from src.service.task_service import TaskService
+        defs = self.repo.db.query(TaskDefinition).filter(
+            TaskDefinition.min_level <= player.level
+        ).filter(
+            TaskDefinition.task_type.in_([1, 2, 4])
+        ).order_by(TaskDefinition.sort_order).all()
+        need_commit = False
+        for td in defs:
+            existing = self.repo.db.query(PlayerTask).filter(
+                PlayerTask.player_id == player.id,
+                PlayerTask.task_id == td.id
+            ).first()
+            if not existing:
+                pt = PlayerTask(
+                    player_id=player.id,
+                    task_id=td.id,
+                    progress=0,
+                    target=td.requirement_value,
+                    status=0,
+                )
+                self.repo.db.add(pt)
+                need_commit = True
+        if need_commit:
+            self.repo.db.commit()
+            # 对新任务执行进度检查，追溯已完成的条件
+            TaskService(self.repo.db).check_progress(player.id, "reach_level", player.level)
+            TaskService(self.repo.db).check_progress(player.id, "pve_battle", 0)
+            TaskService(self.repo.db).check_progress(player.id, "equip_item", 0)
 
     def _calc_combat_power(self, player) -> int:
         """计算角色战力"""

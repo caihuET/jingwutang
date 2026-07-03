@@ -91,6 +91,13 @@ class TaskService:
             from src.utils.errors import GameException
             from src.utils.constants import ErrorCode
             raise GameException(ErrorCode.PARAM_INVALID, "任务不存在")
+        # 检查等级要求
+        from src.repository.player_repo import PlayerRepository
+        player = PlayerRepository(self.repo.db).get_by_id(player_id)
+        if player and td.min_level and player.level < td.min_level:
+            raise GameException(ErrorCode.PARAM_INVALID, "等级不足，无法接受此任务")
+        if player and td.max_level and player.level > td.max_level:
+            raise GameException(ErrorCode.PARAM_INVALID, "等级过高")
         existing = self.repo.get_player_task_by_def(player_id, task_id)
         if existing:
             raise GameException(ErrorCode.PARAM_INVALID, "任务已领取")
