@@ -16,6 +16,8 @@ class MeridianService:
 
     def _ensure_seed_data(self):
         """自动初始化经脉数据（若表为空）"""
+        from src.models.database import engine, Base
+        Base.metadata.create_all(bind=engine)
         if self.repo.get_all_meridians():
             return
         db = self.repo.db
