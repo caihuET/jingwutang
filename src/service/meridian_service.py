@@ -16,11 +16,41 @@ class MeridianService:
 
     def _ensure_seed_data(self):
         """自动初始化经脉数据（若表为空）"""
-        from src.models.database import engine, Base
-        Base.metadata.create_all(bind=engine)
+        from sqlalchemy import text
+        db = self.repo.db
+        # 用原生 SQL 创建表（解决外键类型不匹配问题）
+        db.execute(text("CREATE TABLE IF NOT EXISTS meridian_definitions ("
+            "id INTEGER AUTO_INCREMENT PRIMARY KEY, "
+            "name VARCHAR(16) NOT NULL, "
+            "acupoint_count INTEGER DEFAULT 10, "
+            "bonus_hp INTEGER DEFAULT 0, "
+            "bonus_attack INTEGER DEFAULT 0, "
+            "bonus_defense INTEGER DEFAULT 0"
+            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"))
+        db.execute(text("CREATE TABLE IF NOT EXISTS meridian_acupoints ("
+            "id INTEGER AUTO_INCREMENT PRIMARY KEY, "
+            "meridian_id INTEGER NOT NULL, "
+            "position INTEGER NOT NULL, "
+            "name VARCHAR(16) NOT NULL, "
+            "reputation_cost INTEGER NOT NULL, "
+            "bonus_hp INTEGER DEFAULT 0, "
+            "bonus_attack INTEGER DEFAULT 0, "
+            "bonus_defense INTEGER DEFAULT 0, "
+            "bonus_speed INTEGER DEFAULT 0, "
+            "INDEX idx_meridian (meridian_id)"
+            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"))
+        db.execute(text("CREATE TABLE IF NOT EXISTS player_meridians ("
+            "id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
+            "player_id BIGINT UNSIGNED NOT NULL, "
+            "meridian_id INTEGER NOT NULL, "
+            "current_acupoint INTEGER DEFAULT 0, "
+            "INDEX idx_player (player_id)"
+            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"))
+        db.commit()
+        # 检查是否已有经脉定义数据
         if self.repo.get_all_meridians():
             return
-        db = self.repo.db
+        # 注入经脉种子数据
         for i, name in enumerate(MERIDIAN_NAMES):
             count = MERIDIAN_COUNTS[i]
             hp = count * 8

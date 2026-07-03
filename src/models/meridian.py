@@ -1,5 +1,6 @@
 """经脉模型"""
 from sqlalchemy import Column, BigInteger, Integer, String, ForeignKey
+from sqlalchemy.dialects.mysql import BIGINT as MySQLBigInt
 from src.models.database import Base
 
 
@@ -32,6 +33,6 @@ class PlayerMeridian(Base):
     """角色经脉进度"""
     __tablename__ = "player_meridians"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    player_id = Column(BigInteger, ForeignKey("players.id"), nullable=False, index=True)
+    player_id = Column(MySQLBigInt(unsigned=True), ForeignKey("players.id"), nullable=False, index=True)
     meridian_id = Column(Integer, ForeignKey("meridian_definitions.id"), nullable=False)
     current_acupoint = Column(Integer, default=0)
