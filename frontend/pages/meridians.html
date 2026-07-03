@@ -114,7 +114,7 @@ function loadMeridians(){
   .then(function(r){return r.json()}).then(function(d){
     if(ld)ld.style.display="none";
     var g=document.getElementById("merGrid");if(!g)return;
-    if(d.code!==0){g.innerHTML="<div style="color:#c0392b">"+"加载失败: "+(d.message||"未知错误")+"</div>";return;}
+    if(d.code!==0){g.innerHTML="<div style=color:#c0392b>加载失败: "+(d.message||"未知错误")+"</div>";return;}
     var ms=d.data||[];var h="";
     for(var i=0;i<ms.length;i++){
       var m=ms[i];var cp=m.current_acupoint;
@@ -142,6 +142,9 @@ function doBreakthrough(mid){
     if(d.code===0){loadMeridians();}else{alert(d.message||"突破失败");}
   }).catch(function(){alert("网络异常");});
 }
+// Start loading meridian data immediately (independent of player info)
+loadMeridians();
+// Also fetch player info for sidebar and reputation
 fetch("/game/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}})
 .then(function(r){return r.json()}).then(function(d){
   if(d.code!==0)return;
