@@ -217,11 +217,12 @@ class PlayerService:
         from src.service.task_service import TaskService
         defs = self.repo.db.query(TaskDefinition).filter(
             TaskDefinition.min_level <= player.level
-        ).filter(
-            TaskDefinition.task_type.in_([1, 2, 4])
         ).order_by(TaskDefinition.sort_order).all()
         need_commit = False
         for td in defs:
+            # 检查最大等级限制
+            if td.max_level is not None and player.level > td.max_level:
+                continue
             existing = self.repo.db.query(PlayerTask).filter(
                 PlayerTask.player_id == player.id,
                 PlayerTask.task_id == td.id
@@ -239,9 +240,19 @@ class PlayerService:
         if need_commit:
             self.repo.db.commit()
             # 对新任务执行进度检查，追溯已完成的条件
-            TaskService(self.repo.db).check_progress(player.id, "reach_level", player.level)
-            TaskService(self.repo.db).check_progress(player.id, "pve_battle", 0)
-            TaskService(self.repo.db).check_progress(player.id, "equip_item", 0)
+            ts = TaskService(self.repo.db)
+            ts.check_progress(player.id, "reach_level", player.level)
+            from src.repository.equipment_repo import EquipmentRepository
+            equipped = EquipmentRepository(self.repo.db).get_equipped(player.id)
+            if equipped:
+                ts.check_progress(player.id, "equip_item", len(equipped))
+            from src.service.battle_engine import BattleLog
+            battle_count = self.repo.db.query(BattleLog).filter(
+                BattleLog.attacker_id == player.id,
+                BattleLog.battle_type == 1
+            ).count() if hasattr(BattleLog, 'battle_type') else 0
+            if battle_count:
+                ts.check_progress(player.id, "pve_battle", battle_count)
 
     def _calc_combat_power(self, player) -> int:
         """计算角色战力"""
