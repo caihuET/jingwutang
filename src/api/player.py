@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.models.database import get_db
 from src.service.player_service import PlayerService
+from src.service.meridian_service import MeridianService
 
 router = APIRouter()
 
@@ -64,3 +65,20 @@ def buy_stamina(req: BuyStaminaRequest, db: Session = Depends(get_db)):
     """购买体力"""
     result = PlayerService(db).buy_stamina(req.player_id)
     return {"code": 0, "data": result, "message": "购买成功"}
+
+
+class MeridianBreakthroughRequest(BaseModel):
+    meridian_id: int
+
+
+@router.get("/meridian/list")
+def get_meridians(player_id: int = 1, db: Session = Depends(get_db)):
+    """获取经脉状态"""
+    return {"code": 0, "data": MeridianService(db).get_meridians(player_id), "message": "ok"}
+
+
+@router.post("/meridian/breakthrough")
+def breakthrough(req: MeridianBreakthroughRequest, player_id: int = 1, db: Session = Depends(get_db)):
+    """打通穴位"""
+    result = MeridianService(db).breakthrough(player_id, req.meridian_id)
+    return {"code": 0, "data": result, "message": "打通成功"}
