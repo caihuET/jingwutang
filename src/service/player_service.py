@@ -1,4 +1,4 @@
-"""角色服务"""
+﻿"""角色服务"""
 from src.utils.validators import validate_nickname, check_sensitive_words
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
@@ -209,9 +209,20 @@ class PlayerService:
                     PlayerSkill.skill_id == sd.id
                 ).first()
                 if not existing:
+                    # 查找空槽位并自动上槽
+                    empty_slot = None
+                    existing_slotted = [s.slot_position for s in self.repo.db.query(PlayerSkill).filter(
+                        PlayerSkill.player_id == player.id,
+                        PlayerSkill.slot_position.isnot(None)
+                    ).all()]
+                    for slot_num in range(1, 5):
+                        if slot_num not in existing_slotted:
+                            empty_slot = slot_num
+                            break
                     ps = PlayerSkill(
                         player_id=player.id, skill_id=sd.id,
-                        level=1, proficiency=0, is_learned=1,
+                        level=1, proficiency=0,
+                        slot_position=empty_slot, is_learned=1,
                     )
                     self.repo.db.add(ps)
                     need_commit = True
