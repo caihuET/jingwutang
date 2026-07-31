@@ -68,10 +68,9 @@ document.addEventListener('DOMContentLoaded', loadSidebar);
 function titleSpan(p) {
     if (!p || !p.title || !p.title.name) { return ''; }
     var lv = p.title.title_level || 1;
-    var colors = {1: '#9e9e9e', 2: '#c9a96e', 3: '#ff9800', 4: '#e91e63', 5: '#e53935'};
-    var color = colors[lv] || '#c9a96e';
-    var glow = lv >= 3 ? 'text-shadow:0 0 6px ' + color + ';' : '';
-    return ' <span style="color:' + color + ';font-size:0.85em;' + glow + '">[' + p.title.name + ']</span>';
+    var color = titleColor(lv);
+    var glow = lv >= 4 ? 'text-shadow:0 0 6px ' + color + ';' : '';
+    return ' <span class="title-tag" style="color:' + color + ';font-size:0.85em;' + glow + '">[' + p.title.name + '·Lv.' + lv + ']</span>';
 }
 
 
@@ -82,4 +81,10 @@ function renderTopPlayer(p) {
 
 function renderPlayerName(p) {
     return (p.name || '-') + titleSpan(p);
+}
+
+
+function titleColor(lv) {
+    var colors = {1: '#9e9e9e', 2: '#4caf50', 3: '#2196f3', 4: '#9c27b0', 5: '#ffb300'};
+    return colors[lv] || '#c9a96e';
 }

@@ -230,6 +230,33 @@ def init_db():
 
 
 
+
+
+
+    # 运行迁移：补充被动技能/称号字段（列不存在时自动添加，幂等）
+    try:
+        with engine.connect() as conn:
+            migrate_cols = [
+                ("skill_definitions", "unlock_level",
+                 "ALTER TABLE skill_definitions ADD COLUMN unlock_level INT DEFAULT 0 AFTER cooldown"),
+                ("players", "equipped_title_id",
+                 "ALTER TABLE players ADD COLUMN equipped_title_id INT NULL AFTER title"),
+                ("task_definitions", "reward_title_id",
+                 "ALTER TABLE task_definitions ADD COLUMN reward_title_id INT NULL AFTER reward_item_id"),
+            ]
+            for table_name, column_name, ddl in migrate_cols:
+                cnt = conn.execute(text(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS "
+                    "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=:t AND COLUMN_NAME=:c"
+                ), {"t": table_name, "c": column_name}).scalar()
+                if not cnt:
+                    conn.execute(text(ddl))
+            conn.commit()
+    except Exception:
+        pass
+
+
+
     try:
 
 
