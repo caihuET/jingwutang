@@ -3,9 +3,15 @@ import random
 from datetime import datetime
 from src.repository.social_repo import SocialRepository
 from src.repository.player_repo import PlayerRepository
+from src.repository.guild_repo import GuildRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import FriendStatus
+from src.utils.validators import check_sensitive_words
+from src.utils.redis_client import (
+    clear_unread, get_online_ids, get_read_cursor, incr_unread,
+    set_read_cursor, check_rate_limit,
+)
 from src.models.social import FriendRelation, ChatMessage
 
 
@@ -13,6 +19,7 @@ class SocialService:
     def __init__(self, db):
         self.repo = SocialRepository(db)
         self.player_repo = PlayerRepository(db)
+        self.guild_repo = GuildRepository(db)
 
     def get_friends(self, player_id: int) -> dict:
         relations = self.repo.get_relations(player_id, status=FriendStatus.ACCEPTED)
@@ -54,9 +61,13 @@ class SocialService:
                 status=FriendStatus.PENDING,
             ))
         self.repo.db.commit()
-        return {"target_id": target.id}
+        applicant = self.player_repo.get_by_id(player_id)
+        return {
+            "target_id": target.id,
+            "name": applicant.name if applicant else "",
+        }
 
-    def respond_friend(self, player_id: int, applicant_id: int, accept: bool) -> bool:
+    def respond_friend(self, player_id: int, applicant_id: int, accept: bool) -> dict:
         rel = self.repo.get_relation(applicant_id, player_id)
         if not rel or rel.status != FriendStatus.PENDING:
             raise GameException(ErrorCode.PARAM_INVALID, "申请不存在")
@@ -73,7 +84,10 @@ class SocialService:
         else:
             rel.status = FriendStatus.REJECTED
         self.repo.db.commit()
-        return True
+        responder = self.player_repo.get_by_id(player_id)
+        return {
+            "name": responder.name if responder else "",
+        }
 
     def remove_friend(self, player_id: int, friend_id: int) -> bool:
         rel_a = self.repo.get_relation(player_id, friend_id)
@@ -136,6 +150,10 @@ class SocialService:
                   content: str, receiver_id: int = None) -> dict:
         if not content or len(content) > 200:
             raise GameException(ErrorCode.PARAM_INVALID, "消息内容不合法")
+        if not check_sensitive_words(content):
+            raise GameException(ErrorCode.PARAM_INVALID, "消息包含敏感词")
+        if not check_rate_limit(player_id):
+            raise GameException(ErrorCode.RATE_LIMITED, "发言太快，请稍后再试")
         player = self.player_repo.get_by_id(player_id)
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
@@ -144,8 +162,11 @@ class SocialService:
             guild_id = player.guild_id
             if not guild_id:
                 raise GameException(ErrorCode.PARAM_INVALID, "请先加入帮派")
-        if channel == 3 and not receiver_id:
-            raise GameException(ErrorCode.PARAM_INVALID, "私聊需要指定接收人")
+        if channel == 3:
+            if not receiver_id:
+                raise GameException(ErrorCode.PARAM_INVALID, "私聊需要指定接收人")
+            if not self._is_friend(player_id, receiver_id):
+                raise GameException(ErrorCode.PARAM_INVALID, "只能给好友发送私聊")
         msg = ChatMessage(
             channel=channel, sender_id=player_id,
             receiver_id=receiver_id, content=content, guild_id=guild_id,
@@ -153,38 +174,103 @@ class SocialService:
         self.repo.db.add(msg)
         self.repo.db.commit()
         self.repo.db.refresh(msg)
+        self._increase_unread(player_id, channel, guild_id, receiver_id)
+        receiver = self.player_repo.get_by_id(receiver_id) if receiver_id else None
         return {
             "id": msg.id,
             "channel": msg.channel,
             "sender_id": msg.sender_id,
             "sender_name": player.name,
-            "content": msg.content,
             "receiver_id": receiver_id,
+            "receiver_name": receiver.name if receiver else "",
+            "content": msg.content,
             "guild_id": guild_id,
             "created_at": msg.created_at.strftime("%m-%d %H:%M") if msg.created_at else "",
+            "read": False,
         }
 
     def get_messages(self, player_id: int, channel: int,
-                     receiver_id: int = None) -> list:
+                     receiver_id: int = None, before_id: int = None,
+                     limit: int = 20) -> dict:
         player = self.player_repo.get_by_id(player_id)
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
         rows = self.repo.get_messages(
             channel, guild_id=player.guild_id if channel == 2 else None,
             receiver_id=receiver_id, player_id=player_id,
+            before_id=before_id, limit=limit + 1,
         )
+        has_more = len(rows) > limit
+        rows = rows[:limit]
+        self._mark_read(player_id, channel, receiver_id, rows)
         result = []
         for msg in reversed(rows):
             sender = self.player_repo.get_by_id(msg.sender_id)
+            receiver = self.player_repo.get_by_id(msg.receiver_id) if msg.receiver_id else None
             result.append({
                 "id": msg.id,
                 "channel": msg.channel,
                 "sender_id": msg.sender_id,
                 "sender_name": sender.name if sender else "系统",
+                "receiver_id": msg.receiver_id,
+                "receiver_name": receiver.name if receiver else "",
                 "content": msg.content,
                 "created_at": msg.created_at.strftime("%m-%d %H:%M") if msg.created_at else "",
+                "read": self._is_read(player_id, channel, msg),
             })
-        return result
+        return {"messages": result, "has_more": has_more}
+
+    def _is_friend(self, player_id: int, friend_id: int) -> bool:
+        """判断两人是否为好友"""
+        rel_a = self.repo.get_relation(player_id, friend_id)
+        rel_b = self.repo.get_relation(friend_id, player_id)
+        return (rel_a is not None and rel_a.status == FriendStatus.ACCEPTED) or \
+               (rel_b is not None and rel_b.status == FriendStatus.ACCEPTED)
+
+    def _increase_unread(self, sender_id: int, channel: int,
+                         guild_id: int, receiver_id: int = None):
+        """发送后按频道累计未读"""
+        if channel == 3 and receiver_id:
+            incr_unread(receiver_id, "p:{}".format(sender_id))
+            return
+        if channel == 1:
+            for player_id in get_online_ids():
+                if player_id != sender_id:
+                    incr_unread(player_id, "1")
+            return
+        if channel == 2 and guild_id:
+            for member in self.guild_repo.get_guild_members(guild_id):
+                if member.player_id != sender_id:
+                    incr_unread(member.player_id, "2")
+
+    def _mark_read(self, player_id: int, channel: int,
+                   receiver_id: int, rows: list):
+        """读取消息后清除未读并推进已读游标"""
+        if channel == 1:
+            clear_unread(player_id, "1")
+            return
+        if channel == 2:
+            clear_unread(player_id, "2")
+            return
+        if channel != 3:
+            return
+        if receiver_id:
+            clear_unread(player_id, "p:{}".format(receiver_id))
+            last_id = max((m.id for m in rows if m.sender_id == receiver_id), default=0)
+            if last_id:
+                set_read_cursor(player_id, receiver_id, last_id)
+            return
+        clear_unread(player_id)
+        for msg in rows:
+            if msg.sender_id != player_id:
+                set_read_cursor(player_id, msg.sender_id, msg.id)
+
+    def _is_read(self, player_id: int, channel: int, msg) -> bool:
+        """私聊中自己发送的消息是否已被对方阅读"""
+        if channel != 3 or msg.sender_id != player_id or not msg.receiver_id:
+            return False
+        cursor = get_read_cursor(msg.receiver_id, player_id)
+        return msg.id <= cursor
 
     def _active_relation(self, player_id: int, other_id: int) -> bool:
         rel_a = self.repo.get_relation(player_id, other_id)

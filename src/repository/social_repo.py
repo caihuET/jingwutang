@@ -28,17 +28,25 @@ class SocialRepository:
 
     def get_messages(self, channel: int, guild_id: int = None,
                      receiver_id: int = None, player_id: int = None,
-                     limit: int = 50):
+                     before_id: int = None, limit: int = 20):
         query = self.db.query(ChatMessage).filter(
             ChatMessage.channel == channel
         )
         if channel == 2 and guild_id is not None:
             query = query.filter(ChatMessage.guild_id == guild_id)
-        if channel == 3 and receiver_id is not None and player_id is not None:
-            query = query.filter(
-                ((ChatMessage.sender_id == player_id) &
-                 (ChatMessage.receiver_id == receiver_id)) |
-                ((ChatMessage.sender_id == receiver_id) &
-                 (ChatMessage.receiver_id == player_id))
-            )
+        if channel == 3 and player_id is not None:
+            if receiver_id is not None:
+                query = query.filter(
+                    ((ChatMessage.sender_id == player_id) &
+                     (ChatMessage.receiver_id == receiver_id)) |
+                    ((ChatMessage.sender_id == receiver_id) &
+                     (ChatMessage.receiver_id == player_id))
+                )
+            else:
+                query = query.filter(
+                    (ChatMessage.sender_id == player_id) |
+                    (ChatMessage.receiver_id == player_id)
+                )
+        if before_id is not None:
+            query = query.filter(ChatMessage.id < before_id)
         return query.order_by(ChatMessage.id.desc()).limit(limit).all()

@@ -112,15 +112,34 @@ function loadFriends(){
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('friendList').textContent=d.message||'加载失败';return;}
     var list=d.data&&d.data.friends||[];
-    var h='';
-    for(var i=0;i<list.length;i++){
-      var f=list[i];
-      h+='<div class="row"><span><b>'+f.name+'</b> Lv.'+(f.level||1)+' 战力 '+(f.combat_power||0)+'</span>';
-      h+='<span class="btns"><span class="btn btn-g" onclick="giftStamina('+f.player_id+')">赠送体力</span>';
-      h+='<span class="btn btn-g" onclick="sparFriend('+f.player_id+')">切磋</span>';
-      h+='<span class="btn btn-p" onclick="removeFriend('+f.player_id+')">删除</span></span></div>';
-    }
-    document.getElementById('friendList').innerHTML=h||'<div class="empty">还没有好友</div>';
+    var ids=[];
+    for(var i=0;i<list.length;i++){ids.push(list[i].player_id);}
+    fetch('/game/jwt/api/v1/chat/online?player_ids='+ids.join(','),{headers:apiHeaders()})
+    .then(function(r){return r.json()})
+    .then(function(od){
+      var onlineMap=od.data||{};
+      var h='';
+      for(var i=0;i<list.length;i++){
+        var f=list[i];
+        var online=onlineMap[f.player_id]?'<span style="color:#4caf50">在线</span>':'<span style="color:#999">离线</span>';
+        h+='<div class="row"><span><b>'+f.name+'</b> Lv.'+(f.level||1)+' 战力 '+(f.combat_power||0)+' '+online+'</span>';
+        h+='<span class="btns"><span class="btn btn-g" onclick="giftStamina('+f.player_id+')">赠送体力</span>';
+        h+='<span class="btn btn-g" onclick="sparFriend('+f.player_id+')">切磋</span>';
+        h+='<span class="btn btn-p" onclick="removeFriend('+f.player_id+')">删除</span></span></div>';
+      }
+      document.getElementById('friendList').innerHTML=h||'<div class="empty">还没有好友</div>';
+    })
+    .catch(function(){
+      var h='';
+      for(var i=0;i<list.length;i++){
+        var f=list[i];
+        h+='<div class="row"><span><b>'+f.name+'</b> Lv.'+(f.level||1)+' 战力 '+(f.combat_power||0)+'</span>';
+        h+='<span class="btns"><span class="btn btn-g" onclick="giftStamina('+f.player_id+')">赠送体力</span>';
+        h+='<span class="btn btn-g" onclick="sparFriend('+f.player_id+')">切磋</span>';
+        h+='<span class="btn btn-p" onclick="removeFriend('+f.player_id+')">删除</span></span></div>';
+      }
+      document.getElementById('friendList').innerHTML=h||'<div class="empty">还没有好友</div>';
+    });
   }).catch(function(){document.getElementById('friendList').textContent='网络异常';});
 }
 function loadRequestHistory(){
@@ -180,6 +199,7 @@ function sparFriend(id){
     else{alert(d.message||'操作失败');}
   }).catch(function(){alert('网络异常');});
 }
+window.onFriendRequest=function(){loadRequests();};
 loadRequests();
 loadFriends();
 loadRequestHistory();

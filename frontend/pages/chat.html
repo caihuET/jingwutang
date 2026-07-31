@@ -33,6 +33,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .msg .head b{color:#8b1a1a}
 .msg.mine .head,.msg.mine .txt{text-align:right}
 .msg .txt{white-space:pre-wrap;word-break:break-all}
+.friend-name{cursor:pointer;color:#1565c0}
 .chat-input{display:flex;gap:8px;flex-shrink:0}
 .chat-input input[type=text]{flex:1;padding:8px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:13px;outline:none}
 .btn{padding:8px 20px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block;text-decoration:none;text-align:center}
@@ -77,10 +78,9 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 <div class="tab" data-ch="2">帮派</div>
 <div class="tab" data-ch="3">私聊</div>
 </div>
-<div id="privateRow" style="display:none;margin-bottom:8px">
-<select id="friendSelect"><option value="">选择好友</option></select>
-</div>
+<div id="privateHint" style="display:none;margin-bottom:8px;font-size:12px;color:#8b1a1a">私聊输入 /好友名 内容</div>
 <div class="chat-box" id="chatBox"><div class="empty">连接中...</div></div>
+<button id="loadMoreBtn" style="display:none;margin-bottom:8px;padding:6px 14px;border:none;border-radius:6px;background:linear-gradient(135deg,#c9a96e,#a08040);color:#1a1a2e;cursor:pointer;font-size:12px">加载更早消息</button>
 <div class="chat-input">
 <input type="text" id="chatInput" placeholder="输入消息内容" maxlength="200">
 <span class="btn btn-p" onclick="sendMsg()">发送</span>
@@ -92,8 +92,11 @@ var pid=parseInt(localStorage.getItem('player_id'))||1;
 var curCh=1;
 var curFriend='';
 var ws=null;
-var wsFail=0;
-var msgBuf={1:[],2:[],3:{}};
+var wsRetry=0;
+var friendsMap={};
+var hasMore=false;
+var loadingMore=false;
+var msgBuf={1:[],2:[],3:[]};
 function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function loadFriends(){
@@ -101,20 +104,14 @@ function loadFriends(){
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0)return;
     var friends=d.data&&d.data.friends||[];
-    var h='<option value="">选择好友</option>';
-    for(var i=0;i<friends.length;i++){h+='<option value="'+friends[i].player_id+'">'+esc(friends[i].name)+'</option>';}
-    var sel=document.getElementById('friendSelect');
-    sel.innerHTML=h;
-    if(curFriend)sel.value=curFriend;
+    friendsMap={};
+    for(var i=0;i<friends.length;i++){friendsMap[friends[i].name]=friends[i].player_id;}
+    var hint=document.getElementById('privateHint');
+    if(hint){hint.textContent='私聊输入 /好友名 内容';}
   });
 }
-function currentKey(){return curCh===3?curFriend:curCh;}
 function getBuf(){
-  if(curCh===3){
-    if(!msgBuf[3][curFriend])msgBuf[3][curFriend]=[];
-    return msgBuf[3][curFriend];
-  }
-  return msgBuf[curCh];
+  return curCh===3?(msgBuf[3]||[]):(msgBuf[curCh]||[]);
 }
 function renderBox(){
   var list=getBuf()||[];
@@ -122,35 +119,45 @@ function renderBox(){
   for(var i=0;i<list.length;i++){
     var m=list[i];
     var mine=m.sender_id===pid;
-    h+='<div class="msg'+(mine?' mine':'')+'"><div class="head">'+(mine?'我':esc(m.sender_name))+' '+esc(m.created_at||'')+'</div><div class="txt">'+esc(m.content)+'</div></div>';
+    var otherName=mine?(m.receiver_name||''):(m.sender_name||'');
+    var otherId=mine?(m.receiver_id||''):(m.sender_id||'');
+    var head=mine?'我':'<span class="friend-name" data-id="'+otherId+'">'+esc(otherName)+'</span>';
+    if(mine&&m.read){head+=' 已读';}
+    h+='<div class="msg'+(mine?' mine':'')+'"><div class="head">'+head+' '+esc(m.created_at||'')+'</div><div class="txt">'+esc(m.content)+'</div></div>';
   }
   var box=document.getElementById('chatBox');
   box.innerHTML=h||'<div class="empty">暂无消息</div>';
   box.scrollTop=box.scrollHeight;
 }
-function loadHistory(){
-  var url='/game/jwt/api/v1/chat/messages?channel='+curCh+'&player_id='+pid;
-  if(curCh===3){
-    if(!curFriend){document.getElementById('chatBox').innerHTML='<div class="empty">请先选择私聊好友</div>';return;}
-    url+='&receiver_id='+curFriend;
-  }
-  fetch(url,{headers:apiHeaders()})
+function loadHistory(beforeId){
+  var url='/game/jwt/api/v1/chat/messages?channel='+curCh+'&player_id='+pid+'&limit=20';
+  if(beforeId){url+='&before_id='+beforeId;}
+  return fetch(url,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('chatBox').innerHTML='<div class="empty">'+esc(d.message||'加载失败')+'</div>';return;}
-    var list=d.data||[];
-    if(curCh===3){msgBuf[3][curFriend]=list;}else{msgBuf[curCh]=list;}
+    var data=d.data||{};
+    var list=data.messages||[];
+    if(beforeId){msgBuf[curCh]=list.concat(msgBuf[curCh]||[]);}
+    else{msgBuf[curCh]=list;}
+    hasMore=data.has_more||false;
+    document.getElementById('loadMoreBtn').style.display=hasMore?'block':'none';
     renderBox();
+    markRead(curCh,'');
   });
+}
+function loadMore(){
+  if(loadingMore||!hasMore)return;
+  loadingMore=true;
+  var list=getBuf();
+  var beforeId=list.length?list[0].id:0;
+  loadHistory(beforeId).then(function(){loadingMore=false;});
 }
 function addMsg(m){
   if(!m||!m.channel)return;
   if(m.channel===3){
     if(m.sender_id!==pid&&m.receiver_id!==pid)return;
-    var other=m.sender_id===pid?m.receiver_id:m.sender_id;
-    var key=String(other);
-    if(!msgBuf[3][key])msgBuf[3][key]=[];
-    msgBuf[3][key].push(m);
-    if(curCh===3&&String(curFriend)===key)renderBox();
+    msgBuf[3].push(m);
+    if(curCh===3)renderBox();
     return;
   }
   if(!msgBuf[m.channel])msgBuf[m.channel]=[];
@@ -160,32 +167,57 @@ function addMsg(m){
 function connectWs(){
   if(ws&&ws.readyState===1)return;
   var proto=location.protocol==='https:'?'wss://':'ws://';
-  ws=new WebSocket(proto+location.host+'/game/jwt/api/v1/ws/chat?player_id='+pid);
-  ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat')addMsg(d.data);}catch(err){}};
-  ws.onopen=function(){wsFail=0;};
+  var token=encodeURIComponent(localStorage.getItem('token')||'');
+  ws=new WebSocket(proto+location.host+'/game/jwt/api/v1/ws/chat?token='+token);
+  ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat'){addMsg(d.data);}else if(d.type==='error'){alert(d.message||'发送失败');}else if(d.type==='friend_request'){refreshFriendBadge();if(typeof window.onFriendRequest==='function'){window.onFriendRequest(d);}showFriendNotice(d.name?d.name+' 申请加你为好友':'收到新的好友申请');}else if(d.type==='friend_accepted'){if(typeof updateFriendCount==='function')updateFriendCount(1);showFriendNotice(d.name?d.name+' 已同意你的好友申请':'好友申请已通过');}}catch(err){}};
+  ws.onopen=function(){wsRetry=0;};
   ws.onclose=function(){
-    wsFail+=1;
-    if(wsFail<=10)setTimeout(connectWs,3000);
+    var delay=Math.min(30000,1000*Math.pow(2,wsRetry));
+    wsRetry+=1;
+    setTimeout(connectWs,delay);
   };
 }
 function sendMsg(){
-  var content=document.getElementById('chatInput').value.trim();
+  var input=document.getElementById('chatInput');
+  var content=input.value.trim();
   if(!content){alert('请输入消息内容');return;}
-  var body={channel:curCh,content:content};
+  var receiverId=null;
   if(curCh===3){
-    if(!curFriend){alert('请先选择私聊好友');return;}
-    body.receiver_id=parseInt(curFriend);
+    var parsed=parsePrivateTarget(content);
+    if(!parsed)return;
+    content=parsed.content;
+    receiverId=parsed.receiver_id;
   }
+  var body={channel:curCh,content:content};
+  if(receiverId){body.receiver_id=receiverId;}
   if(ws&&ws.readyState===1){
-    ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:body.receiver_id}));
-    document.getElementById('chatInput').value='';
+    ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:receiverId}));
+    input.value='';
   }else{
     fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
-      if(d.code===0){document.getElementById('chatInput').value='';loadHistory();}
+      if(d.code===0){input.value='';loadHistory();}
       else{alert(d.message||'发送失败');}
     }).catch(function(){alert('网络异常');});
   }
+}
+function parsePrivateTarget(content){
+  var match=content.match(/^\/([^\s]+)\s+(.+)$/);
+  if(match){
+    var name=match[1];
+    var friendId=friendsMap[name];
+    if(!friendId){alert('未找到好友 '+name);return null;}
+    curFriend=String(friendId);
+    var hint=document.getElementById('privateHint');
+    if(hint){hint.textContent='发送给：'+name+'（可输入 /好友名 内容 切换）';}
+    return {receiver_id:friendId,content:match[2]};
+  }
+  if(!curFriend){alert('请输入 /好友名 内容');return null;}
+  return {receiver_id:parseInt(curFriend),content:content};
+}
+function markRead(ch,friendId){
+  fetch('/game/jwt/api/v1/chat/read?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({channel:ch,friend_id:friendId||null})})
+  .then(function(r){return r.json()});
 }
 (function(){
   var tabs=document.querySelectorAll('.tabs .tab');
@@ -194,19 +226,25 @@ function sendMsg(){
       document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active');});
       this.classList.add('active');
       curCh=parseInt(this.getAttribute('data-ch'))||1;
-      document.getElementById('privateRow').style.display=curCh===3?'block':'none';
+      document.getElementById('privateHint').style.display=curCh===3?'block':'none';
       if(curCh===3)loadFriends();
       loadHistory();
     });
   }
-  document.getElementById('friendSelect').addEventListener('change',function(){
-    curFriend=this.value;
-    if(curFriend&&!msgBuf[3][curFriend])msgBuf[3][curFriend]=[];
-    loadHistory();
+  document.getElementById('chatBox').addEventListener('click',function(e){
+    var target=e.target;
+    if(target&&target.className==='friend-name'&&target.getAttribute('data-id')){
+      curFriend=target.getAttribute('data-id');
+      var hint=document.getElementById('privateHint');
+      if(hint){hint.textContent='发送给：'+target.textContent+'（可输入 /好友名 内容 切换）';}
+    }
   });
+  document.getElementById('loadMoreBtn').addEventListener('click',loadMore);
 })();
+loadFriends();
 loadHistory();
 connectWs();
+setInterval(function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({action:'ping'}));}},25000);
 setInterval(function(){if(!ws||ws.readyState!==1||curCh===3)loadHistory();},5000);
 </script>
 <script>

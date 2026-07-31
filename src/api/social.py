@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from src.models.database import get_db
 from src.service.social_service import SocialService
 from src.service.chat_ws import ws_manager
+from src.utils.redis_client import clear_unread, get_online, get_unread
 
 router = APIRouter()
 
@@ -32,7 +33,10 @@ class FriendName(BaseModel):
 @router.post("/friend/add")
 async def friend_add(req: FriendName, player_id: int = 1, db: Session = Depends(get_db)):
     result = SocialService(db).add_friend(player_id, req.player_name)
-    await ws_manager.send_to_player(result.get("target_id"), {"type": "friend_request"})
+    await ws_manager.send_to_player(
+        result.get("target_id"),
+        {"type": "friend_request", "name": result.get("name") or ""},
+    )
     return {"code": 0, "data": None, "message": "好友申请已发送"}
 
 
@@ -43,9 +47,12 @@ class FriendRespond(BaseModel):
 
 @router.post("/friend/respond")
 async def friend_respond(req: FriendRespond, player_id: int = 1, db: Session = Depends(get_db)):
-    SocialService(db).respond_friend(player_id, req.player_id, req.accept)
+    result = SocialService(db).respond_friend(player_id, req.player_id, req.accept)
     if req.accept:
-        await ws_manager.send_to_player(req.player_id, {"type": "friend_accepted"})
+        await ws_manager.send_to_player(
+            req.player_id,
+            {"type": "friend_accepted", "name": result.get("name") or ""},
+        )
     return {"code": 0, "data": None, "message": "操作成功"}
 
 
@@ -73,8 +80,12 @@ def friend_spar(req: FriendId, player_id: int = 1, db: Session = Depends(get_db)
 
 @router.get("/chat/messages")
 def chat_messages(channel: int = 1, receiver_id: int = None,
-                  player_id: int = 1, db: Session = Depends(get_db)):
-    data = SocialService(db).get_messages(player_id, channel, receiver_id)
+                  player_id: int = 1, before_id: int = None,
+                  limit: int = 20, db: Session = Depends(get_db)):
+    limit = min(max(1, limit), 50)
+    data = SocialService(db).get_messages(
+        player_id, channel, receiver_id, before_id, limit,
+    )
     return {"code": 0, "data": data, "message": "ok"}
 
 
@@ -89,3 +100,30 @@ async def chat_send(req: ChatSend, player_id: int = 1, db: Session = Depends(get
     msg = SocialService(db).send_chat(player_id, req.channel, req.content, req.receiver_id)
     await ws_manager.broadcast(msg["channel"], msg["sender_id"], msg.get("guild_id"), msg)
     return {"code": 0, "data": None, "message": "发送成功"}
+
+
+class ChatRead(BaseModel):
+    channel: int
+    friend_id: int = None
+
+
+@router.get("/chat/unread")
+def chat_unread(player_id: int = 1, db: Session = Depends(get_db)):
+    return {"code": 0, "data": get_unread(player_id), "message": "ok"}
+
+
+@router.post("/chat/read")
+def chat_read(req: ChatRead, player_id: int = 1,
+              db: Session = Depends(get_db)):
+    if req.channel == 3:
+        field = "p:{}".format(req.friend_id) if req.friend_id else None
+        clear_unread(player_id, field)
+    else:
+        clear_unread(player_id, str(req.channel))
+    return {"code": 0, "data": None, "message": "ok"}
+
+
+@router.get("/chat/online")
+def chat_online(player_ids: str = "", db: Session = Depends(get_db)):
+    ids = [int(item) for item in player_ids.split(",") if item.strip().isdigit()]
+    return {"code": 0, "data": get_online(ids), "message": "ok"}
