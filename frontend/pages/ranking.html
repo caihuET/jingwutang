@@ -79,15 +79,15 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <a href="game.html" style="color:inherit;text-decoration:none"><div class="logo">精武<span>堂</span></div></a>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav">
 <a class="nav-item " href="battle.html">历练</a>
@@ -104,8 +104,13 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 </div>
 <div class="content">
 <div class="page-title">排行榜</div>
-<div class="tabs"><div class="tab active">等级榜</div><div class="tab">战力榜</div><div class="tab">竞技场榜</div></div>
-<table class="table"><thead><tr><th>#</th><th>玩家</th><th>等级</th><th>门派</th><th>战力</th></tr></thead><tbody>
+<div class="tabs">
+<div class="tab active" data-kind="level">等级榜</div>
+<div class="tab" data-kind="combat">战力榜</div>
+</div>
+<div id="marqueeArea" style="margin-bottom:10px;font-size:13px;color:#8b1a1a"></div>
+<div id="myRank" style="font-size:13px;color:#6b5b4e;margin-bottom:8px">我的排名：-</div>
+<table class="table"><thead><tr><th>#</th><th>玩家</th><th>等级</th><th>门派</th><th>战力</th></tr></thead><tbody id="rankBody">
 <tr><td style="font-weight:700;color:#ffd700">1</td><td>剑指苍穹</td><td>68</td><td>武当</td><td>15800</td></tr>
 <tr><td style="font-weight:700;color:#c0c0c0">2</td><td>横扫千军</td><td>65</td><td>少林</td><td>14200</td></tr>
 <tr><td style="font-weight:700;color:#cd7f32">3</td><td>月影清霜</td><td>62</td><td>峨眉</td><td>13500</td></tr>
@@ -116,10 +121,92 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <tr><td>8</td><td>铁骨铮铮</td><td>45</td><td>少林</td><td>10200</td></tr>
 <tr><td>9</td><td>春风化雨</td><td>42</td><td>峨眉</td><td>9500</td></tr>
 <tr><td>10</td><td>暗影流光</td><td>38</td><td>唐门</td><td>8800</td></tr>
-</tbody></table></div></div><script>
-(function(){var t=localStorage.getItem('token');if(!t){window.location.href='/game/jwt/';}
-function h(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
-var tb=document.querySelector('.topbar');if(tb){var btn=document.createElement('button');btn.textContent='退出';btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';btn.onclick=h;tb.appendChild(btn);}
+</tbody></table>
+<div style="margin-top:10px;display:flex;gap:8px">
+<span class="btn btn-g" onclick="changePage(-1)">上一页</span>
+<span id="pageInfo" style="font-size:13px;color:#6b5b4e;align-self:center">1 / 1</span>
+<span class="btn btn-g" onclick="changePage(1)">下一页</span>
+</div>
+</div></div><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+var pid=parseInt(localStorage.getItem('player_id'))||1;
+var kind='level';
+var page=1;
+var pageSize=20;
+var totalPages=1;
+function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function loadRanking(){
+  fetch('/game/jwt/api/v1/ranking/'+kind+'?player_id='+pid+'&page='+page+'&size='+pageSize,{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0){document.getElementById('rankBody').innerHTML='<tr><td colspan="5">'+esc(d.message||'加载失败')+'</td></tr>';return;}
+    var data=d.data||{};
+    var list=data.list||[];
+    var h='';
+    for(var i=0;i<list.length;i++){
+      var row=list[i];
+      var color=row.rank===1?'#ffd700':(row.rank===2?'#c0c0c0':(row.rank===3?'#cd7f32':''));
+      var mine=row.player_id===pid?' style="background:#fff3cd"':'';
+      h+='<tr'+mine+'><td'+(color?' style="font-weight:700;color:'+color+'"':'')+'>'+row.rank+'</td><td>'+esc(row.name)+(row.player_id===pid?'（我）':'')+'</td><td>'+row.level+'</td><td>'+esc(row.school)+'</td><td>'+row.combat_power+'</td></tr>';
+    }
+    document.getElementById('rankBody').innerHTML=h||'<tr><td colspan="5">暂无数据</td></tr>';
+    document.getElementById('myRank').textContent='我的排名：'+(data.my_rank||'未上榜');
+    totalPages=Math.max(1,Math.ceil((data.total||0)/pageSize));
+    document.getElementById('pageInfo').textContent=page+' / '+totalPages;
+  }).catch(function(){document.getElementById('rankBody').innerHTML='<tr><td colspan="5">网络异常</td></tr>';});
+}
+function loadMarquee(){
+  fetch('/game/jwt/api/v1/ranking/marquee',{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0)return;
+    var list=(d.data&&d.data.list)||[];
+    var parts=[];
+    for(var i=0;i<list.length;i++){
+      parts.push('第'+list[i].rank+'名 '+esc(list[i].name)+' Lv.'+list[i].level);
+    }
+    document.getElementById('marqueeArea').textContent=parts.length?('等级榜 Top10：'+parts.join('  |  ')):'';
+  });
+}
+function changePage(delta){
+  var next=page+delta;
+  if(next<1||next>totalPages)return;
+  page=next;
+  loadRanking();
+}
+(function(){
+  var tabs=document.querySelectorAll('.tabs .tab');
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].addEventListener('click',function(){
+      document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active');});
+      this.classList.add('active');
+      kind=this.getAttribute('data-kind');
+      page=1;
+      loadRanking();
+    });
+  }
+  var tb=document.querySelector('.topbar');
+  if(tb){
+    var btn=document.createElement('button');
+    btn.textContent='退出';
+    btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';
+    btn.onclick=function(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');sessionStorage.removeItem('gcState');window.location.href='/game/jwt/';};
+    tb.appendChild(btn);
+  }
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:apiHeaders()})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').innerHTML=renderTopPlayer(p);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').innerHTML=renderPlayerName(p);
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+loadRanking();
+loadMarquee();
 })();
 </script>
 </body></html>

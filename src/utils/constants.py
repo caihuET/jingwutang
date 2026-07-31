@@ -90,6 +90,19 @@ class FriendStatus:
     }
 
 
+class GuildApplicationStatus:
+    """帮派申请状态"""
+    PENDING = 0
+    ACCEPTED = 1
+    REJECTED = 2
+
+    NAMES = {
+        PENDING: "等待审核",
+        ACCEPTED: "已通过",
+        REJECTED: "已拒绝",
+    }
+
+
 class ErrorCode:
     """错误码"""
     SUCCESS = 0

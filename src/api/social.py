@@ -93,11 +93,14 @@ class ChatSend(BaseModel):
     channel: int
     content: str
     receiver_id: int = None
+    receiver_name: str = None
 
 
 @router.post("/chat/send")
 async def chat_send(req: ChatSend, player_id: int = 1, db: Session = Depends(get_db)):
-    msg = SocialService(db).send_chat(player_id, req.channel, req.content, req.receiver_id)
+    msg = SocialService(db).send_chat(
+        player_id, req.channel, req.content, req.receiver_id, req.receiver_name
+    )
     await ws_manager.broadcast(msg["channel"], msg["sender_id"], msg.get("guild_id"), msg)
     return {"code": 0, "data": None, "message": "发送成功"}
 

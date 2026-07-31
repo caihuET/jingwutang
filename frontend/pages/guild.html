@@ -93,6 +93,10 @@ input[type=text],textarea{padding:7px 10px;border:1px solid #d4c5a9;border-radiu
 <div class="card-title">帮派成员</div>
 <table class="table" id="memberTable"></table>
 </div>
+<div class="card" id="applyCard" style="display:none">
+<div class="card-title">入帮申请</div>
+<div id="applyList">暂无申请</div>
+</div>
 <div class="card" id="annEdit" style="display:none">
 <div class="card-title">修改公告</div>
 <div class="form-row"><textarea id="annContent" rows="2"></textarea></div>
@@ -127,6 +131,31 @@ function renderGuild(g){
     h+='<tr><td>'+(m.name||'未知')+(m.player_id===pid?'（我）':'')+'</td><td>'+(m.level||0)+'</td><td>'+role+'</td><td>'+(m.contribution||0)+'</td></tr>';
   }
   document.getElementById('memberTable').innerHTML=h;
+  var applyCard=document.getElementById('applyCard');
+  applyCard.style.display=isLeader?'block':'none';
+  if(isLeader){loadApplications();}
+}
+function loadApplications(){
+  fetch('/game/jwt/api/v1/guild/applications?player_id='+pid,{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0){document.getElementById('applyList').textContent=d.message||'加载失败';return;}
+    var list=d.data&&d.data.applications||[];
+    var h='';
+    for(var i=0;i<list.length;i++){
+      var a=list[i];
+      h+='<div class="row"><span><b>'+a.name+'</b> Lv.'+(a.level||1)+' 战力 '+(a.combat_power||0)+'</span>';
+      h+='<span class="btns"><span class="btn btn-g" onclick="reviewApplication('+a.application_id+',true)">同意</span>';
+      h+='<span class="btn btn-p" onclick="reviewApplication('+a.application_id+',false)">拒绝</span></span></div>';
+    }
+    document.getElementById('applyList').innerHTML=h||'<div class="empty">暂无待审核申请</div>';
+  }).catch(function(){document.getElementById('applyList').textContent='网络异常';});
+}
+function reviewApplication(id,accept){
+  fetch('/game/jwt/api/v1/guild/review?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({application_id:id,accept:accept})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){loadApplications();loadGuild();}
+    else{showGuildErr(d.message||'审核失败');}
+  }).catch(function(){showGuildErr('网络异常');});
 }
 function loadGuildList(){
   fetch('/game/jwt/api/v1/guild/list',{headers:apiHeaders()})
@@ -155,7 +184,7 @@ function createGuild(){
 function joinGuild(id){
   fetch('/game/jwt/api/v1/guild/join?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({guild_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){loadGuild();}
+    if(d.code===0){alert(d.message||'申请已提交，等待帮主审核');}
     else{showGuildErr(d.message||'加入失败');}
   }).catch(function(){showGuildErr('网络异常');});
 }

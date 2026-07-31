@@ -51,3 +51,14 @@ class GuildMember(Base):
     role = Column(Integer, default=5)
     contribution = Column(Integer, default=0)
     joined_at = Column(DateTime(6), default=func.now(), nullable=False)
+
+
+class GuildApplication(Base):
+    """帮派入帮申请"""
+    __tablename__ = "guild_applications"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    guild_id = Column(Integer, nullable=False, index=True)
+    player_id = Column(BigInteger, nullable=False, index=True)
+    status = Column(Integer, default=0)
+    created_at = Column(DateTime(6), default=func.now(), nullable=False)

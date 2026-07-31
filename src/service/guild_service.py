@@ -3,7 +3,8 @@ from src.repository.guild_repo import GuildRepository
 from src.repository.player_repo import PlayerRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
-from src.models.social import Guild, GuildMember
+from src.utils.constants import GuildApplicationStatus
+from src.models.social import Guild, GuildMember, GuildApplication
 
 
 class GuildService:
@@ -74,7 +75,8 @@ class GuildService:
         self.repo.db.commit()
         return {"guild_id": guild.id, "name": guild.name}
 
-    def join(self, player_id: int, guild_id: int) -> bool:
+    def join(self, player_id: int, guild_id: int) -> dict:
+        """申请加入帮派，等待帮主审核"""
         player = self.player_repo.get_by_id(player_id)
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
@@ -83,10 +85,70 @@ class GuildService:
         guild = self.repo.get_by_id(guild_id)
         if not guild:
             raise GameException(ErrorCode.PARAM_INVALID, "帮派不存在")
-        self.repo.db.add(GuildMember(
-            guild_id=guild_id, player_id=player_id, role=5,
-        ))
-        player.guild_id = guild_id
+        if self.repo.get_pending_application(guild_id, player_id):
+            raise GameException(ErrorCode.PARAM_INVALID, "已提交申请，等待审核")
+        application = GuildApplication(
+            guild_id=guild_id, player_id=player_id,
+            status=GuildApplicationStatus.PENDING,
+        )
+        self.repo.db.add(application)
+        self.repo.db.commit()
+        self.repo.db.refresh(application)
+        return {"application_id": application.id}
+
+    def list_applications(self, player_id: int) -> dict:
+        """帮主查看待审核的入帮申请"""
+        player = self.player_repo.get_by_id(player_id)
+        if not player or not player.guild_id:
+            raise GameException(ErrorCode.PARAM_INVALID, "尚未加入帮派")
+        member = self.repo.get_player_member(player_id)
+        if not member or member.role != 1:
+            raise GameException(ErrorCode.PARAM_INVALID, "只有帮主可以审核")
+        applications = self.repo.get_applications(
+            player.guild_id, GuildApplicationStatus.PENDING
+        )
+        result = []
+        for app in applications:
+            applicant = self.player_repo.get_by_id(app.player_id)
+            result.append({
+                "application_id": app.id,
+                "player_id": app.player_id,
+                "name": applicant.name if applicant else "未知",
+                "level": applicant.level if applicant else 0,
+                "combat_power": applicant.combat_power if applicant else 0,
+                "created_at": app.created_at.strftime("%m-%d %H:%M") if app.created_at else "",
+            })
+        return {"applications": result}
+
+    def review_application(self, player_id: int,
+                           application_id: int, accept: bool) -> bool:
+        """帮主同意或拒绝入帮申请"""
+        player = self.player_repo.get_by_id(player_id)
+        if not player or not player.guild_id:
+            raise GameException(ErrorCode.PARAM_INVALID, "尚未加入帮派")
+        member = self.repo.get_player_member(player_id)
+        if not member or member.role != 1:
+            raise GameException(ErrorCode.PARAM_INVALID, "只有帮主可以审核")
+        application = self.repo.get_application(application_id)
+        if not application or application.guild_id != player.guild_id:
+            raise GameException(ErrorCode.PARAM_INVALID, "申请不存在")
+        if application.status != GuildApplicationStatus.PENDING:
+            raise GameException(ErrorCode.PARAM_INVALID, "该申请已处理")
+        if accept:
+            applicant = self.player_repo.get_by_id(application.player_id)
+            if not applicant:
+                raise GameException(ErrorCode.PARAM_INVALID, "申请人不存在")
+            if applicant.guild_id:
+                application.status = GuildApplicationStatus.REJECTED
+            else:
+                self.repo.db.add(GuildMember(
+                    guild_id=application.guild_id,
+                    player_id=application.player_id, role=5,
+                ))
+                applicant.guild_id = application.guild_id
+                application.status = GuildApplicationStatus.ACCEPTED
+        else:
+            application.status = GuildApplicationStatus.REJECTED
         self.repo.db.commit()
         return True
 

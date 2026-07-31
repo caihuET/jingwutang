@@ -121,6 +121,7 @@ function initGlobalChat() {
     window._gcMsgs = {1: [], 2: []};
     window._gcPrivate = [];
     window._gcPrivateFriend = '';
+    window._gcPrivateName = '';
     window._gcFriends = {};
     window._gcWs = null;
     window._gcPoll = null;
@@ -182,6 +183,7 @@ function initGlobalChat() {
         var target = e.target;
         if (target && target.className === 'gc-friend-name' && target.getAttribute('data-id')) {
             window._gcPrivateFriend = target.getAttribute('data-id');
+            window._gcPrivateName = target.textContent;
             var hint = document.getElementById('gcFriendHint');
             if (hint) { hint.textContent = '发送给：' + target.textContent + '（可输入 /好友名 内容 切换）'; }
             document.getElementById('gcInput').placeholder = '发送给 ' + target.textContent;
@@ -216,6 +218,7 @@ function initGlobalChat() {
     gcBadge(3);
     gcLoadHistory();
     gcConnect();
+    gcLoadFriends();
     refreshUnread();
     setInterval(function() {
         if (window._gcWs && window._gcWs.readyState === 1) {
@@ -419,9 +422,9 @@ function gcSend() {
         if (!parsed) { return; }
         content = parsed.content;
     }
-    var body = {channel: ch, content: content, receiver_id: parsed ? parsed.receiver_id : undefined};
+    var body = {channel: ch, content: content, receiver_id: parsed ? parsed.receiver_id : undefined, receiver_name: parsed ? parsed.receiver_name : undefined};
     if (window._gcWs && window._gcWs.readyState === 1) {
-        window._gcWs.send(JSON.stringify({action: 'send', channel: ch, content: content, receiver_id: body.receiver_id}));
+        window._gcWs.send(JSON.stringify({action: 'send', channel: ch, content: content, receiver_id: body.receiver_id, receiver_name: body.receiver_name}));
         gcResetInput(input, ch);
     } else {
         fetch('/game/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
@@ -443,20 +446,17 @@ function parsePrivateTarget(content) {
     if (match) {
         var name = match[1];
         var friendId = window._gcFriends && window._gcFriends[name];
-        if (!friendId) {
-            showFriendNotice('未找到好友 ' + name);
-            return null;
-        }
-        window._gcPrivateFriend = String(friendId);
+        window._gcPrivateName = name;
+        if (friendId) { window._gcPrivateFriend = String(friendId); }
         var hint = document.getElementById('gcFriendHint');
         if (hint) { hint.textContent = '发送给：' + name + '（可输入 /好友名 内容 切换）'; }
-        return {receiver_id: friendId, content: match[2]};
+        return {receiver_id: friendId || null, receiver_name: name, content: match[2]};
     }
     if (!window._gcPrivateFriend) {
         showFriendNotice('请输入 /好友名 内容');
         return null;
     }
-    return {receiver_id: parseInt(window._gcPrivateFriend), content: content};
+    return {receiver_id: parseInt(window._gcPrivateFriend), receiver_name: window._gcPrivateName, content: content};
 }
 
 function gcFriendNameById(id) {
@@ -469,7 +469,7 @@ function gcFriendNameById(id) {
 
 function gcResetInput(input, ch) {
     if (ch === 3) {
-        var name = gcFriendNameById(window._gcPrivateFriend);
+        var name = window._gcPrivateName || gcFriendNameById(window._gcPrivateFriend);
         input.value = name ? '/' + name + ' ' : '';
     } else {
         input.value = '';

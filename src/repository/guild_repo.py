@@ -1,5 +1,5 @@
 """帮派数据访问"""
-from src.models.social import Guild, GuildMember
+from src.models.social import Guild, GuildMember, GuildApplication
 
 
 class GuildRepository:
@@ -30,3 +30,23 @@ class GuildRepository:
         return self.db.query(GuildMember).filter(
             GuildMember.guild_id == guild_id
         ).all()
+
+    def get_applications(self, guild_id: int, status: int = None):
+        query = self.db.query(GuildApplication).filter(
+            GuildApplication.guild_id == guild_id
+        )
+        if status is not None:
+            query = query.filter(GuildApplication.status == status)
+        return query.order_by(GuildApplication.id.desc()).all()
+
+    def get_application(self, application_id: int):
+        return self.db.query(GuildApplication).filter(
+            GuildApplication.id == application_id
+        ).first()
+
+    def get_pending_application(self, guild_id: int, player_id: int):
+        return self.db.query(GuildApplication).filter(
+            GuildApplication.guild_id == guild_id,
+            GuildApplication.player_id == player_id,
+            GuildApplication.status == 0,
+        ).first()

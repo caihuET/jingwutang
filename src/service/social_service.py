@@ -147,7 +147,8 @@ class SocialService:
         }
 
     def send_chat(self, player_id: int, channel: int,
-                  content: str, receiver_id: int = None) -> dict:
+                  content: str, receiver_id: int = None,
+                  receiver_name: str = None) -> dict:
         if not content or len(content) > 200:
             raise GameException(ErrorCode.PARAM_INVALID, "消息内容不合法")
         if not check_sensitive_words(content):
@@ -163,8 +164,11 @@ class SocialService:
             if not guild_id:
                 raise GameException(ErrorCode.PARAM_INVALID, "请先加入帮派")
         if channel == 3:
+            if not receiver_id and receiver_name:
+                target = self.player_repo.get_by_name(receiver_name.strip())
+                receiver_id = target.id if target else None
             if not receiver_id:
-                raise GameException(ErrorCode.PARAM_INVALID, "私聊需要指定接收人")
+                raise GameException(ErrorCode.PARAM_INVALID, "未找到好友")
             if not self._is_friend(player_id, receiver_id):
                 raise GameException(ErrorCode.PARAM_INVALID, "只能给好友发送私聊")
         msg = ChatMessage(

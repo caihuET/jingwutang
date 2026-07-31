@@ -91,6 +91,7 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 var pid=parseInt(localStorage.getItem('player_id'))||1;
 var curCh=1;
 var curFriend='';
+var curFriendName='';
 var ws=null;
 var wsRetry=0;
 var friendsMap={};
@@ -190,8 +191,9 @@ function sendMsg(){
   }
   var body={channel:curCh,content:content};
   if(receiverId){body.receiver_id=receiverId;}
+  if(parsed&&parsed.receiver_name){body.receiver_name=parsed.receiver_name;}
   if(ws&&ws.readyState===1){
-    ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:receiverId}));
+    ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:receiverId,receiver_name:parsed?parsed.receiver_name:null}));
     resetInput(input,curCh);
   }else{
     fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
@@ -206,14 +208,14 @@ function parsePrivateTarget(content){
   if(match){
     var name=match[1];
     var friendId=friendsMap[name];
-    if(!friendId){alert('未找到好友 '+name);return null;}
-    curFriend=String(friendId);
+    curFriendName=name;
+    if(friendId){curFriend=String(friendId);}
     var hint=document.getElementById('privateHint');
     if(hint){hint.textContent='发送给：'+name+'（可输入 /好友名 内容 切换）';}
-    return {receiver_id:friendId,content:match[2]};
+    return {receiver_id:friendId||null,receiver_name:name,content:match[2]};
   }
   if(!curFriend){alert('请输入 /好友名 内容');return null;}
-  return {receiver_id:parseInt(curFriend),content:content};
+  return {receiver_id:parseInt(curFriend),receiver_name:curFriendName||friendNameById(curFriend),content:content};
 }
 function friendNameById(id){
   for(var key in friendsMap){
@@ -223,7 +225,7 @@ function friendNameById(id){
 }
 function resetInput(input,ch){
   if(ch===3){
-    var name=friendNameById(curFriend);
+    var name=curFriendName||friendNameById(curFriend);
     input.value=name?'/'+name+' ':'';
   }else{
     input.value='';
@@ -249,6 +251,7 @@ function markRead(ch,friendId){
     var target=e.target;
     if(target&&target.className==='friend-name'&&target.getAttribute('data-id')){
       curFriend=target.getAttribute('data-id');
+      curFriendName=target.textContent;
       var hint=document.getElementById('privateHint');
       if(hint){hint.textContent='发送给：'+target.textContent+'（可输入 /好友名 内容 切换）';}
     }

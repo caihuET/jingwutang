@@ -35,11 +35,12 @@ async def _handle_send(websocket: WebSocket, db: Session,
     channel = int(data.get("channel", 1))
     content = str(data.get("content", "")).strip()
     receiver_id = data.get("receiver_id")
+    receiver_name = data.get("receiver_name")
     if not content:
         return
     try:
         msg = SocialService(db).send_chat(
-            player_id, channel, content, receiver_id
+            player_id, channel, content, receiver_id, receiver_name
         )
         await ws_manager.broadcast(
             channel, player_id, msg.get("guild_id"), msg

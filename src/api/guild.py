@@ -36,7 +36,27 @@ class GuildJoin(BaseModel):
 @router.post("/guild/join")
 def guild_join(req: GuildJoin, player_id: int = 1, db: Session = Depends(get_db)):
     GuildService(db).join(player_id, req.guild_id)
-    return {"code": 0, "data": None, "message": "加入成功"}
+    return {"code": 0, "data": None, "message": "申请已提交，等待帮主审核"}
+
+
+@router.get("/guild/applications")
+def guild_applications(player_id: int = 1, db: Session = Depends(get_db)):
+    data = GuildService(db).list_applications(player_id)
+    return {"code": 0, "data": data, "message": "ok"}
+
+
+class GuildReview(BaseModel):
+    application_id: int
+    accept: bool = True
+
+
+@router.post("/guild/review")
+def guild_review(req: GuildReview, player_id: int = 1,
+                 db: Session = Depends(get_db)):
+    GuildService(db).review_application(
+        player_id, req.application_id, req.accept
+    )
+    return {"code": 0, "data": None, "message": "审核完成"}
 
 
 @router.post("/guild/leave")
