@@ -26,3 +26,8 @@ class EquipmentRepository:
         return self.db.query(EquipmentDefinition).filter(
             EquipmentDefinition.id == def_id
         ).first()
+
+    def get_all_definitions(self):
+        return self.db.query(EquipmentDefinition).order_by(
+            EquipmentDefinition.quality, EquipmentDefinition.level_required
+        ).all()

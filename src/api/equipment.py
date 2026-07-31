@@ -13,6 +13,12 @@ def get_equipment(player_id: int = 1, db: Session = Depends(get_db)):
     return {"code": 0, "data": EquipmentService(db).get_equipment(player_id), "message": "ok"}
 
 
+@router.get("/equipment/catalog")
+def get_catalog(db: Session = Depends(get_db)):
+    """装备图鉴（按品质分组）"""
+    return {"code": 0, "data": EquipmentService(db).get_catalog(), "message": "ok"}
+
+
 class EquipAction(BaseModel):
     equip_id: int
 

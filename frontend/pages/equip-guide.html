@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>装备说明 | 精武堂</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;height:100vh;display:flex;flex-direction:column}
+.topbar{height:50px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);border-bottom:2px solid #c9a96e;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
+.topbar .logo{font-size:18px;font-weight:700;color:#c9a96e;letter-spacing:4px;margin-right:24px}
+.topbar .logo span{color:#c9a96e}
+.topbar .player{margin-left:auto;color:#c9a96e;font-size:13px}
+.game-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:linear-gradient(180deg,#1e1e32,#151525);border-right:1px solid rgba(201,169,110,0.2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar .profile{padding:16px;border-bottom:1px solid rgba(201,169,110,0.15);text-align:center}
+.sidebar .profile .avatar{width:48px;height:48px;border-radius:50%;border:2px solid #c9a96e;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:rgba(201,169,110,0.1);font-size:20px}
+.sidebar .profile .name{font-size:14px;font-weight:700;color:#c9a96e}
+.sidebar .profile .info{font-size:11px;color:#6b5b4e;margin-top:2px}
+.sidebar .stats{padding:10px 16px;border-bottom:1px solid rgba(201,169,110,0.1)}
+.sidebar .stats .srow{display:flex;justify-content:space-between;font-size:11px;color:#c9a96e;padding:2px 0}
+.sidebar .nav{padding:8px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;color:#6b5b4e;cursor:pointer;font-size:13px;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover{color:#c9a96e;background:rgba(201,169,110,0.05)}
+.nav-item.active{color:#c9a96e;background:rgba(201,169,110,0.08);border-left-color:#c9a96e}
+.content{flex:1;padding:20px;overflow-y:auto}
+.page-title{font-size:18px;color:#8b1a1a;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #d4c5a9}
+.card{background:white;border:1px solid #d4c5a9;border-radius:8px;padding:14px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:600;color:#8b1a1a;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #d4c5a9}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{text-align:left;padding:6px 8px;font-size:11px;color:#6b5b4e;border-bottom:1px solid #d4c5a9}
+.table td{padding:6px 8px;border-bottom:1px solid #d4c5a9}
+.q-gray{color:#9e9e9e}.q-green{color:#4caf50}.q-blue{color:#2196f3}.q-purple{color:#9c27b0}.q-orange{color:#ff9800}.q-red{color:#e53935}
+.slot-name{color:#666}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:700;margin-right:6px}
+.enhance-note{font-size:12px;color:#6b5b4e;background:#fff8e7;border:1px solid #d4c5a9;border-radius:6px;padding:8px 12px;margin-bottom:12px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-bottom:10px}
+@media(max-width:768px){.sidebar{display:none}}
+</style>
+<script src="/game/jwt/static/js/common.js"></script>
+</head>
+<body>
+<div class="topbar">
+<a href="game.html" style="color:inherit;text-decoration:none"><div class="logo">精武<span>堂</span></div></a>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
+</div>
+<div class="game-body">
+<div class="sidebar">
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
+<div class="stats">
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
+</div>
+<div class="nav">
+<a class="nav-item " href="battle.html">历练</a>
+<a class="nav-item " href="equipment.html">装备</a>
+<a class="nav-item active" href="equip-guide.html">装备说明</a>
+<a class="nav-item " href="skills.html">技能</a>
+<a class="nav-item " href="meridians.html">经脉</a>
+<a class="nav-item " href="tasks.html">任务</a>
+<a class="nav-item " href="ranking.html">排行</a>
+<a class="nav-item " href="shop.html">商城</a>
+</div>
+</div>
+<div class="content">
+<div class="page-title">装备说明</div>
+<div class="enhance-note" id="enhanceNote">加载中...</div>
+<div id="guideLoading" style="font-size:12px;color:#666">加载中...</div>
+<div id="guideContent" style="display:none">
+<div id="guideList"></div>
+</div>
+<div id="guideError" style="text-align:center;font-size:13px;color:#c0392b;margin:8px 0;display:none"></div>
+<script>
+var pid=localStorage.getItem('player_id')||1;
+var qualityNames=["","普通","优秀","精良","史诗","传说","红装"];
+var qualityCls=["","q-gray","q-green","q-blue","q-purple","q-orange","q-red"];
+var slotNames={1:"武器",2:"头冠",3:"衣甲",4:"腰带",5:"靴子",6:"项链"};
+function loadGuide(){
+  document.getElementById('guideLoading').style.display='block';document.getElementById('guideContent').style.display='none';
+  fetch('/game/jwt/api/v1/equipment/catalog',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  .then(function(r){return r.json()}).then(function(d){
+    document.getElementById('guideLoading').style.display='none';
+    if(d.code!==0){document.getElementById('guideError').style.display='block';document.getElementById('guideError').textContent=d.message||'加载失败';return;}
+    var data=d.data||{};var groups=data.groups||[];
+    var note='强化上限：普通+5 / 优秀+8 / 精良+12 / 史诗+15 / 传说+18 / 红装+20';
+    document.getElementById('enhanceNote').textContent=note;
+    var h='<div class="legend">';
+    for(var q=1;q<=6;q++){h+='<span class="badge '+qualityCls[q]+'" style="background:rgba(0,0,0,0.05)">'+qualityNames[q]+'</span>';}
+    h+='</div>';
+    for(var i=0;i<groups.length;i++){
+      var g=groups[i];
+      if(!g.items||g.items.length===0)continue;
+      h+='<div class="card"><div class="card-title"><span class="badge '+qualityCls[g.quality]+'">'+g.quality_name+'</span>强化上限 +'+g.enhance_max+'</div>';
+      h+='<table class="table"><tr><th>装备名称</th><th>部位</th><th>等级需求</th><th>攻击</th><th>防御</th><th>生命</th></tr>';
+      for(var j=0;j<g.items.length;j++){
+        var it=g.items[j];
+        h+='<tr><td class="'+qualityCls[g.quality]+'" style="font-weight:700">'+it.name+'</td><td class="slot-name">'+(slotNames[it.slot]||('部位'+it.slot))+'</td><td>Lv.'+it.level_required+'</td><td>'+it.base_attack+'</td><td>'+it.base_defense+'</td><td>'+it.base_hp+'</td></tr>';
+      }
+      h+='</table></div>';
+    }
+    document.getElementById('guideContent').style.display='block';
+    document.getElementById('guideList').innerHTML=h||'<div style="color:#999;font-size:13px">暂无装备数据</div>';
+  }).catch(function(){document.getElementById('guideLoading').style.display='none';document.getElementById('guideError').style.display='block';document.getElementById('guideError').textContent='网络异常';});
+}
+loadGuide();
+</script>
+<script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var pid=localStorage.getItem('player_id')||1;
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

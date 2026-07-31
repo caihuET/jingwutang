@@ -76,7 +76,8 @@ class TestExpTable(unittest.TestCase):
 
 class TestEnhanceRates(unittest.TestCase):
     def test_rate_count(self):
-        self.assertEqual(len(ENHANCE_RATES), 15)
+        # 强化上限扩展至 20 级（各品质上限见 ENHANCE_MAX_BY_QUALITY）
+        self.assertEqual(len(ENHANCE_RATES), 20)
 
     def test_rate_values(self):
         self.assertEqual(ENHANCE_RATES[0], 1.0)
@@ -85,6 +86,7 @@ class TestEnhanceRates(unittest.TestCase):
         self.assertEqual(ENHANCE_RATES[5], 0.65)
         self.assertEqual(ENHANCE_RATES[10], 0.25)
         self.assertEqual(ENHANCE_RATES[14], 0.10)
+        self.assertEqual(ENHANCE_RATES[19], 0.03)
 
     def test_rates_decreasing(self):
         for i in range(14):
