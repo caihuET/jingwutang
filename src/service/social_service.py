@@ -16,8 +16,12 @@ class SocialService:
     def get_friends(self, player_id: int) -> dict:
         relations = self.repo.get_relations(player_id, status=1)
         friends = []
+        seen = set()
         for rel in relations:
             other_id = rel.friend_id if rel.player_id == player_id else rel.player_id
+            if other_id in seen:
+                continue
+            seen.add(other_id)
             friend = self.player_repo.get_by_id(other_id)
             if friend:
                 friends.append(self._player_brief(friend))
@@ -43,23 +47,20 @@ class SocialService:
         self.repo.db.add(FriendRelation(
             player_id=player_id, friend_id=target.id, status=0,
         ))
-        self.repo.db.add(FriendRelation(
-            player_id=target.id, friend_id=player_id, status=0,
-        ))
         self.repo.db.commit()
         return True
 
     def respond_friend(self, player_id: int, applicant_id: int, accept: bool) -> bool:
-        rel_a = self.repo.get_relation(applicant_id, player_id)
-        rel_b = self.repo.get_relation(player_id, applicant_id)
-        if not rel_a or not rel_b or rel_b.status != 0:
+        rel = self.repo.get_relation(applicant_id, player_id)
+        if not rel or rel.status != 0:
             raise GameException(ErrorCode.PARAM_INVALID, "申请不存在")
         if accept:
-            rel_a.status = 1
-            rel_b.status = 1
+            rel.status = 1
+            self.repo.db.add(FriendRelation(
+                player_id=player_id, friend_id=applicant_id, status=1,
+            ))
         else:
-            self.repo.db.delete(rel_a)
-            self.repo.db.delete(rel_b)
+            self.repo.db.delete(rel)
         self.repo.db.commit()
         return True
 
@@ -161,8 +162,9 @@ class SocialService:
         return result
 
     def _has_relation(self, player_id: int, other_id: int) -> bool:
-        rel = self.repo.get_relation(player_id, other_id)
-        return rel is not None
+        rel_a = self.repo.get_relation(player_id, other_id)
+        rel_b = self.repo.get_relation(other_id, player_id)
+        return rel_a is not None or rel_b is not None
 
     def _player_brief(self, player) -> dict:
         return {

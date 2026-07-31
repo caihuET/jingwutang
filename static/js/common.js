@@ -109,7 +109,7 @@ function initGlobalChat() {
     var css = document.createElement('style');
     css.id = 'gcStyle';
     css.textContent =
-        '.global-chat{position:fixed;right:12px;bottom:12px;width:320px;height:380px;background:white;border:1px solid #c9a96e;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;flex-direction:column;z-index:9999;overflow:hidden}' +
+        '.global-chat{position:fixed;left:212px;bottom:12px;width:480px;height:380px;background:white;border:1px solid #c9a96e;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;flex-direction:column;z-index:9999;overflow:hidden}' +
         '.gc-head{background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;padding:6px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0}' +
         '.gc-head .gc-title{font-weight:700;font-size:13px;margin-right:auto}' +
         '.gc-tabs{display:flex;gap:2px}' +
@@ -129,6 +129,7 @@ function initGlobalChat() {
         '.gc-friend{padding:6px 10px;border-bottom:1px solid #d4c5a9;flex-shrink:0}' +
         '.gc-friend select{width:100%;padding:5px;border:1px solid #d4c5a9;border-radius:6px;font-size:12px}' +
         '.global-chat.gc-hide{display:none}' +
+        '.gc-open-btn{position:fixed;left:212px;bottom:12px;padding:8px 16px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;border:1px solid #c9a96e;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;z-index:9998;display:none}' +
         '@media(max-width:768px){.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:320px}}';
     document.head.appendChild(css);
 
@@ -145,6 +146,12 @@ function initGlobalChat() {
         '<div class="gc-body" id="gcBody"><div class="gc-empty">连接中...</div></div>' +
         '<div class="gc-input"><input type="text" id="gcInput" maxlength="200" placeholder="输入消息"><span class="btn" onclick="gcSend()">发送</span></div>';
     document.body.appendChild(el);
+    var openBtn = document.createElement('button');
+    openBtn.id = 'gcOpen';
+    openBtn.className = 'gc-open-btn';
+    openBtn.textContent = '江湖聊天';
+    openBtn.onclick = function() { gcToggle(); };
+    document.body.appendChild(openBtn);
 
     document.getElementById('gcInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') { gcSend(); }
@@ -153,6 +160,7 @@ function initGlobalChat() {
         window._gcPrivateFriend = this.value;
         window._gcPrivate = [];
         gcLoadHistory();
+        gcSave();
     });
     var tabs = document.querySelectorAll('#globalChat .gc-tab');
     for (var i = 0; i < tabs.length; i++) {
@@ -160,13 +168,41 @@ function initGlobalChat() {
             gcSwitch(parseInt(this.getAttribute('data-ch')) || 1);
         });
     }
+    var saved = gcLoadState();
+    if (saved) {
+        window._gcChannel = saved.channel || 1;
+        window._gcMsgs = saved.msgs || {1: [], 2: []};
+        window._gcPrivate = saved.private || [];
+        window._gcPrivateFriend = saved.privateFriend || '';
+        window._gcUnread = saved.unread || {1: 0, 2: 0, 3: 0};
+        if (saved.collapsed) {
+            el.classList.add('gc-hide');
+            document.getElementById('gcOpen').style.display = 'block';
+        }
+        for (var t = 0; t < tabs.length; t++) {
+            tabs[t].classList.toggle('active', parseInt(tabs[t].getAttribute('data-ch')) === window._gcChannel);
+        }
+        document.getElementById('gcFriendRow').style.display = window._gcChannel === 3 ? 'block' : 'none';
+    }
+    gcRender();
+    gcBadge(1);
+    gcBadge(2);
+    gcBadge(3);
     gcLoadHistory();
     gcConnect();
 }
 
 function gcToggle() {
     var el = document.getElementById('globalChat');
-    if (el) { el.classList.toggle('gc-hide'); }
+    var openBtn = document.getElementById('gcOpen');
+    if (!el) { return; }
+    var hidden = el.classList.toggle('gc-hide');
+    if (openBtn) { openBtn.style.display = hidden ? 'block' : 'none'; }
+    if (!hidden) {
+        gcLoadHistory();
+        gcConnect();
+    }
+    gcSave();
 }
 
 function gcSwitch(ch) {
@@ -179,6 +215,7 @@ function gcSwitch(ch) {
     if (ch === 3) { gcLoadFriends(); }
     gcBadge(ch);
     gcLoadHistory();
+    gcSave();
 }
 
 function gcBadge(ch) {
@@ -230,6 +267,7 @@ function gcLoadHistory() {
         window._gcUnread[ch] = 0;
         gcBadge(ch);
         gcRender();
+        gcSave();
     });
 }
 
@@ -261,6 +299,7 @@ function gcAddMsg(msg) {
             window._gcUnread[3] = (window._gcUnread[3] || 0) + 1;
             gcBadge(3);
         }
+        gcSave();
         return;
     }
     if (!window._gcMsgs[ch]) { window._gcMsgs[ch] = []; }
@@ -271,6 +310,30 @@ function gcAddMsg(msg) {
         window._gcUnread[ch] = (window._gcUnread[ch] || 0) + 1;
         gcBadge(ch);
     }
+    gcSave();
+}
+
+function gcLoadState() {
+    try {
+        var raw = sessionStorage.getItem('gcState');
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+}
+
+function gcSave() {
+    try {
+        sessionStorage.setItem('gcState', JSON.stringify({
+            channel: window._gcChannel,
+            msgs: {
+                1: (window._gcMsgs[1] || []).slice(-50),
+                2: (window._gcMsgs[2] || []).slice(-50)
+            },
+            private: (window._gcPrivate || []).slice(-50),
+            privateFriend: window._gcPrivateFriend,
+            unread: window._gcUnread,
+            collapsed: document.getElementById('globalChat').classList.contains('gc-hide')
+        }));
+    } catch (e) {}
 }
 
 function gcConnect() {
