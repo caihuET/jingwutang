@@ -143,3 +143,18 @@ ENHANCE_MAX_BY_QUALITY = {
 
 # 门派技能解锁等级（索引对应门派技能顺序）
 SKILL_UNLOCK_LEVELS = {0: 1, 1: 1, 2: 5, 3: 10, 4: 15, 5: 25, 6: 40, 7: 60}
+
+
+# 被动技能解锁等级
+PASSIVE_SKILL_UNLOCK_LEVEL = 20
+
+
+# 被动技能效果（数值随技能等级线性提升）
+PASSIVE_SKILL_EFFECTS = {
+    "金刚不坏体": {"defense": 2, "max_hp": 30},
+    "太极心法": {"magic_attack": 3, "max_mp": 10},
+    "慈航心经": {"heal_per_round": 5},
+    "百毒不侵": {"crit_rate": 0.01, "dodge_rate": 0.01},
+    "打狗心法": {"attack": 3, "lifesteal": 0.02},
+    "圣火护体": {"reflect_rate": 0.10},
+}

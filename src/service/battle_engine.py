@@ -32,7 +32,9 @@ class BattleUnit:
                  hp: int, mp: int, attack: int, defense: int,
                  magic_attack: int, magic_defense: int, speed: int,
                  crit_rate: float = 0.05, dodge_rate: float = 0.05,
-                 skills: list = None, is_player: bool = False):
+                 skills: list = None, is_player: bool = False,
+                 heal_per_round: int = 0, lifesteal: float = 0.0,
+                 reflect_rate: float = 0.0):
         self.id = unit_id
         self.name = name
         self.level = level
@@ -50,6 +52,9 @@ class BattleUnit:
         self.skills = skills or []
         self.is_player = is_player
         self.cooldowns = {}  # skill_id -> remaining rounds
+        self.heal_per_round = heal_per_round
+        self.lifesteal = lifesteal
+        self.reflect_rate = reflect_rate
 
     def is_alive(self) -> bool:
         return self.hp > 0
@@ -153,6 +158,7 @@ class BattleEngine:
         while self.result.rounds < self.MAX_ROUNDS:
             self.result.rounds += 1
             round_log = {"round": self.result.rounds, "actions": []}
+            self._apply_round_heal(round_log)
 
             # 按速度判定先后手
             if self.attacker.speed >= self.defender.speed:
@@ -223,6 +229,23 @@ class BattleEngine:
         damage = self._calc_damage(actor, target, skill, is_critical)
         target.take_damage(damage)
 
+        # 吸血效果
+        if actor.lifesteal > 0 and damage > 0:
+            actor.hp = min(actor.max_hp, actor.hp + int(damage * actor.lifesteal))
+
+        # 反弹伤害
+        if target.reflect_rate > 0 and damage > 0:
+            reflect_damage = int(damage * target.reflect_rate)
+            actor.take_damage(reflect_damage)
+            round_log["actions"].append({
+                "actor": target.name,
+                "skill": "反弹",
+                "damage": reflect_damage,
+                "target": actor.name,
+                "dodged": False,
+                "critical": False,
+            })
+
         round_log["actions"].append({
             "actor": actor.name,
             "skill": skill.get("name", "普攻"),
@@ -231,6 +254,24 @@ class BattleEngine:
             "dodged": False,
             "critical": is_critical,
         })
+
+    def _apply_round_heal(self, round_log: dict):
+        """每回合开始时应用被动回血"""
+        for unit in (self.attacker, self.defender):
+            if unit.heal_per_round <= 0 or unit.hp <= 0:
+                continue
+            healed = min(unit.max_hp - unit.hp, unit.heal_per_round)
+            if healed <= 0:
+                continue
+            unit.hp += healed
+            round_log["actions"].append({
+                "actor": unit.name,
+                "skill": "被动回复",
+                "damage": healed,
+                "target": unit.name,
+                "dodged": False,
+                "critical": False,
+            })
 
     def _select_skill(self, unit: BattleUnit) -> dict:
         """为行动者选择技能"""

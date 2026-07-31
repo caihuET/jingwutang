@@ -141,9 +141,9 @@ fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'B
 .then(function(d){
   if(d.code!==0)return;
   var p=d.data;
-  document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
+  document.getElementById('topPlayerInfo').innerHTML=renderTopPlayer(p);
   var el=function(i){return document.getElementById(i)};
-  if(el('sName'))el('sName').textContent=p.name||'-';
+  if(el('sName'))el('sName').innerHTML=renderPlayerName(p);
   if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
   if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
   if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);

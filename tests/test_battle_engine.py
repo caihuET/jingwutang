@@ -220,6 +220,51 @@ class TestAdvanceCombat(unittest.TestCase):
             result = engine.execute()
             self.assertIsNotNone(result.winner, f"地图{map_id}战斗应有结果")
 
+    def test_passive_heal(self):
+        """被动回血应在回合开始时生效"""
+        unit = BattleUnit(1, "回血", 10, 100, 100, 10, 5, 5, 5, 10,
+                          skills=[], heal_per_round=10)
+        unit.hp = 50
+        engine = BattleEngine()
+        engine.attacker = unit
+        engine.defender = BattleUnit(2, "木桩", 1, 1000, 100, 1, 0, 0, 0, 1,
+                                     skills=[])
+        round_log = {"actions": []}
+        engine._apply_round_heal(round_log)
+        self.assertEqual(unit.hp, 60)
+        self.assertEqual(len(round_log["actions"]), 1)
+
+    def test_reflect_damage(self):
+        """反弹伤害应反伤攻击者"""
+        attacker = BattleUnit(1, "攻", 10, 200, 100, 50, 10, 5, 5, 10,
+                              skills=[{"id": 1, "name": "拳", "skill_type": 2,
+                                       "base_damage": 150, "mp_cost": 0,
+                                       "cooldown": 0, "damage_type": 1}],
+                              is_player=True)
+        defender = BattleUnit(2, "反", 10, 500, 100, 0, 10, 5, 5, 5,
+                              skills=[], reflect_rate=0.5, dodge_rate=0.0)
+        engine = BattleEngine()
+        engine.attacker = attacker
+        engine.defender = defender
+        hp_before = attacker.hp
+        engine._process_actor_turn(attacker, defender, {"actions": []})
+        self.assertLess(attacker.hp, hp_before)
+
+    def test_lifesteal(self):
+        """吸血应按伤害比例回复攻击者"""
+        attacker = BattleUnit(1, "吸血", 10, 200, 100, 50, 10, 5, 5, 10,
+                              skills=[{"id": 1, "name": "吸", "skill_type": 2,
+                                       "base_damage": 150, "mp_cost": 0,
+                                       "cooldown": 0, "damage_type": 1}],
+                              lifesteal=1.0)
+        attacker.hp = 100
+        defender = BattleUnit(2, "木桩", 1, 500, 100, 0, 0, 0, 0, 1, skills=[])
+        engine = BattleEngine()
+        engine.attacker = attacker
+        engine.defender = defender
+        engine._process_actor_turn(attacker, defender, {"actions": []})
+        self.assertGreater(attacker.hp, 100)
+
 
 if __name__ == "__main__":
     unittest.main()

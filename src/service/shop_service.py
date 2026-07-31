@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from src.repository.shop_repo import ShopRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
+from src.service.title_service import TitleService
 from src.models.shop import PlayerItem, PurchaseLog
 
 
@@ -80,7 +81,9 @@ class ShopService:
         elif item.item_type == 3:
             raise GameException(ErrorCode.PARAM_INVALID, "强化石用于装备强化，无需使用")
         elif item.item_type == 4:
-            player.title = item.name.replace("称号·", "") if item.name.startswith("称号·") else item.name
+            granted = TitleService(self.repo.db).grant_shop_title(player_id, item.id)
+            if not granted:
+                player.title = item.name.replace("称号·", "") if item.name.startswith("称号·") else item.name
         elif item.item_type in (5, 6):
             days = item.effect_value or 30
             player.vip_until = datetime.utcnow() + timedelta(days=days)

@@ -21,6 +21,11 @@ class TestAllImports(unittest.TestCase):
         self.assertTrue(len(EXP_TABLE) > 0)
         self.assertEqual(SchoolType.SHAOLIN, 1)
 
+    def test_title_models_import(self):
+        from src.models.title import TitleDefinition, PlayerTitle
+        self.assertIsNotNone(TitleDefinition)
+        self.assertIsNotNone(PlayerTitle)
+
     def test_battle_engine_import(self):
         from src.service.battle_engine import (
             BattleEngine, BattleUnit, BattleResult, MONSTERS

@@ -17,6 +17,7 @@ class TaskDefinition(Base):
     reward_gold = Column(Integer, default=0)
     reward_reputation = Column(Integer, default=0)
     reward_item_id = Column(Integer, nullable=True)
+    reward_title_id = Column(Integer, nullable=True)
     daily_refresh = Column(Integer, default=0)
     min_level = Column(Integer, default=1)
     max_level = Column(Integer, nullable=True)

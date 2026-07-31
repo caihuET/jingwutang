@@ -16,13 +16,13 @@ from src.models.battle_log import BattleLog
 
 from src.utils.errors import GameException
 
-from src.models.skill import SkillDefinition
+from src.models.skill import SkillDefinition, PlayerSkill
 
 from src.models.player_attr import PlayerAttribute
 
 from src.utils.constants import ErrorCode
 
-from src.utils.constants import EXP_TABLE, BattleType, SkillType
+from src.utils.constants import EXP_TABLE, BattleType, SkillType, PASSIVE_SKILL_EFFECTS
 
 from src.service.task_service import TaskService
 
@@ -242,7 +242,28 @@ class BattleService:
 
 
 
-    def _build_player_unit(self, player) -> BattleUnit:
+    def _get_passive_bonuses(self, player) -> dict:
+        """汇总已学被动技能的常驻加成"""
+        bonuses = {}
+        rows = self.db.query(PlayerSkill, SkillDefinition).join(
+            SkillDefinition, SkillDefinition.id == PlayerSkill.skill_id
+        ).filter(
+            PlayerSkill.player_id == player.id,
+            SkillDefinition.skill_type == SkillType.PASSIVE,
+            PlayerSkill.is_learned == 1,
+        ).all()
+        for ps, sd in rows:
+            effects = PASSIVE_SKILL_EFFECTS.get(sd.name, {})
+            for key, value in effects.items():
+                bonuses[key] = bonuses.get(key, 0) + value * ps.level
+        return bonuses
+
+
+
+
+
+
+    def _build_player_unit(self, player) -> BattleUnit:
         """从数据库角色构建战斗单元"""
         # 经脉加成
         meridian_hp = 0
@@ -326,7 +347,15 @@ class BattleService:
 
 
 
-        # 出战技能
+        # 被动技能加成
+        passive_bonus = self._get_passive_bonuses(player)
+
+
+
+
+
+
+        # 出战技能
 
         skills_data = self.skill_repo.get_slotted_skills(player.id)
 
@@ -368,17 +397,20 @@ class BattleService:
             unit_id=player.id,
             name=player.name,
             level=player.level,
-            hp=player.max_hp + int(max_hp_extra) + hp_bonus + meridian_hp,
-            mp=player.max_mp + int(max_mp_extra),
-            attack=base_stats["attack"] + int(meridian_atk),
-            defense=base_stats["defense"] + int(meridian_def),
-            magic_attack=base_stats["magic_attack"],
-            magic_defense=base_stats["magic_defense"],
-            speed=base_stats["speed"] + int(meridian_spd),
-            crit_rate=0.05,
-            dodge_rate=0.05,
-            skills=skills,
-            is_player=True,
+            hp=player.max_hp + int(max_hp_extra) + hp_bonus + meridian_hp + int(passive_bonus.get("max_hp", 0)),
+            mp=player.max_mp + int(max_mp_extra) + int(passive_bonus.get("max_mp", 0)),
+            attack=base_stats["attack"] + int(meridian_atk) + int(passive_bonus.get("attack", 0)),
+            defense=base_stats["defense"] + int(meridian_def) + int(passive_bonus.get("defense", 0)),
+            magic_attack=base_stats["magic_attack"] + int(passive_bonus.get("magic_attack", 0)),
+            magic_defense=base_stats["magic_defense"] + int(passive_bonus.get("magic_defense", 0)),
+            speed=base_stats["speed"] + int(meridian_spd) + int(passive_bonus.get("speed", 0)),
+            crit_rate=0.05 + passive_bonus.get("crit_rate", 0),
+            dodge_rate=0.05 + passive_bonus.get("dodge_rate", 0),
+            skills=skills,
+            heal_per_round=int(passive_bonus.get("heal_per_round", 0)),
+            lifesteal=passive_bonus.get("lifesteal", 0),
+            reflect_rate=min(0.5, passive_bonus.get("reflect_rate", 0)),
+            is_player=True,
 
         )
 

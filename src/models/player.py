@@ -24,6 +24,7 @@ class Player(Base):
     reputation = Column(Integer, default=0)
     combat_power = Column(Integer, default=0)
     title = Column(String(64), nullable=True)
+    equipped_title_id = Column(Integer, nullable=True)
     free_points = Column(Integer, default=0)
     vip_until = Column(DateTime(6), nullable=True)
     created_at = Column(DateTime(6), default=func.now(), nullable=False)

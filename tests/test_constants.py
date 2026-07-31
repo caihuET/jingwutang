@@ -6,6 +6,7 @@ import unittest
 from src.utils.constants import (
     ErrorCode, EXP_TABLE, ENHANCE_RATES,
     SchoolType, EquipSlot, EquipQuality, TaskType, BattleType,
+    SkillType, PASSIVE_SKILL_UNLOCK_LEVEL, PASSIVE_SKILL_EFFECTS,
 )
 
 
@@ -107,6 +108,19 @@ class TestErrorMessages(unittest.TestCase):
     def test_chinese_messages(self):
         self.assertEqual(ErrorCode.MESSAGES[1001], "用户名已存在")
         self.assertEqual(ErrorCode.MESSAGES[5000], "服务器内部错误")
+
+
+class TestPassiveSkills(unittest.TestCase):
+    """被动技能常量测试"""
+
+    def test_passive_type(self):
+        self.assertEqual(SkillType.PASSIVE, 5)
+
+    def test_passive_unlock_level(self):
+        self.assertEqual(PASSIVE_SKILL_UNLOCK_LEVEL, 20)
+
+    def test_passive_effects_cover_six_schools(self):
+        self.assertEqual(len(PASSIVE_SKILL_EFFECTS), 6)
 
 
 if __name__ == "__main__":

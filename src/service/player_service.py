@@ -2,7 +2,8 @@
 from src.utils.validators import validate_nickname, check_sensitive_words
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
-from src.utils.constants import SchoolType, EXP_TABLE
+from src.utils.constants import SchoolType, EXP_TABLE
+from src.utils.constants import SkillType
 from src.models.player_attr import PlayerAttribute
 from src.repository.player_repo import PlayerRepository
 from datetime import datetime
@@ -53,11 +54,11 @@ class PlayerService:
     def _assign_school_skills(self, player_id: int, school_id: int):
         """分配门派技能"""
         from src.models.skill import SkillDefinition, PlayerSkill
-        skills = self.repo.db.query(SkillDefinition).filter(
-            SkillDefinition.school_id == school_id
-        ).all()
+        skills = self.repo.db.query(SkillDefinition).filter(
+            SkillDefinition.school_id == school_id
+        ).order_by(SkillDefinition.id).all()
         for i, sd in enumerate(skills):
-            slot = i + 1 if i < 4 else None
+            slot = None if sd.skill_type == SkillType.PASSIVE else (i + 1 if i < 4 else None)
             sp = PlayerSkill(
                 player_id=player_id, skill_id=sd.id,
                 level=1, proficiency=0,
@@ -105,9 +106,17 @@ class PlayerService:
         attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         combat_power = self._calc_combat_power(player)
 
-        vip_until = player.vip_until.isoformat() if player.vip_until else None
+        vip_until = player.vip_until.isoformat() if player.vip_until else None
+
+
+
+        title_info = self._get_title_info(player)
         return {
-            "name": player.name,
+            "name": player.name,
+
+
+
+            "title": title_info,
             "level": player.level,
             "exp": player.exp,
             "hp": player.hp,
@@ -138,7 +147,31 @@ class PlayerService:
             "vip_until": vip_until,
         }
 
-    def _get_max_stamina(self, level: int) -> int:
+    def _get_title_info(self, player) -> dict:
+        """获取当前佩戴称号信息"""
+        from src.repository.title_repo import TitleRepository
+
+        if player.equipped_title_id:
+            td = TitleRepository(self.repo.db).get_title(player.equipped_title_id)
+            if td:
+                return {
+                    "id": td.id,
+                    "name": td.name,
+                    "title_level": td.title_level,
+                    "display_effect": td.display_effect,
+                }
+
+        if player.title:
+            return {"id": None, "name": player.title, "title_level": 1, "display_effect": "none"}
+
+        return None
+
+
+
+
+
+
+    def _get_max_stamina(self, level: int) -> int:
         return min(150, 100 + (level // 10) * 5)
 
     def _apply_stamina_recovery(self, player):
@@ -201,10 +234,10 @@ class PlayerService:
             SkillDefinition.school_id == player.school_id
         ).order_by(SkillDefinition.id).all()
         need_commit = False
-        from src.utils.constants import SKILL_UNLOCK_LEVELS
+        from src.utils.constants import SKILL_UNLOCK_LEVELS, PASSIVE_SKILL_UNLOCK_LEVEL
         for i, sd in enumerate(defs):
             # 技能解锁等级: 1/1/5/10/15/25/40/60
-            required = SKILL_UNLOCK_LEVELS.get(i, 100)
+            required = PASSIVE_SKILL_UNLOCK_LEVEL if sd.skill_type == SkillType.PASSIVE else SKILL_UNLOCK_LEVELS.get(i, 100)
             if player.level >= required:
                 existing = self.repo.db.query(PlayerSkill).filter(
                     PlayerSkill.player_id == player.id,
@@ -224,7 +257,7 @@ class PlayerService:
                     ps = PlayerSkill(
                         player_id=player.id, skill_id=sd.id,
                         level=1, proficiency=0,
-                        slot_position=empty_slot, is_learned=1,
+                        slot_position=None if sd.skill_type == SkillType.PASSIVE else empty_slot, is_learned=1,
                     )
                     self.repo.db.add(ps)
                     need_commit = True

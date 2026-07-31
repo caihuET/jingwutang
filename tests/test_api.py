@@ -138,6 +138,28 @@ class TestPlayerAPI(unittest.TestCase):
         self.assertEqual(resp.status_code, 422)
 
 
+class TestTitleAPI(unittest.TestCase):
+    """称号接口测试"""
+
+    def setUp(self):
+        self.client = TestClient(app)
+
+    def test_title_list(self):
+        resp = self.client.get("/api/v1/title/list?player_id=1")
+        data = resp.json()
+        self.assertIn("code", data)
+
+    def test_equip_invalid_title(self):
+        resp = self.client.post("/api/v1/title/equip", json={"title_id": 99999})
+        data = resp.json()
+        self.assertIn("code", data)
+
+    def test_unequip_invalid_title(self):
+        resp = self.client.post("/api/v1/title/unequip", json={"title_id": 99999})
+        data = resp.json()
+        self.assertIn("code", data)
+
+
 class TestPageExists(unittest.TestCase):
     """前端页面存在性测试"""
 

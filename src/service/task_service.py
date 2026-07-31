@@ -3,6 +3,7 @@ from src.repository.task_repo import TaskRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import TaskType
+from src.service.title_service import TitleService
 from src.models.task import TaskDefinition
 from datetime import datetime
 import logging
@@ -82,12 +83,15 @@ class TaskService:
             player.exp += td.reward_exp or 0
             player.gold += td.reward_gold or 0
             player.reputation += td.reward_reputation or 0
+            if td.reward_title_id:
+                TitleService(self.repo.db).grant(player_id, td.reward_title_id, auto_equip=False)
         pt.status = 2
         self.repo.db.commit()
         return {
             "exp": td.reward_exp if td else 0,
             "gold": td.reward_gold if td else 0,
             "reputation": td.reward_reputation if td else 0,
+            "title_id": td.reward_title_id if td else None,
         }
 
     

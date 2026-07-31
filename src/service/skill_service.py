@@ -1,7 +1,7 @@
 """技能服务"""
 from src.repository.skill_repo import SkillRepository
 from src.utils.errors import GameException
-from src.utils.constants import ErrorCode
+from src.utils.constants import ErrorCode, SkillType
 
 
 class SkillService:
@@ -15,11 +15,13 @@ class SkillService:
         defs = {}
         if skill_ids:
             for d in self.repo.db.query(SkillDefinition).filter(SkillDefinition.id.in_(skill_ids)).all():
-                defs[d.id] = d.name
+                defs[d.id] = d
         return [{
             "id": s.id,
             "skill_id": s.skill_id,
-            "name": defs.get(s.skill_id, f"技能{s.skill_id}"),
+            "name": defs[s.skill_id].name if s.skill_id in defs else f"技能{s.skill_id}",
+            "skill_type": defs[s.skill_id].skill_type if s.skill_id in defs else 0,
+            "description": defs[s.skill_id].description if s.skill_id in defs else "",
             "level": s.level,
             "proficiency": s.proficiency,
             "slot_position": s.slot_position,
@@ -32,6 +34,16 @@ class SkillService:
             raise GameException(ErrorCode.PARAM_INVALID, "最多 4 个出战技能")
         skills = self.repo.get_player_skills(player_id)
         skill_map = {s.id: s for s in skills}
+        from src.models.skill import SkillDefinition
+        if skills:
+            skill_ids_all = [s.skill_id for s in skills]
+            defs = {d.id: d for d in self.repo.db.query(SkillDefinition).filter(
+                SkillDefinition.id.in_(skill_ids_all)
+            ).all()}
+            for sid in skill_ids:
+                ps = skill_map.get(sid)
+                if ps and defs.get(ps.skill_id) and defs[ps.skill_id].skill_type == SkillType.PASSIVE:
+                    raise GameException(ErrorCode.PARAM_INVALID, "被动技能不能设置到出战栏")
 
         # 全部清除
         for s in skills:

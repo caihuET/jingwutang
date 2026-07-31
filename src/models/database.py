@@ -98,6 +98,10 @@ def init_db():
 
 
 
+    import src.models.title  # noqa: F401
+
+
+
     try:
 
 

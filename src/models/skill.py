@@ -1,4 +1,4 @@
-﻿"""技能模型"""
+"""技能模型"""
 from sqlalchemy import Column, BigInteger, Integer, String, ForeignKey, SmallInteger
 from src.models.database import Base
 
@@ -32,4 +32,5 @@ class SkillDefinition(Base):
     cooldown = Column(Integer, default=0)
     target_type = Column(SmallInteger, default=1)
     max_level = Column(Integer, default=10)
+    unlock_level = Column(Integer, default=0)
     description = Column(String(256), nullable=False)

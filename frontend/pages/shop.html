@@ -160,8 +160,8 @@ function loadPlayer(){
     if(d.code!==0)return;
     var p=d.data;
     document.getElementById('moneyBar').innerHTML='<span>金币: <b>'+p.gold+'</b></span><span>元宝: <b>'+p.ingot+'</b></span><span>修为: <b>'+p.reputation+'</b></span>';
-    document.getElementById('topPlayerInfo').textContent=(p.name||'-')+' Lv.'+(p.level||1);
-    document.getElementById('sName').textContent=p.name||'-';
+    document.getElementById('topPlayerInfo').innerHTML=renderTopPlayer(p);
+    document.getElementById('sName').innerHTML=renderPlayerName(p);
     document.getElementById('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
     document.getElementById('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
     document.getElementById('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);

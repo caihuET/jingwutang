@@ -47,6 +47,7 @@ from src.api.skill import router as skill_router
 from src.api.task import router as task_router
 from src.api.meridian import router as meridian_router
 from src.api.shop import router as shop_router
+from src.api.title import router as title_router
 from src.api.social import router as social_router
 from src.api.guild import router as guild_router
 
@@ -58,6 +59,7 @@ app.include_router(skill_router, prefix="/api/v1", tags=["技能"])
 app.include_router(task_router, prefix="/api/v1", tags=["任务"])
 app.include_router(meridian_router, prefix="/api/v1", tags=["经脉"])
 app.include_router(shop_router, prefix="/api/v1", tags=["商城"])
+app.include_router(title_router, prefix="/api/v1", tags=["称号"])
 app.include_router(social_router, prefix="/api/v1", tags=["社交"])
 app.include_router(guild_router, prefix="/api/v1", tags=["帮派"])
 
