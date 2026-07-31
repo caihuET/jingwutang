@@ -17,6 +17,8 @@ services:
       - ./static:/app/static:ro
       - ./templates:/app/templates:ro
       - ./src:/app/src:ro
+    depends_on:
+      - redis
     restart: always
 
   nginx:
@@ -30,3 +32,13 @@ services:
     depends_on:
       - app
     restart: always
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: always
+
+volumes:
+  redis-data:
