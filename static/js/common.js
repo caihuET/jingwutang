@@ -21,6 +21,7 @@ function checkAuth() {
 function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('player_id');
     sessionStorage.removeItem('gcState');
     window.location.href = '/game/jwt/';
 }
@@ -361,7 +362,7 @@ function gcConnect() {
         if (!window._gcPoll) {
             window._gcPoll = setInterval(function() {
                 if (!window._gcWs || window._gcWs.readyState !== 1) { gcLoadHistory(); }
-            }, 10000);
+            }, 5000);
         }
         setTimeout(gcConnect, 3000);
     };
@@ -471,4 +472,5 @@ function refreshFriendNav() {
 document.addEventListener('DOMContentLoaded', initGlobalChat);
 document.addEventListener('DOMContentLoaded', function() {
     refreshFriendNav();
+    setInterval(refreshFriendBadge, 15000);
 });

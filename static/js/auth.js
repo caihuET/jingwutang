@@ -49,6 +49,7 @@ async function handleLogin(e) {
         });
         var data = await res.json();
         if (data.code === 0) {
+            sessionStorage.removeItem('gcState');
             localStorage.setItem('token', data.data.token);
             localStorage.setItem('user_id', data.data.user_id);
             fetch(API_BASE + '/player/by_user?user_id=' + data.data.user_id, {headers: {'Authorization': 'Bearer ' + data.data.token}}).then(function(r){return r.json()}).then(function(pd){if(pd.data&&pd.data.player_id){localStorage.setItem('player_id',pd.data.player_id);window.location.href='/game/jwt/game.html';}else{window.location.href='/game/jwt/create.html';}}).catch(function(){window.location.href='/game/jwt/game.html';});

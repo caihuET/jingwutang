@@ -180,7 +180,7 @@ loadGuild();
 </script>
 <script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
 fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
 .then(function(r){return r.json()})
 .then(function(d){
