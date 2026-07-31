@@ -101,10 +101,10 @@ CREATE TABLE IF NOT EXISTS guild_members (
 -- 5. 商城种子数据（表为空时插入，派生表列已显式命名避免 Duplicate column）
 INSERT INTO shop_items (name, category, item_type, effect_value, price_type, price, daily_limit, description, sort_order)
 SELECT name, category, item_type, effect_value, price_type, price, daily_limit, description, sort_order FROM (
-    SELECT '体力药剂(小)' AS name, 1 AS category, 1 AS item_type, 30 AS effect_value, 1 AS price_type, 5000 AS price, 3 AS daily_limit, '恢复 30 点体力' AS description, 1 AS sort_order
-    UNION ALL SELECT '体力药剂(大)' AS name, 1 AS category, 1 AS item_type, 80 AS effect_value, 2 AS price_type, 20 AS price, 2 AS daily_limit, '恢复 80 点体力' AS description, 2 AS sort_order
-    UNION ALL SELECT '经验加成券' AS name, 1 AS category, 2 AS item_type, 1000 AS effect_value, 1 AS price_type, 8000 AS price, 5 AS daily_limit, '获得 1000 点经验' AS description, 3 AS sort_order
-    UNION ALL SELECT '强化石' AS name, 2 AS category, 3 AS item_type, 1 AS effect_value, 1 AS price_type, 3000 AS price, 0 AS daily_limit, '装备强化材料' AS description, 1 AS sort_order
+    SELECT '体力药剂(小)' AS name, 1 AS category, 1 AS item_type, 30 AS effect_value, 1 AS price_type, 5 AS price, 3 AS daily_limit, '恢复 30 点体力' AS description, 1 AS sort_order
+    UNION ALL SELECT '体力药剂(大)' AS name, 1 AS category, 1 AS item_type, 80 AS effect_value, 2 AS price_type, 1 AS price, 2 AS daily_limit, '恢复 80 点体力' AS description, 2 AS sort_order
+    UNION ALL SELECT '经验加成券' AS name, 1 AS category, 2 AS item_type, 1000 AS effect_value, 1 AS price_type, 100 AS price, 5 AS daily_limit, '获得 1000 点经验' AS description, 3 AS sort_order
+    UNION ALL SELECT '强化石' AS name, 2 AS category, 3 AS item_type, 1 AS effect_value, 2 AS price_type, 5 AS price, 0 AS daily_limit, '装备强化材料' AS description, 1 AS sort_order
     UNION ALL SELECT '称号·武林至尊' AS name, 3 AS category, 4 AS item_type, 0 AS effect_value, 2 AS price_type, 100 AS price, 0 AS daily_limit, '使用后获得称号' AS description, 1 AS sort_order
     UNION ALL SELECT '称号·江湖侠客' AS name, 3 AS category, 4 AS item_type, 0 AS effect_value, 2 AS price_type, 50 AS price, 0 AS daily_limit, '使用后获得称号' AS description, 2 AS sort_order
     UNION ALL SELECT 'VIP周卡' AS name, 4 AS category, 6 AS item_type, 7 AS effect_value, 2 AS price_type, 60 AS price, 0 AS daily_limit, '7 天 VIP' AS description, 1 AS sort_order

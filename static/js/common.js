@@ -69,8 +69,8 @@ function titleSpan(p) {
     if (!p || !p.title || !p.title.name) { return ''; }
     var lv = p.title.title_level || 1;
     var color = titleColor(lv);
-    var glow = lv >= 4 ? 'text-shadow:0 0 6px ' + color + ';' : '';
-    return ' <span class="title-tag" style="color:' + color + ';font-size:0.85em;' + glow + '">[' + p.title.name + '·Lv.' + lv + ']</span>';
+    var glow = lv >= 3 ? 'text-shadow:0 0 6px ' + color + ';' : '';
+    return ' <span class="title-tag" style="color:' + color + ';font-size:0.85em;' + glow + '">[' + p.title.name + ']</span>';
 }
 
 
@@ -85,6 +85,6 @@ function renderPlayerName(p) {
 
 
 function titleColor(lv) {
-    var colors = {1: '#9e9e9e', 2: '#4caf50', 3: '#2196f3', 4: '#9c27b0', 5: '#ffb300'};
+    var colors = {1: '#9e9e9e', 2: '#4caf50', 3: '#9c27b0', 4: '#ffb300'};
     return colors[lv] || '#c9a96e';
 }

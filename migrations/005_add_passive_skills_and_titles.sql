@@ -85,38 +85,38 @@ CREATE TABLE IF NOT EXISTS player_titles (
 
 -- 7. 商城称号种子（source_type=1）
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '武林至尊', 5, 1, si.id, 'marquee', '商城购买获得', 1
+SELECT '武林至尊', 4, 1, si.id, 'marquee', '商城购买获得', 1
 FROM shop_items si WHERE si.name='称号·武林至尊'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='武林至尊');
 
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '江湖侠客', 2, 1, si.id, 'gold', '商城购买获得', 2
+SELECT '江湖侠客', 1, 1, si.id, 'none', '商城购买获得', 2
 FROM shop_items si WHERE si.name='称号·江湖侠客'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='江湖侠客');
 
 -- 8. 成就称号种子（source_type=2，关联已有成就任务）
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '百战勇士', 3, 2, td.id, 'glow', '累计战斗胜利 100 场', 3
+SELECT '百战勇士', 2, 2, td.id, 'glow', '累计战斗胜利 100 场', 3
 FROM task_definitions td WHERE td.name='百战勇士'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='百战勇士');
 
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '千锤百炼', 3, 2, td.id, 'glow', '强化装备 50 次', 4
+SELECT '千锤百炼', 2, 2, td.id, 'glow', '强化装备 50 次', 4
 FROM task_definitions td WHERE td.name='千锤百炼'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='千锤百炼');
 
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '富甲一方', 4, 2, td.id, 'gradient', '累计获得 10 万金币', 5
+SELECT '富甲一方', 3, 2, td.id, 'gradient', '累计获得 10 万金币', 5
 FROM task_definitions td WHERE td.name='富甲一方'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='富甲一方');
 
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '武林高手', 5, 2, td.id, 'marquee', '等级达到 60 级', 6
+SELECT '武林高手', 4, 2, td.id, 'marquee', '等级达到 60 级', 6
 FROM task_definitions td WHERE td.name='武林高手'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='武林高手');
 
 INSERT INTO title_definitions (name, title_level, source_type, source_id, display_effect, description, sort_order)
-SELECT '六脉通达', 4, 2, td.id, 'gradient', '经脉全部打通', 7
+SELECT '六脉通达', 3, 2, td.id, 'gradient', '经脉全部打通', 7
 FROM task_definitions td WHERE td.name='六脉通达'
 AND NOT EXISTS (SELECT 1 FROM title_definitions WHERE name='六脉通达');
 
@@ -125,3 +125,11 @@ UPDATE task_definitions td
 JOIN title_definitions t ON t.source_type=2 AND t.name=td.name
 SET td.reward_title_id = t.id
 WHERE td.task_type=4 AND td.reward_title_id IS NULL;
+
+-- 10. 称号等级改为 1-4 四档尊贵等级（灰<绿<紫<金），已执行过旧版本的库在此校正
+UPDATE title_definitions SET title_level = CASE
+    WHEN name='江湖侠客' THEN 1
+    WHEN name IN ('百战勇士','千锤百炼') THEN 2
+    WHEN name IN ('富甲一方','六脉通达') THEN 3
+    WHEN name IN ('武林至尊','武林高手') THEN 4
+    ELSE title_level END;

@@ -67,7 +67,7 @@ function renderTitles(titles) {
         var btn = t.is_equipped
             ? '<span class="btn btn-g" style="padding:2px 10px;font-size:11px" onclick="unequipTitle(' + t.title_id + ')">卸下</span>'
             : '<span class="btn btn-p" style="padding:2px 10px;font-size:11px" onclick="equipTitle(' + t.title_id + ')">佩戴</span>';
-        html += '<div class="inv-item"><span><b style="color:' + color + '">' + t.name + '</b> Lv.' + (t.title_level || 1) + (t.is_equipped ? ' (已佩戴)' : '') + '</span>' + btn + '</div>';
+        html += '<div class="inv-item"><span><b style="color:' + color + '">' + t.name + '</b>' + (t.is_equipped ? ' (已佩戴)' : '') + '</span>' + btn + '</div>';
     }
     el.innerHTML = html;
 }

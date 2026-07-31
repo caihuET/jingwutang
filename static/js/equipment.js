@@ -81,7 +81,7 @@ function renderEquippedTable(items) {
 
 function doEquip(id) {
     showToast('绌挎埓涓?..', 'info');
-    fetch(API_BASE + '/equipment/equip', {
+    fetch(API_BASE + '/equipment/equip?player_id='+(localStorage.getItem('player_id')||1), {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
         body: JSON.stringify({equip_id: id})
     })
@@ -95,7 +95,7 @@ function doEquip(id) {
 
 function doUnequip(id) {
     showToast('鍗镐笅涓?..', 'info');
-    fetch(API_BASE + '/equipment/unequip', {
+    fetch(API_BASE + '/equipment/unequip?player_id='+(localStorage.getItem('player_id')||1), {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
         body: JSON.stringify({equip_id: id})
     })
@@ -109,7 +109,7 @@ function doUnequip(id) {
 
 function doEnhance(id) {
     showToast('寮哄寲涓?..', 'info');
-    fetch(API_BASE + '/equipment/enhance', {
+    fetch(API_BASE + '/equipment/enhance?player_id='+(localStorage.getItem('player_id')||1), {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
         body: JSON.stringify({equip_id: id})
     })

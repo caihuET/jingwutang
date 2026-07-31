@@ -108,6 +108,7 @@ function loadShop(){
       h+='<div class="desc">'+it.description+'</div>';
       h+='<div class="price">'+it.price+' '+it.price_type_name+'</div>';
       h+='<div class="limit">'+(it.daily_limit?('每日限购 '+it.daily_limit):'不限购')+'</div>';
+      h+='<input id="qty_'+it.id+'" type="number" min="1" max="99" value="1" style="width:56px;margin:4px auto;display:block;text-align:center">';
       h+='<span class="btn btn-p" style="padding:4px 12px;font-size:11px;margin-top:6px" onclick="buyItem('+it.id+')">购买</span></div>';
     }
     document.getElementById('shopList').innerHTML=h||'<div style="color:#999;font-size:13px">暂无商品</div>';
@@ -134,9 +135,12 @@ function loadInventory(){
 }
 
 function buyItem(itemId){
-  fetch('/game/jwt/api/v1/shop/buy?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:1})})
+  var qtyEl=document.getElementById('qty_'+itemId);
+  var qty=qtyEl?parseInt(qtyEl.value)||1:1;
+  if(qty<1||qty>99){alert('购买数量需在 1-99 之间');return;}
+  fetch('/game/jwt/api/v1/shop/buy?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:qty})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert('购买成功');loadShop();loadInventory();loadPlayer();}
+    if(d.code===0){alert('购买成功 x'+qty);loadShop();loadInventory();loadPlayer();}
     else{alert(d.message||'购买失败');}
   }).catch(function(){alert('网络异常');});
 }

@@ -102,7 +102,10 @@ class EquipmentService:
             eq.enhance_hp = (eq.enhance_hp or 0) + 10
         else:
             if eq.enhance_level >= 3:
-                eq.enhance_level = max(0, eq.enhance_level - 1)
+                eq.enhance_level = max(0, eq.enhance_level - 1)
+                eq.enhance_attack = max(0, (eq.enhance_attack or 0) - 5)
+                eq.enhance_defense = max(0, (eq.enhance_defense or 0) - 3)
+                eq.enhance_hp = max(0, (eq.enhance_hp or 0) - 10)
 
         self.repo.db.commit()
         if success:
