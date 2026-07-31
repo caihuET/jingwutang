@@ -19,13 +19,20 @@ def friend_requests(player_id: int = 1, db: Session = Depends(get_db)):
     return {"code": 0, "data": SocialService(db).get_requests(player_id), "message": "ok"}
 
 
+@router.get("/friend/request-history")
+def friend_request_history(player_id: int = 1, db: Session = Depends(get_db)):
+    """我发出的好友申请历史（等待/已同意/已拒绝/已解除）"""
+    return {"code": 0, "data": SocialService(db).get_request_history(player_id), "message": "ok"}
+
+
 class FriendName(BaseModel):
     player_name: str
 
 
 @router.post("/friend/add")
-def friend_add(req: FriendName, player_id: int = 1, db: Session = Depends(get_db)):
-    SocialService(db).add_friend(player_id, req.player_name)
+async def friend_add(req: FriendName, player_id: int = 1, db: Session = Depends(get_db)):
+    result = SocialService(db).add_friend(player_id, req.player_name)
+    await ws_manager.send_to_player(result.get("target_id"), {"type": "friend_request"})
     return {"code": 0, "data": None, "message": "好友申请已发送"}
 
 
@@ -35,8 +42,10 @@ class FriendRespond(BaseModel):
 
 
 @router.post("/friend/respond")
-def friend_respond(req: FriendRespond, player_id: int = 1, db: Session = Depends(get_db)):
+async def friend_respond(req: FriendRespond, player_id: int = 1, db: Session = Depends(get_db)):
     SocialService(db).respond_friend(player_id, req.player_id, req.accept)
+    if req.accept:
+        await ws_manager.send_to_player(req.player_id, {"type": "friend_accepted"})
     return {"code": 0, "data": None, "message": "操作成功"}
 
 

@@ -21,6 +21,7 @@ function checkAuth() {
 function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user_id');
+    sessionStorage.removeItem('gcState');
     window.location.href = '/game/jwt/';
 }
 
@@ -130,6 +131,7 @@ function initGlobalChat() {
         '.gc-friend select{width:100%;padding:5px;border:1px solid #d4c5a9;border-radius:6px;font-size:12px}' +
         '.global-chat.gc-hide{display:none}' +
         '.gc-open-btn{position:fixed;left:212px;bottom:12px;padding:8px 16px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;border:1px solid #c9a96e;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;z-index:9998;display:none}' +
+        '.friend-badge{background:#e53935;color:#fff;font-size:10px;border-radius:8px;padding:0 5px;margin-left:4px;display:inline-block;vertical-align:top}' +
         '@media(max-width:768px){.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:320px}}';
     document.head.appendChild(css);
 
@@ -316,13 +318,16 @@ function gcAddMsg(msg) {
 function gcLoadState() {
     try {
         var raw = sessionStorage.getItem('gcState');
-        return raw ? JSON.parse(raw) : null;
+        if (!raw) { return null; }
+        var saved = JSON.parse(raw);
+        return saved.pid === window._gcPid ? saved : null;
     } catch (e) { return null; }
 }
 
 function gcSave() {
     try {
         sessionStorage.setItem('gcState', JSON.stringify({
+            pid: window._gcPid,
             channel: window._gcChannel,
             msgs: {
                 1: (window._gcMsgs[1] || []).slice(-50),
@@ -345,6 +350,8 @@ function gcConnect() {
         try {
             var d = JSON.parse(e.data);
             if (d.type === 'chat') { gcAddMsg(d.data); }
+            else if (d.type === 'friend_request') { refreshFriendBadge(); }
+            else if (d.type === 'friend_accepted') { updateFriendCount(1); }
         } catch (err) {}
     };
     ws.onopen = function() {
@@ -388,4 +395,80 @@ function gcSend() {
     }
 }
 
+function friendNav() {
+    return document.querySelector('.nav-item[href$="friend.html"]');
+}
+
+function getFriendCount() {
+    var nav = friendNav();
+    if (!nav || !nav.childNodes[0]) { return 0; }
+    var m = (nav.childNodes[0].textContent || '').match(/\((\d+)\)/);
+    return m ? parseInt(m[1]) : 0;
+}
+
+function setFriendCount(n) {
+    var nav = friendNav();
+    if (!nav || !nav.childNodes[0]) { return; }
+    var text = nav.childNodes[0].textContent.trim();
+    if (text.indexOf('(') >= 0) { text = text.substring(0, text.indexOf('(')).trim(); }
+    if (!text) { text = '好友'; }
+    nav.childNodes[0].textContent = text + ' (' + n + ')';
+}
+
+function updateFriendCount(delta) {
+    setFriendCount(Math.max(0, getFriendCount() + delta));
+}
+
+function getFriendBadge() {
+    var el = document.getElementById('friendBadge');
+    return el ? (parseInt(el.textContent) || 0) : 0;
+}
+
+function setFriendBadge(n) {
+    var nav = friendNav();
+    if (!nav) { return; }
+    var el = document.getElementById('friendBadge');
+    if (!el) {
+        el = document.createElement('span');
+        el.id = 'friendBadge';
+        el.className = 'friend-badge';
+        nav.appendChild(el);
+    }
+    el.style.display = n > 0 ? 'inline-block' : 'none';
+    el.textContent = n > 99 ? '99+' : n;
+}
+
+function updateFriendBadge(delta) {
+    setFriendBadge(Math.max(0, getFriendBadge() + delta));
+}
+
+function refreshFriendBadge() {
+    var pid = parseInt(localStorage.getItem('player_id')) || 1;
+    fetch('/game/jwt/api/v1/friend/requests?player_id=' + pid, {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        setFriendBadge(d.code === 0 ? (d.data && d.data.requests || []).length : 0);
+    });
+}
+
+function refreshFriendNav() {
+    var nav = friendNav();
+    if (!nav) { return; }
+    var pid = parseInt(localStorage.getItem('player_id')) || 1;
+    fetch('/game/jwt/api/v1/friend/list?player_id=' + pid, {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.code !== 0) { return; }
+        setFriendCount((d.data && d.data.friends || []).length);
+    });
+    refreshFriendBadge();
+}
+
 document.addEventListener('DOMContentLoaded', initGlobalChat);
+document.addEventListener('DOMContentLoaded', function() {
+    refreshFriendNav();
+});

@@ -75,6 +75,21 @@ class ChatChannel:
     PRIVATE = 3
 
 
+class FriendStatus:
+    """好友申请状态"""
+    PENDING = 0
+    ACCEPTED = 1
+    REJECTED = 2
+    REMOVED = 3
+
+    NAMES = {
+        PENDING: "等待回应",
+        ACCEPTED: "对方已同意",
+        REJECTED: "对方已拒绝",
+        REMOVED: "已解除",
+    }
+
+
 class ErrorCode:
     """错误码"""
     SUCCESS = 0

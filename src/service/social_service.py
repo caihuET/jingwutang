@@ -5,6 +5,7 @@ from src.repository.social_repo import SocialRepository
 from src.repository.player_repo import PlayerRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
+from src.utils.constants import FriendStatus
 from src.models.social import FriendRelation, ChatMessage
 
 
@@ -14,7 +15,7 @@ class SocialService:
         self.player_repo = PlayerRepository(db)
 
     def get_friends(self, player_id: int) -> dict:
-        relations = self.repo.get_relations(player_id, status=1)
+        relations = self.repo.get_relations(player_id, status=FriendStatus.ACCEPTED)
         friends = []
         seen = set()
         for rel in relations:
@@ -28,7 +29,7 @@ class SocialService:
         return {"friends": friends}
 
     def get_requests(self, player_id: int) -> dict:
-        relations = self.repo.get_relations(player_id, status=0)
+        relations = self.repo.get_relations(player_id, status=FriendStatus.PENDING)
         requests = []
         for rel in relations:
             if rel.friend_id != player_id:
@@ -38,29 +39,39 @@ class SocialService:
                 requests.append(self._player_brief(applicant))
         return {"requests": requests}
 
-    def add_friend(self, player_id: int, player_name: str) -> bool:
+    def add_friend(self, player_id: int, player_name: str) -> dict:
         target = self.player_repo.get_by_name(player_name)
         if not target or target.id == player_id:
             raise GameException(ErrorCode.PARAM_INVALID, "玩家不存在")
-        if self._has_relation(player_id, target.id):
+        if self._active_relation(player_id, target.id):
             raise GameException(ErrorCode.ALREADY_FRIENDS, "已存在好友关系")
-        self.repo.db.add(FriendRelation(
-            player_id=player_id, friend_id=target.id, status=0,
-        ))
+        rel = self.repo.get_relation(player_id, target.id)
+        if rel and rel.status in (FriendStatus.REJECTED, FriendStatus.REMOVED):
+            rel.status = FriendStatus.PENDING
+        else:
+            self.repo.db.add(FriendRelation(
+                player_id=player_id, friend_id=target.id,
+                status=FriendStatus.PENDING,
+            ))
         self.repo.db.commit()
-        return True
+        return {"target_id": target.id}
 
     def respond_friend(self, player_id: int, applicant_id: int, accept: bool) -> bool:
         rel = self.repo.get_relation(applicant_id, player_id)
-        if not rel or rel.status != 0:
+        if not rel or rel.status != FriendStatus.PENDING:
             raise GameException(ErrorCode.PARAM_INVALID, "申请不存在")
         if accept:
-            rel.status = 1
-            self.repo.db.add(FriendRelation(
-                player_id=player_id, friend_id=applicant_id, status=1,
-            ))
+            rel.status = FriendStatus.ACCEPTED
+            reverse = self.repo.get_relation(player_id, applicant_id)
+            if reverse:
+                reverse.status = FriendStatus.ACCEPTED
+            else:
+                self.repo.db.add(FriendRelation(
+                    player_id=player_id, friend_id=applicant_id,
+                    status=FriendStatus.ACCEPTED,
+                ))
         else:
-            self.repo.db.delete(rel)
+            rel.status = FriendStatus.REJECTED
         self.repo.db.commit()
         return True
 
@@ -68,11 +79,25 @@ class SocialService:
         rel_a = self.repo.get_relation(player_id, friend_id)
         rel_b = self.repo.get_relation(friend_id, player_id)
         if rel_a:
-            self.repo.db.delete(rel_a)
+            rel_a.status = FriendStatus.REMOVED
         if rel_b:
             self.repo.db.delete(rel_b)
         self.repo.db.commit()
         return True
+
+    def get_request_history(self, player_id: int) -> dict:
+        """获取我发出的好友申请历史"""
+        result = []
+        for rel in self.repo.get_sent_requests(player_id):
+            target = self.player_repo.get_by_id(rel.friend_id)
+            result.append({
+                "player_id": rel.friend_id,
+                "name": target.name if target else "未知",
+                "level": target.level if target else 0,
+                "status": rel.status,
+                "status_name": FriendStatus.NAMES.get(rel.status, "未知"),
+            })
+        return {"requests": result}
 
     def gift_stamina(self, player_id: int, friend_id: int) -> dict:
         rel = self.repo.get_relation(player_id, friend_id)
@@ -161,10 +186,12 @@ class SocialService:
             })
         return result
 
-    def _has_relation(self, player_id: int, other_id: int) -> bool:
+    def _active_relation(self, player_id: int, other_id: int) -> bool:
         rel_a = self.repo.get_relation(player_id, other_id)
         rel_b = self.repo.get_relation(other_id, player_id)
-        return rel_a is not None or rel_b is not None
+        active = (FriendStatus.PENDING, FriendStatus.ACCEPTED)
+        return (rel_a is not None and rel_a.status in active) or \
+               (rel_b is not None and rel_b.status in active)
 
     def _player_brief(self, player) -> dict:
         return {

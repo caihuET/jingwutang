@@ -81,6 +81,10 @@ input[type=text]{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;fon
 <div id="requestList">加载中...</div>
 </div>
 <div class="card">
+<div class="card-title">我发出的申请</div>
+<div id="historyList">加载中...</div>
+</div>
+<div class="card">
 <div class="card-title">我的好友</div>
 <div id="friendList">加载中...</div>
 </div>
@@ -121,6 +125,21 @@ function loadFriends(){
     document.getElementById('friendList').innerHTML=h||'<div class="empty">还没有好友</div>';
   }).catch(function(){document.getElementById('friendList').textContent='网络异常';});
 }
+function loadRequestHistory(){
+  fetch('/game/jwt/api/v1/friend/request-history?player_id='+pid,{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0){document.getElementById('historyList').textContent=d.message||'加载失败';return;}
+    var list=d.data&&d.data.requests||[];
+    var h='';
+    var colors={0:'#ff9800',1:'#4caf50',2:'#e53935',3:'#999'};
+    for(var i=0;i<list.length;i++){
+      var r=list[i];
+      h+='<div class="row"><span><b>'+r.name+'</b> Lv.'+(r.level||1)+'</span>';
+      h+='<span style="color:'+(colors[r.status]||'#666')+'">'+r.status_name+'</span></div>';
+    }
+    document.getElementById('historyList').innerHTML=h||'<div class="empty">暂无申请记录</div>';
+  }).catch(function(){document.getElementById('historyList').textContent='网络异常';});
+}
 function addFriend(){
   var name=document.getElementById('friendName').value.trim();
   if(!name){showFriendErr('请输入玩家昵称');return;}
@@ -134,14 +153,18 @@ function addFriend(){
 function respond(id,accept){
   fetch('/game/jwt/api/v1/friend/respond?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id,accept:accept})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){loadRequests();loadFriends();}
+    if(d.code===0){
+      if(accept){updateFriendCount(1);}
+      updateFriendBadge(-1);
+      loadRequests();loadFriends();
+    }
     else{alert(d.message||'操作失败');}
   }).catch(function(){alert('网络异常');});
 }
 function removeFriend(id){
   fetch('/game/jwt/api/v1/friend/remove?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){loadFriends();}
+    if(d.code===0){updateFriendCount(-1);loadFriends();}
     else{alert(d.message||'操作失败');}
   }).catch(function(){alert('网络异常');});
 }
@@ -161,6 +184,7 @@ function sparFriend(id){
 }
 loadRequests();
 loadFriends();
+loadRequestHistory();
 </script>
 <script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}

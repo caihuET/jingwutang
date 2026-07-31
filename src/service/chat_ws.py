@@ -20,6 +20,16 @@ class ChatWebSocketManager:
         self._connections.pop(player_id, None)
         self._guild_ids.pop(player_id, None)
 
+    async def send_to_player(self, player_id: int, payload: dict):
+        ws = self._connections.get(player_id)
+        if ws is None:
+            return
+        try:
+            await ws.send_json(payload)
+        except Exception:
+            await self.disconnect(player_id)
+            logger.warning("通知推送失败，已断开连接: player_id=%s", player_id)
+
     async def broadcast(self, channel: int, sender_id: int,
                         guild_id: int, message: dict):
         payload = {"type": "chat", "channel": channel, "data": message}

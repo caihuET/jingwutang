@@ -21,6 +21,11 @@ class SocialRepository:
             query = query.filter(FriendRelation.status == status)
         return query.all()
 
+    def get_sent_requests(self, player_id: int) -> list:
+        return self.db.query(FriendRelation).filter(
+            FriendRelation.player_id == player_id
+        ).order_by(FriendRelation.id.desc()).all()
+
     def get_messages(self, channel: int, guild_id: int = None,
                      receiver_id: int = None, player_id: int = None,
                      limit: int = 50):

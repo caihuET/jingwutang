@@ -84,6 +84,20 @@ class TestChatWebSocketManager(unittest.TestCase):
         asyncio.run(run())
         self.assertEqual(len(a.sent), 0)
 
+    def test_send_to_player_only_target(self):
+        manager = ChatWebSocketManager()
+        me = FakeWebSocket()
+        target = FakeWebSocket()
+
+        async def run():
+            await manager.connect(me, 1, None)
+            await manager.connect(target, 2, None)
+            await manager.send_to_player(2, {"type": "friend_request"})
+
+        asyncio.run(run())
+        self.assertEqual(len(target.sent), 1)
+        self.assertEqual(len(me.sent), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,7 @@ from src.utils.constants import (
     ErrorCode, EXP_TABLE, ENHANCE_RATES,
     SchoolType, EquipSlot, EquipQuality, TaskType, BattleType,
     SkillType, PASSIVE_SKILL_UNLOCK_LEVEL, PASSIVE_SKILL_EFFECTS,
+    FriendStatus,
 )
 
 
@@ -121,6 +122,22 @@ class TestPassiveSkills(unittest.TestCase):
 
     def test_passive_effects_cover_six_schools(self):
         self.assertEqual(len(PASSIVE_SKILL_EFFECTS), 6)
+
+
+class TestFriendStatus(unittest.TestCase):
+    """好友申请状态常量测试"""
+
+    def test_status_values(self):
+        self.assertEqual(FriendStatus.PENDING, 0)
+        self.assertEqual(FriendStatus.ACCEPTED, 1)
+        self.assertEqual(FriendStatus.REJECTED, 2)
+        self.assertEqual(FriendStatus.REMOVED, 3)
+
+    def test_status_names(self):
+        self.assertEqual(FriendStatus.NAMES[0], "等待回应")
+        self.assertEqual(FriendStatus.NAMES[1], "对方已同意")
+        self.assertEqual(FriendStatus.NAMES[2], "对方已拒绝")
+        self.assertEqual(FriendStatus.NAMES[3], "已解除")
 
 
 if __name__ == "__main__":
