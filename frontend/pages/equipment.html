@@ -146,7 +146,7 @@ function loadEquipment(){
     // 显示非标准槽位的已装备物品
     for(var j=0;j<equipped.length;j++){
       var e=equipped[j];
-      if(e.slot<1||e.slot>4){
+      if(e.slot<1||e.slot>6){
         eh+='<div class="esi" id="eq-item-'+e.id+'" style="border-style:solid;border-color:#c9a96e">';
         eh+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
         eh+='<div style="font-size:11px;color:#666">槽位'+e.slot+' | +'+(e.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[e.quality]||"未知")+'</div>';
