@@ -111,14 +111,17 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <div class="elist" id="bagItems"></div></div></div>
 <div id="equipError" style="text-align:center;font-size:13px;color:#c0392b;margin:8px 0;display:none"></div>
 <script>
-var pid=localStorage.getItem('player_id')||1;
+var pid=localStorage.getItem('player_id')||1;
+var equipItems=[];
+var qualityNames=Array("","普通","优秀","精良","史诗","传说","红装");
 function loadEquipment(){
   document.getElementById('equipLoading').style.display='block';document.getElementById('equipContent').style.display='none';
   fetch('/game/jwt/api/v1/equipment/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     document.getElementById('equipLoading').style.display='none';document.getElementById('equipContent').style.display='block';
     if(d.code!==0){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'加载失败';return;}
-    var items=d.data||[];
+    var items=d.data||[];
+    equipItems=items;
     var equipped=items.filter(function(i){return i.is_equipped===1});
     var bag=items.filter(function(i){return i.is_equipped===0});
         // 动态显示已装备物品，支持任意槽位值
@@ -127,7 +130,7 @@ function loadEquipment(){
     // 先显示标准槽位 (1-4)
     for(var i=1;i<=4;i++){
       var eq=equipped.find(function(e){return e.slot===i});
-      eh+='<div class="esi" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
+      eh+='<div class="esi" id="'+(eq?'eq-item-'+eq.id:'')+'" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
       if(eq){
         eh+='<div style="font-weight:600" class="'+qCls(eq.quality)+'">'+eq.name+'</div>';
         eh+='<div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[eq.quality]||"未知")+'</div>';
@@ -144,7 +147,7 @@ function loadEquipment(){
     for(var j=0;j<equipped.length;j++){
       var e=equipped[j];
       if(e.slot<1||e.slot>4){
-        eh+='<div class="esi" style="border-style:solid;border-color:#c9a96e">';
+        eh+='<div class="esi" id="eq-item-'+e.id+'" style="border-style:solid;border-color:#c9a96e">';
         eh+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
         eh+='<div style="font-size:11px;color:#666">槽位'+e.slot+' | +'+(e.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[e.quality]||"未知")+'</div>';
         eh+='<div style="margin-top:4px;display:flex;gap:4px">';
@@ -157,8 +160,8 @@ function loadEquipment(){
     var bh='';
     for(var i=0;i<bag.length;i++){
       var e=bag[i];
-      bh+='<div class="ec"><div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
-      bh+='<div class="nr"><span style="font-size:11px;color:#666">'+(['','普通','优秀','精良','史诗','传说'][e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
+      bh+='<div class="ec" id="bag-item-'+e.id+'"><div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
+      bh+='<div class="nr"><span style="font-size:11px;color:#666">'+(qualityNames[e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>'; bh+='<div style="font-size:11px;color:#a08040;margin-top:2px">售价 '+e.sell_price+' 金币</div>';
       bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',&#39;equip&#39;)">装备</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#7f8c8d,#555);color:#c9a96e;border:none;border-radius:4px;cursor:pointer;margin-left:4px" onclick="doAction('+e.id+',&#39;sell&#39;)">出售</span></div></div>';
     }
     document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">暂无装备</div>';
@@ -168,14 +171,76 @@ function qCls(q){
   return ["","q-gray","q-green","q-blue","q-purple","q-orange","q-red"][q]||"q-gray";
 }
 function doAction(id,action){
-  var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance',sell:'/game/jwt/api/v1/equipment/sell'};
+  var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance',sell:'/game/jwt/api/v1/equipment/sell'};
+  if(action==='sell'){
+    var sellItem=equipItems.find(function(x){return x.id===id;});
+    if(sellItem&&sellItem.quality>=4){
+      if(!confirm('该装备为'+(qualityNames[sellItem.quality]||'高品')+'装备，出售后将获得 '+sellItem.sell_price+' 金币，确定出售吗？')){return;}
+    }
+  }
   fetch((urls[action]||urls.equip)+'?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0||(d.data&&d.data.success!==false)){loadEquipment();}
+    if(d.code===0){handleActionResult(id,action,d);}
     else{document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent=d.message||'操作失败';}
   }).catch(function(){document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
 }
-loadEquipment();
+loadEquipment();
+
+function handleActionResult(id, action, d){
+  if(action==='enhance'){
+    var oldItem=equipItems.find(function(x){return x.id===id;});
+    var oldLevel=oldItem?oldItem.enhance_level:0;
+    var newLevel=d.data&&d.data.new_level!==undefined?d.data.new_level:oldLevel;
+    if(oldItem){oldItem.enhance_level=newLevel;}
+    var delta=newLevel-oldLevel;
+    var resultText=d.data&&d.data.success?'强化成功 +1':(delta<0?'强化失败 -1':'强化失败');
+    if(oldItem){
+      var isEquipped=oldItem.is_equipped===1;
+      var cardId=isEquipped?('eq-item-'+id):('bag-item-'+id);
+      var cardEl=document.getElementById(cardId);
+      if(cardEl){cardEl.innerHTML=isEquipped?equippedItemHtml(oldItem,resultText):bagItemHtml(oldItem,resultText);}
+    }
+    return;
+  }
+  if(action==='sell'){
+    var gained=d.data&&d.data.gold_gained!==undefined?d.data.gold_gained:0;
+    equipItems=equipItems.filter(function(x){return x.id!==id;});
+    var cardEl=document.getElementById('bag-item-'+id);
+    if(cardEl){cardEl.parentNode.removeChild(cardEl);}
+    alert('出售成功，获得 '+gained+' 金币');
+    return;
+  }
+  loadEquipment();
+}
+
+function equippedItemHtml(e,resultText){
+  var h='';
+  h+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
+  h+='<div style="font-size:11px;color:#666">+'+(e.enhance_level||0)+' '+(qualityNames[e.quality]||'未知')+'</div>';
+  h+='<div style="margin-top:4px;display:flex;gap:4px">';
+  h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'unequip\')">卸下</span>';
+  h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'enhance\')">强化</span>';
+  h+='</div>';
+  if(resultText){
+    h+='<div style="margin-top:4px;font-size:11px;color:'+(resultText.indexOf('+1')>=0?'#2d7d46':'#e53935')+'">'+resultText+'</div>';
+  }
+  return h;
+}
+
+function bagItemHtml(e,resultText){
+  var h='';
+  h+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
+  h+='<div class="nr"><span style="font-size:11px;color:#666">'+(qualityNames[e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
+  h+='<div style="font-size:11px;color:#a08040;margin-top:2px">售价 '+e.sell_price+' 金币</div>';
+  h+='<div style="margin-top:6px;display:flex;gap:4px">';
+  h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'equip\')">装备</span>';
+  h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#7f8c8d,#555);color:#c9a96e;border:none;border-radius:4px;cursor:pointer;margin-left:4px" onclick="doAction('+e.id+',\'sell\')">出售</span>';
+  h+='</div>';
+  if(resultText){
+    h+='<div style="margin-top:4px;font-size:11px;color:'+(resultText.indexOf('+1')>=0?'#2d7d46':'#e53935')+'">'+resultText+'</div>';
+  }
+  return h;
+}
 </script><script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}

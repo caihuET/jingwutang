@@ -422,7 +422,7 @@ function gcSend() {
     var body = {channel: ch, content: content, receiver_id: parsed ? parsed.receiver_id : undefined};
     if (window._gcWs && window._gcWs.readyState === 1) {
         window._gcWs.send(JSON.stringify({action: 'send', channel: ch, content: content, receiver_id: body.receiver_id}));
-        input.value = '';
+        gcResetInput(input, ch);
     } else {
         fetch('/game/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
             method: 'POST',
@@ -431,7 +431,7 @@ function gcSend() {
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.code === 0) { input.value = ''; gcLoadHistory(); }
+            if (d.code === 0) { gcResetInput(input, ch); gcLoadHistory(); }
             else { alert(d.message || '发送失败'); }
         })
         .catch(function() { alert('网络异常'); });
@@ -457,6 +457,23 @@ function parsePrivateTarget(content) {
         return null;
     }
     return {receiver_id: parseInt(window._gcPrivateFriend), content: content};
+}
+
+function gcFriendNameById(id) {
+    var name = '';
+    for (var key in window._gcFriends) {
+        if (String(window._gcFriends[key]) === String(id)) { name = key; break; }
+    }
+    return name;
+}
+
+function gcResetInput(input, ch) {
+    if (ch === 3) {
+        var name = gcFriendNameById(window._gcPrivateFriend);
+        input.value = name ? '/' + name + ' ' : '';
+    } else {
+        input.value = '';
+    }
 }
 
 function gcMarkRead(ch, friendId) {

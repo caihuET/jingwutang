@@ -164,6 +164,22 @@ SKILL_UNLOCK_LEVELS = {0: 1, 1: 1, 2: 5, 3: 10, 4: 15, 5: 25, 6: 40, 7: 60}
 PASSIVE_SKILL_UNLOCK_LEVEL = 20
 
 
+# 各门派标准被动技能名（兼容历史乱码数据）
+PASSIVE_NAMES_BY_SCHOOL = {
+    1: "金刚不坏体",
+    2: "太极心法",
+    3: "慈航心经",
+    4: "百毒不侵",
+    5: "打狗心法",
+    6: "圣火护体",
+}
+
+
+def get_passive_name(school_id: int, fallback: str) -> str:
+    """按门派返回标准被动技能名"""
+    return PASSIVE_NAMES_BY_SCHOOL.get(school_id, fallback)
+
+
 # 被动技能效果（数值随技能等级线性提升）
 PASSIVE_SKILL_EFFECTS = {
     "金刚不坏体": {"defense": 2, "max_hp": 30},

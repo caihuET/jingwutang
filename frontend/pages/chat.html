@@ -192,11 +192,11 @@ function sendMsg(){
   if(receiverId){body.receiver_id=receiverId;}
   if(ws&&ws.readyState===1){
     ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:receiverId}));
-    input.value='';
+    resetInput(input,curCh);
   }else{
     fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
-      if(d.code===0){input.value='';loadHistory();}
+      if(d.code===0){resetInput(input,curCh);loadHistory();}
       else{alert(d.message||'发送失败');}
     }).catch(function(){alert('网络异常');});
   }
@@ -214,6 +214,20 @@ function parsePrivateTarget(content){
   }
   if(!curFriend){alert('请输入 /好友名 内容');return null;}
   return {receiver_id:parseInt(curFriend),content:content};
+}
+function friendNameById(id){
+  for(var key in friendsMap){
+    if(String(friendsMap[key])===String(id)){return key;}
+  }
+  return '';
+}
+function resetInput(input,ch){
+  if(ch===3){
+    var name=friendNameById(curFriend);
+    input.value=name?'/'+name+' ':'';
+  }else{
+    input.value='';
+  }
 }
 function markRead(ch,friendId){
   fetch('/game/jwt/api/v1/chat/read?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({channel:ch,friend_id:friendId||null})})

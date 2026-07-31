@@ -23,6 +23,7 @@ from src.models.player_attr import PlayerAttribute
 from src.utils.constants import ErrorCode
 
 from src.utils.constants import EXP_TABLE, BattleType, SkillType, PASSIVE_SKILL_EFFECTS
+from src.utils.constants import get_passive_name
 
 from src.service.task_service import TaskService
 
@@ -253,7 +254,7 @@ class BattleService:
             PlayerSkill.is_learned == 1,
         ).all()
         for ps, sd in rows:
-            effects = PASSIVE_SKILL_EFFECTS.get(sd.name, {})
+            effects = PASSIVE_SKILL_EFFECTS.get(get_passive_name(sd.school_id or 0, sd.name), {})
             for key, value in effects.items():
                 bonuses[key] = bonuses.get(key, 0) + value * ps.level
         return bonuses

@@ -28,7 +28,8 @@ class EquipmentService:
 
         "enhance_max": ENHANCE_MAX_BY_QUALITY.get(eq.quality, 15),
 
-        "level_required": defn.level_required if defn else 1,
+        "level_required": defn.level_required if defn else 1,
+        "sell_price": self._calc_sell_price(eq, defn),
                 "is_equipped": eq.is_equipped,
                 "enhance_level": eq.enhance_level,
                 "stats": {
@@ -123,14 +124,24 @@ class EquipmentService:
         player = self.repo.db.query(Player).filter(Player.id == player_id).first()
         if not player:
             raise GameException(ErrorCode.PARAM_INVALID, "角色不存在")
-        # 根据品质和强化等级计算售价
-        price = 10 + max(0, eq.quality - 1) * 20 + eq.enhance_level * 50
+        # 根据装备等级、品质和强化等级计算售价
+        defn = self.repo.get_definition(eq.equip_def_id)
+        price = self._calc_sell_price(eq, defn)
         player.gold += price
         self.repo.db.delete(eq)
         self.repo.db.commit()
-        return {"gold_gained": price, "total_gold": player.gold}
-
-    def get_catalog(self) -> dict:
+        return {"gold_gained": price, "total_gold": player.gold}
+
+    def _calc_sell_price(self, eq, defn) -> int:
+        """按装备等级、品质和强化等级计算出售价"""
+        base = defn.sell_price if defn and defn.sell_price > 0 else (
+            (defn.level_required if defn else 1) * 10
+        )
+        quality_bonus = max(0, eq.quality - 1) * 20
+        enhance_bonus = eq.enhance_level * 50
+        return base + quality_bonus + enhance_bonus
+
+    def get_catalog(self) -> dict:
         """获取装备图鉴（按品质分组，含各品质强化上限）"""
         defs = self.repo.get_all_definitions()
         groups = []

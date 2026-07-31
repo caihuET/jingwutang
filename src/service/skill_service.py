@@ -2,6 +2,7 @@
 from src.repository.skill_repo import SkillRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode, SkillType
+from src.utils.constants import get_passive_name
 
 
 class SkillService:
@@ -16,17 +17,26 @@ class SkillService:
         if skill_ids:
             for d in self.repo.db.query(SkillDefinition).filter(SkillDefinition.id.in_(skill_ids)).all():
                 defs[d.id] = d
-        return [{
-            "id": s.id,
-            "skill_id": s.skill_id,
-            "name": defs[s.skill_id].name if s.skill_id in defs else f"技能{s.skill_id}",
-            "skill_type": defs[s.skill_id].skill_type if s.skill_id in defs else 0,
-            "description": defs[s.skill_id].description if s.skill_id in defs else "",
-            "level": s.level,
-            "proficiency": s.proficiency,
-            "slot_position": s.slot_position,
-            "is_learned": s.is_learned,
-        } for s in skills]
+        result = []
+        for s in skills:
+            d = defs.get(s.skill_id)
+            name = f"技能{s.skill_id}"
+            if d:
+                name = d.name
+                if d.skill_type == SkillType.PASSIVE:
+                    name = get_passive_name(d.school_id or 0, d.name)
+            result.append({
+                "id": s.id,
+                "skill_id": s.skill_id,
+                "name": name,
+                "skill_type": d.skill_type if d else 0,
+                "description": d.description if d else "",
+                "level": s.level,
+                "proficiency": s.proficiency,
+                "slot_position": s.slot_position,
+                "is_learned": s.is_learned,
+            })
+        return result
 
     def set_slots(self, player_id: int, skill_ids: list) -> bool:
         """设置出战技能栏 (最多 4 个)"""
