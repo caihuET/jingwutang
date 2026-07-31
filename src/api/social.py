@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.models.database import get_db
 from src.service.social_service import SocialService
+from src.service.chat_ws import ws_manager
 
 router = APIRouter()
 
@@ -75,6 +76,7 @@ class ChatSend(BaseModel):
 
 
 @router.post("/chat/send")
-def chat_send(req: ChatSend, player_id: int = 1, db: Session = Depends(get_db)):
-    SocialService(db).send_chat(player_id, req.channel, req.content, req.receiver_id)
+async def chat_send(req: ChatSend, player_id: int = 1, db: Session = Depends(get_db)):
+    msg = SocialService(db).send_chat(player_id, req.channel, req.content, req.receiver_id)
+    await ws_manager.broadcast(msg["channel"], msg["sender_id"], msg.get("guild_id"), msg)
     return {"code": 0, "data": None, "message": "发送成功"}

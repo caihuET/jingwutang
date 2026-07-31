@@ -50,6 +50,7 @@ from src.api.shop import router as shop_router
 from src.api.title import router as title_router
 from src.api.social import router as social_router
 from src.api.guild import router as guild_router
+from src.api.chat import router as chat_ws_router
 
 app.include_router(auth_router, prefix="/api/v1", tags=["认证"])
 app.include_router(player_router, prefix="/api/v1", tags=["角色"])
@@ -62,6 +63,7 @@ app.include_router(shop_router, prefix="/api/v1", tags=["商城"])
 app.include_router(title_router, prefix="/api/v1", tags=["称号"])
 app.include_router(social_router, prefix="/api/v1", tags=["社交"])
 app.include_router(guild_router, prefix="/api/v1", tags=["帮派"])
+app.include_router(chat_ws_router, prefix="/api/v1", tags=["聊天"])
 
 
 @app.get("/api/v1/health")

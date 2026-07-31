@@ -85,6 +85,244 @@ function renderPlayerName(p) {
 
 
 function titleColor(lv) {
+    lv = lv >= 4 ? 4 : lv;
     var colors = {1: '#9e9e9e', 2: '#4caf50', 3: '#9c27b0', 4: '#ffb300'};
-    return colors[lv] || '#c9a96e';
+    return colors[lv] || '#ffb300';
 }
+
+
+/* 全局聊天窗（世界/帮派/私聊，WebSocket 实时） */
+function initGlobalChat() {
+    if (!localStorage.getItem('token')) { return; }
+    if (location.pathname.indexOf('create.html') >= 0) { return; }
+    if (location.pathname.indexOf('chat.html') >= 0) { return; }
+    if (document.getElementById('globalChat')) { return; }
+    window._gcPid = parseInt(localStorage.getItem('player_id')) || 1;
+    window._gcChannel = 1;
+    window._gcUnread = {1: 0, 2: 0, 3: 0};
+    window._gcMsgs = {1: [], 2: []};
+    window._gcPrivate = [];
+    window._gcPrivateFriend = '';
+    window._gcWs = null;
+    window._gcPoll = null;
+
+    var css = document.createElement('style');
+    css.id = 'gcStyle';
+    css.textContent =
+        '.global-chat{position:fixed;right:12px;bottom:12px;width:320px;height:380px;background:white;border:1px solid #c9a96e;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;flex-direction:column;z-index:9999;overflow:hidden}' +
+        '.gc-head{background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;padding:6px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0}' +
+        '.gc-head .gc-title{font-weight:700;font-size:13px;margin-right:auto}' +
+        '.gc-tabs{display:flex;gap:2px}' +
+        '.gc-tab{padding:3px 8px;font-size:11px;cursor:pointer;border-radius:4px;position:relative}' +
+        '.gc-tab.active{background:rgba(201,169,110,.25);color:#fff}' +
+        '.gc-badge{position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:9px;border-radius:8px;padding:0 4px;display:none}' +
+        '.gc-min{cursor:pointer;font-size:14px;padding:0 4px}' +
+        '.gc-body{flex:1;overflow-y:auto;padding:8px 10px;font-size:12px}' +
+        '.gc-msg{margin-bottom:6px}' +
+        '.gc-msg .head{color:#8b1a1a;font-size:11px}' +
+        '.gc-msg .txt{color:#2c1810;word-break:break-all;white-space:pre-wrap}' +
+        '.gc-msg.mine .head,.gc-msg.mine .txt{text-align:right}' +
+        '.gc-empty{color:#999;font-size:12px;text-align:center;padding:20px 0}' +
+        '.gc-input{display:flex;gap:6px;padding:6px;border-top:1px solid #d4c5a9;flex-shrink:0}' +
+        '.gc-input input[type=text]{flex:1;padding:6px 8px;border:1px solid #d4c5a9;border-radius:6px;font-size:12px;outline:none}' +
+        '.gc-input .btn{padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e}' +
+        '.gc-friend{padding:6px 10px;border-bottom:1px solid #d4c5a9;flex-shrink:0}' +
+        '.gc-friend select{width:100%;padding:5px;border:1px solid #d4c5a9;border-radius:6px;font-size:12px}' +
+        '.global-chat.gc-hide{display:none}' +
+        '@media(max-width:768px){.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:320px}}';
+    document.head.appendChild(css);
+
+    var el = document.createElement('div');
+    el.id = 'globalChat';
+    el.className = 'global-chat';
+    el.innerHTML =
+        '<div class="gc-head"><span class="gc-title">江湖聊天</span>' +
+        '<span class="gc-tabs"><span class="gc-tab active" data-ch="1">世界<span class="gc-badge"></span></span>' +
+        '<span class="gc-tab" data-ch="2">帮派<span class="gc-badge"></span></span>' +
+        '<span class="gc-tab" data-ch="3">私聊<span class="gc-badge"></span></span></span>' +
+        '<span class="gc-min" onclick="gcToggle()">_</span></div>' +
+        '<div class="gc-friend" id="gcFriendRow" style="display:none"><select id="gcFriendSelect"><option value="">选择好友</option></select></div>' +
+        '<div class="gc-body" id="gcBody"><div class="gc-empty">连接中...</div></div>' +
+        '<div class="gc-input"><input type="text" id="gcInput" maxlength="200" placeholder="输入消息"><span class="btn" onclick="gcSend()">发送</span></div>';
+    document.body.appendChild(el);
+
+    document.getElementById('gcInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { gcSend(); }
+    });
+    document.getElementById('gcFriendSelect').addEventListener('change', function() {
+        window._gcPrivateFriend = this.value;
+        window._gcPrivate = [];
+        gcLoadHistory();
+    });
+    var tabs = document.querySelectorAll('#globalChat .gc-tab');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].addEventListener('click', function() {
+            gcSwitch(parseInt(this.getAttribute('data-ch')) || 1);
+        });
+    }
+    gcLoadHistory();
+    gcConnect();
+}
+
+function gcToggle() {
+    var el = document.getElementById('globalChat');
+    if (el) { el.classList.toggle('gc-hide'); }
+}
+
+function gcSwitch(ch) {
+    window._gcChannel = ch;
+    var tabs = document.querySelectorAll('#globalChat .gc-tab');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.toggle('active', parseInt(tabs[i].getAttribute('data-ch')) === ch);
+    }
+    document.getElementById('gcFriendRow').style.display = ch === 3 ? 'block' : 'none';
+    if (ch === 3) { gcLoadFriends(); }
+    gcBadge(ch);
+    gcLoadHistory();
+}
+
+function gcBadge(ch) {
+    var tab = document.querySelector('#globalChat .gc-tab[data-ch="' + ch + '"] .gc-badge');
+    if (!tab) { return; }
+    var n = window._gcUnread[ch] || 0;
+    tab.style.display = n > 0 ? 'inline-block' : 'none';
+    tab.textContent = n > 99 ? '99+' : n;
+}
+
+function gcEscape(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function gcLoadFriends() {
+    fetch('/game/jwt/api/v1/friend/list?player_id=' + window._gcPid, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        var friends = d.data && d.data.friends || [];
+        var sel = document.getElementById('gcFriendSelect');
+        var h = '<option value="">选择好友</option>';
+        for (var i = 0; i < friends.length; i++) {
+            h += '<option value="' + friends[i].player_id + '">' + gcEscape(friends[i].name) + '</option>';
+        }
+        sel.innerHTML = h;
+        if (window._gcPrivateFriend) { sel.value = window._gcPrivateFriend; }
+    });
+}
+
+function gcLoadHistory() {
+    var ch = window._gcChannel;
+    var url = '/game/jwt/api/v1/chat/messages?channel=' + ch + '&player_id=' + window._gcPid;
+    if (ch === 3) {
+        if (!window._gcPrivateFriend) {
+            document.getElementById('gcBody').innerHTML = '<div class="gc-empty">请先选择私聊好友</div>';
+            return;
+        }
+        url += '&receiver_id=' + window._gcPrivateFriend;
+    }
+    fetch(url, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.code !== 0) {
+            document.getElementById('gcBody').innerHTML = '<div class="gc-empty">' + gcEscape(d.message || '加载失败') + '</div>';
+            return;
+        }
+        var list = d.data || [];
+        if (ch === 3) { window._gcPrivate = list; } else { window._gcMsgs[ch] = list; }
+        window._gcUnread[ch] = 0;
+        gcBadge(ch);
+        gcRender();
+    });
+}
+
+function gcRender() {
+    var ch = window._gcChannel;
+    var list = ch === 3 ? window._gcPrivate : (window._gcMsgs[ch] || []);
+    var h = '';
+    for (var i = 0; i < list.length; i++) {
+        var m = list[i];
+        var mine = m.sender_id === window._gcPid;
+        h += '<div class="gc-msg' + (mine ? ' mine' : '') + '"><div class="head">' + gcEscape(mine ? '我' : m.sender_name) + ' ' + gcEscape(m.created_at || '') + '</div>' +
+             '<div class="txt">' + gcEscape(m.content) + '</div></div>';
+    }
+    var box = document.getElementById('gcBody');
+    box.innerHTML = h || '<div class="gc-empty">暂无消息</div>';
+    box.scrollTop = box.scrollHeight;
+}
+
+function gcAddMsg(msg) {
+    if (!msg || !msg.channel) { return; }
+    var ch = msg.channel;
+    if (ch === 3) {
+        if (msg.sender_id !== window._gcPid && msg.receiver_id !== window._gcPid) { return; }
+        var other = msg.sender_id === window._gcPid ? msg.receiver_id : msg.sender_id;
+        if (String(other) === String(window._gcPrivateFriend)) {
+            window._gcPrivate.push(msg);
+            if (window._gcChannel === 3) { gcRender(); }
+        } else if (window._gcChannel !== 3) {
+            window._gcUnread[3] = (window._gcUnread[3] || 0) + 1;
+            gcBadge(3);
+        }
+        return;
+    }
+    if (!window._gcMsgs[ch]) { window._gcMsgs[ch] = []; }
+    window._gcMsgs[ch].push(msg);
+    if (window._gcMsgs[ch].length > 100) { window._gcMsgs[ch].shift(); }
+    if (window._gcChannel === ch) { gcRender(); }
+    else {
+        window._gcUnread[ch] = (window._gcUnread[ch] || 0) + 1;
+        gcBadge(ch);
+    }
+}
+
+function gcConnect() {
+    var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    var url = proto + location.host + '/game/jwt/api/v1/ws/chat?player_id=' + window._gcPid;
+    var ws = new WebSocket(url);
+    window._gcWs = ws;
+    ws.onmessage = function(e) {
+        try {
+            var d = JSON.parse(e.data);
+            if (d.type === 'chat') { gcAddMsg(d.data); }
+        } catch (err) {}
+    };
+    ws.onopen = function() {
+        if (window._gcPoll) { clearInterval(window._gcPoll); window._gcPoll = null; }
+    };
+    ws.onclose = function() {
+        if (!window._gcPoll) {
+            window._gcPoll = setInterval(function() {
+                if (!window._gcWs || window._gcWs.readyState !== 1) { gcLoadHistory(); }
+            }, 10000);
+        }
+        setTimeout(gcConnect, 3000);
+    };
+}
+
+function gcSend() {
+    var input = document.getElementById('gcInput');
+    var content = input.value.trim();
+    if (!content) { return; }
+    var ch = window._gcChannel;
+    var body = {channel: ch, content: content};
+    if (ch === 3) {
+        if (!window._gcPrivateFriend) { alert('请先选择私聊好友'); return; }
+        body.receiver_id = parseInt(window._gcPrivateFriend);
+    }
+    if (window._gcWs && window._gcWs.readyState === 1) {
+        window._gcWs.send(JSON.stringify({action: 'send', channel: ch, content: content, receiver_id: body.receiver_id}));
+        input.value = '';
+    } else {
+        fetch('/game/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token')},
+            body: JSON.stringify(body)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.code === 0) { input.value = ''; gcLoadHistory(); }
+            else { alert(d.message || '发送失败'); }
+        })
+        .catch(function() { alert('网络异常'); });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initGlobalChat);

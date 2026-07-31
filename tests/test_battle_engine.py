@@ -258,7 +258,8 @@ class TestAdvanceCombat(unittest.TestCase):
                                        "cooldown": 0, "damage_type": 1}],
                               lifesteal=1.0)
         attacker.hp = 100
-        defender = BattleUnit(2, "木桩", 1, 500, 100, 0, 0, 0, 0, 1, skills=[])
+        defender = BattleUnit(2, "木桩", 1, 500, 100, 0, 0, 0, 0, 1,
+                              skills=[], dodge_rate=0.0)
         engine = BattleEngine()
         engine.attacker = attacker
         engine.defender = defender

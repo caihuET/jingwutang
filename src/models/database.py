@@ -251,6 +251,14 @@ def init_db():
                 ), {"t": table_name, "c": column_name}).scalar()
                 if not cnt:
                     conn.execute(text(ddl))
+            conn.execute(text("""
+                UPDATE title_definitions SET title_level = CASE
+                    WHEN name='江湖侠客' THEN 1
+                    WHEN name IN ('百战勇士','千锤百炼') THEN 2
+                    WHEN name IN ('富甲一方','六脉通达') THEN 3
+                    WHEN name IN ('武林至尊','武林高手') THEN 4
+                    ELSE title_level END
+            """))
             conn.commit()
     except Exception:
         pass

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帮派 | 精武堂</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;height:100vh;display:flex;flex-direction:column}
+.topbar{height:50px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);border-bottom:2px solid #c9a96e;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
+.topbar .logo{font-size:18px;font-weight:700;color:#c9a96e;letter-spacing:4px;margin-right:24px}
+.topbar .player{margin-left:auto;color:#c9a96e;font-size:13px}
+.game-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:linear-gradient(180deg,#1e1e32,#151525);border-right:1px solid rgba(201,169,110,0.2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar .profile{padding:16px;border-bottom:1px solid rgba(201,169,110,0.15);text-align:center}
+.sidebar .profile .avatar{width:48px;height:48px;border-radius:50%;border:2px solid #c9a96e;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:rgba(201,169,110,0.1);font-size:20px}
+.sidebar .profile .name{font-size:14px;font-weight:700;color:#c9a96e}
+.sidebar .profile .info{font-size:11px;color:#6b5b4e;margin-top:2px}
+.sidebar .stats{padding:10px 16px;border-bottom:1px solid rgba(201,169,110,0.1)}
+.sidebar .stats .srow{display:flex;justify-content:space-between;font-size:11px;color:#c9a96e;padding:2px 0}
+.sidebar .nav{padding:8px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;color:#6b5b4e;cursor:pointer;font-size:13px;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover{color:#c9a96e;background:rgba(201,169,110,0.05)}
+.nav-item.active{color:#c9a96e;background:rgba(201,169,110,0.08);border-left-color:#c9a96e}
+.content{flex:1;padding:20px;overflow-y:auto}
+.page-title{font-size:18px;color:#8b1a1a;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #d4c5a9}
+.card{background:white;border:1px solid #d4c5a9;border-radius:8px;padding:14px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:600;color:#8b1a1a;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #d4c5a9}
+.btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-block;text-decoration:none;text-align:center}
+.btn-p{background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e}
+.btn-g{background:linear-gradient(135deg,#c9a96e,#a08040);color:#1a1a2e}
+.row{display:flex;align-items:center;justify-content:space-between;border:1px solid #d4c5a9;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px;flex-wrap:wrap;gap:6px}
+.row .btns{display:flex;gap:6px}
+input[type=text],textarea{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12px;width:100%;outline:none;font-family:inherit;resize:vertical}
+.form-row{margin-bottom:8px}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{text-align:left;padding:6px 8px;font-size:11px;color:#6b5b4e;border-bottom:1px solid #d4c5a9}
+.table td{padding:6px 8px;border-bottom:1px solid #d4c5a9}
+.empty{color:#999;font-size:12px;padding:6px 0}
+@media(max-width:768px){.sidebar{display:none}}
+</style>
+<script src="/game/jwt/static/js/common.js"></script>
+</head>
+<body>
+<div class="topbar">
+<a href="game.html" style="color:inherit;text-decoration:none"><div class="logo">精武<span>堂</span></div></a>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
+</div>
+<div class="game-body">
+<div class="sidebar">
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
+<div class="stats">
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
+</div>
+<div class="nav">
+<a class="nav-item " href="game.html">江湖首页</a>
+<a class="nav-item " href="player.html">角色信息</a>
+<a class="nav-item " href="equipment.html">背包行囊</a>
+<a class="nav-item " href="skills.html">武学技能</a>
+<a class="nav-item " href="meridians.html">经脉修炼</a>
+<a class="nav-item " href="battle.html">闯荡江湖</a>
+<a class="nav-item " href="tasks.html">任务</a>
+<a class="nav-item " href="ranking.html">排行榜</a>
+<a class="nav-item " href="shop.html">商城</a>
+<a class="nav-item " href="friend.html">好友</a>
+<a class="nav-item active" href="guild.html">帮派</a>
+<a class="nav-item " href="chat.html">聊天</a>
+<a class="nav-item " href="equip-guide.html">装备说明</a>
+</div>
+</div>
+<div class="content">
+<div class="page-title">帮派</div>
+<div id="guildError" style="color:#c0392b;font-size:12px;margin-bottom:8px;display:none"></div>
+<div id="noGuild" style="display:none">
+<div class="card">
+<div class="card-title">创建帮派</div>
+<div class="form-row"><input type="text" id="guildName" placeholder="帮派名称（16 字以内）"></div>
+<div class="form-row"><textarea id="guildAnn" rows="2" placeholder="帮派公告"></textarea></div>
+<span class="btn btn-p" onclick="createGuild()">创建（消耗 5000 金币）</span>
+</div>
+<div class="card">
+<div class="card-title">加入帮派</div>
+<div id="guildList">加载中...</div>
+</div>
+</div>
+<div id="hasGuild" style="display:none">
+<div class="card">
+<div class="card-title" id="guildTitle">-</div>
+<div style="font-size:12px;color:#666;margin-bottom:8px" id="guildAnnounce">-</div>
+<span class="btn btn-p" onclick="leaveGuild()">退出帮派</span>
+</div>
+<div class="card">
+<div class="card-title">帮派成员</div>
+<table class="table" id="memberTable"></table>
+</div>
+<div class="card" id="annEdit" style="display:none">
+<div class="card-title">修改公告</div>
+<div class="form-row"><textarea id="annContent" rows="2"></textarea></div>
+<span class="btn btn-g" onclick="updateAnnouncement()">保存</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+var pid=parseInt(localStorage.getItem('player_id'))||1;
+function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
+function showGuildErr(msg){var el=document.getElementById('guildError');el.style.display='block';el.textContent=msg;}
+function loadGuild(){
+  fetch('/game/jwt/api/v1/guild/info?player_id='+pid,{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0){document.getElementById('noGuild').style.display='block';document.getElementById('hasGuild').style.display='none';loadGuildList();return;}
+    document.getElementById('noGuild').style.display='none';
+    document.getElementById('hasGuild').style.display='block';
+    renderGuild(d.data);
+  }).catch(function(){document.getElementById('guildList').textContent='网络异常';});
+}
+function renderGuild(g){
+  document.getElementById('guildTitle').textContent=g.name+' Lv.'+(g.level||1);
+  document.getElementById('guildAnnounce').textContent='公告：'+(g.announcement||'-');
+  var isLeader=g.leader_id===pid;
+  document.getElementById('annEdit').style.display=isLeader?'block':'none';
+  document.getElementById('annContent').value=g.announcement||'';
+  var h='<tr><th>成员</th><th>等级</th><th>职位</th><th>贡献</th></tr>';
+  for(var i=0;i<g.members.length;i++){
+    var m=g.members[i];
+    var role=m.role===1?'帮主':'成员';
+    h+='<tr><td>'+(m.name||'未知')+(m.player_id===pid?'（我）':'')+'</td><td>'+(m.level||0)+'</td><td>'+role+'</td><td>'+(m.contribution||0)+'</td></tr>';
+  }
+  document.getElementById('memberTable').innerHTML=h;
+}
+function loadGuildList(){
+  fetch('/game/jwt/api/v1/guild/list',{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0){document.getElementById('guildList').textContent=d.message||'加载失败';return;}
+    var list=d.data||[];
+    var h='';
+    for(var i=0;i<list.length;i++){
+      var g=list[i];
+      h+='<div class="row"><span><b>'+g.name+'</b> Lv.'+(g.level||1)+' 人数 '+(g.member_count||0)+'</span>';
+      h+='<span class="btns"><span class="btn btn-g" onclick="joinGuild('+g.guild_id+')">加入</span></span></div>';
+    }
+    document.getElementById('guildList').innerHTML=h||'<div class="empty">暂无帮派</div>';
+  }).catch(function(){document.getElementById('guildList').textContent='网络异常';});
+}
+function createGuild(){
+  var name=document.getElementById('guildName').value.trim();
+  var ann=document.getElementById('guildAnn').value.trim();
+  if(!name){showGuildErr('请输入帮派名称');return;}
+  fetch('/game/jwt/api/v1/guild/create?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({name:name,announcement:ann})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){loadGuild();}
+    else{showGuildErr(d.message||'创建失败');}
+  }).catch(function(){showGuildErr('网络异常');});
+}
+function joinGuild(id){
+  fetch('/game/jwt/api/v1/guild/join?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({guild_id:id})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){loadGuild();}
+    else{showGuildErr(d.message||'加入失败');}
+  }).catch(function(){showGuildErr('网络异常');});
+}
+function leaveGuild(){
+  fetch('/game/jwt/api/v1/guild/leave?player_id='+pid,{method:'POST',headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){loadGuild();}
+    else{showGuildErr(d.message||'操作失败');}
+  }).catch(function(){showGuildErr('网络异常');});
+}
+function updateAnnouncement(){
+  var content=document.getElementById('annContent').value.trim();
+  fetch('/game/jwt/api/v1/guild/announcement?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({content:content})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code===0){loadGuild();}
+    else{showGuildErr(d.message||'修改失败');}
+  }).catch(function(){showGuildErr('网络异常');});
+}
+loadGuild();
+</script>
+<script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').innerHTML=renderTopPlayer(p);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').innerHTML=renderPlayerName(p);
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

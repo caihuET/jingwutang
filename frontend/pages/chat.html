@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聊天 | 精武堂</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;height:100vh;display:flex;flex-direction:column}
+.topbar{height:50px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);border-bottom:2px solid #c9a96e;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
+.topbar .logo{font-size:18px;font-weight:700;color:#c9a96e;letter-spacing:4px;margin-right:24px}
+.topbar .player{margin-left:auto;color:#c9a96e;font-size:13px}
+.game-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:linear-gradient(180deg,#1e1e32,#151525);border-right:1px solid rgba(201,169,110,0.2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar .profile{padding:16px;border-bottom:1px solid rgba(201,169,110,0.15);text-align:center}
+.sidebar .profile .avatar{width:48px;height:48px;border-radius:50%;border:2px solid #c9a96e;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:rgba(201,169,110,0.1);font-size:20px}
+.sidebar .profile .name{font-size:14px;font-weight:700;color:#c9a96e}
+.sidebar .profile .info{font-size:11px;color:#6b5b4e;margin-top:2px}
+.sidebar .stats{padding:10px 16px;border-bottom:1px solid rgba(201,169,110,0.1)}
+.sidebar .stats .srow{display:flex;justify-content:space-between;font-size:11px;color:#c9a96e;padding:2px 0}
+.sidebar .nav{padding:8px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;color:#6b5b4e;cursor:pointer;font-size:13px;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover{color:#c9a96e;background:rgba(201,169,110,0.05)}
+.nav-item.active{color:#c9a96e;background:rgba(201,169,110,0.08);border-left-color:#c9a96e}
+.content{flex:1;padding:20px;display:flex;flex-direction:column;overflow:hidden}
+.page-title{font-size:18px;color:#8b1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #d4c5a9}
+.tabs{display:flex;gap:0;margin-bottom:12px;border-bottom:2px solid #d4c5a9}
+.tabs .tab{padding:6px 16px;cursor:pointer;font-size:13px;color:#6b5b4e;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tabs .tab.active{color:#8b1a1a;border-bottom-color:#8b1a1a;font-weight:600}
+.chat-box{flex:1;background:white;border:1px solid #d4c5a9;border-radius:8px;padding:12px;overflow-y:auto;margin-bottom:12px}
+.msg{margin-bottom:8px;font-size:13px}
+.msg .head{color:#6b5b4e;font-size:11px}
+.msg .head b{color:#8b1a1a}
+.msg.mine .head,.msg.mine .txt{text-align:right}
+.msg .txt{white-space:pre-wrap;word-break:break-all}
+.chat-input{display:flex;gap:8px;flex-shrink:0}
+.chat-input input[type=text]{flex:1;padding:8px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:13px;outline:none}
+.btn{padding:8px 20px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block;text-decoration:none;text-align:center}
+.btn-p{background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e}
+select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12px;outline:none}
+.empty{color:#999;font-size:12px;padding:20px 0;text-align:center}
+@media(max-width:768px){.sidebar{display:none}}
+</style>
+<script src="/game/jwt/static/js/common.js"></script>
+</head>
+<body>
+<div class="topbar">
+<a href="game.html" style="color:inherit;text-decoration:none"><div class="logo">精武<span>堂</span></div></a>
+<div class="player" id="topPlayerInfo">加载中...</div>
+<button onclick="handleLogout()" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px">退出</button>
+</div>
+<div class="game-body">
+<div class="sidebar">
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">-</div><div class="info" id="sInfo">-</div></div>
+<div class="stats">
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
+</div>
+<div class="nav">
+<a class="nav-item " href="game.html">江湖首页</a>
+<a class="nav-item " href="player.html">角色信息</a>
+<a class="nav-item " href="equipment.html">背包行囊</a>
+<a class="nav-item " href="skills.html">武学技能</a>
+<a class="nav-item " href="meridians.html">经脉修炼</a>
+<a class="nav-item " href="battle.html">闯荡江湖</a>
+<a class="nav-item " href="tasks.html">任务</a>
+<a class="nav-item " href="ranking.html">排行榜</a>
+<a class="nav-item " href="shop.html">商城</a>
+<a class="nav-item " href="friend.html">好友</a>
+<a class="nav-item " href="guild.html">帮派</a>
+<a class="nav-item active" href="chat.html">聊天</a>
+<a class="nav-item " href="equip-guide.html">装备说明</a>
+</div>
+</div>
+<div class="content">
+<div class="page-title">聊天</div>
+<div class="tabs">
+<div class="tab active" data-ch="1">世界</div>
+<div class="tab" data-ch="2">帮派</div>
+<div class="tab" data-ch="3">私聊</div>
+</div>
+<div id="privateRow" style="display:none;margin-bottom:8px">
+<select id="friendSelect"><option value="">选择好友</option></select>
+</div>
+<div class="chat-box" id="chatBox"><div class="empty">连接中...</div></div>
+<div class="chat-input">
+<input type="text" id="chatInput" placeholder="输入消息内容" maxlength="200">
+<span class="btn btn-p" onclick="sendMsg()">发送</span>
+</div>
+</div>
+</div>
+<script>
+var pid=parseInt(localStorage.getItem('player_id'))||1;
+var curCh=1;
+var curFriend='';
+var ws=null;
+var msgBuf={1:[],2:[],3:{}};
+function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function loadFriends(){
+  fetch('/game/jwt/api/v1/friend/list?player_id='+pid,{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0)return;
+    var friends=d.data&&d.data.friends||[];
+    var h='<option value="">选择好友</option>';
+    for(var i=0;i<friends.length;i++){h+='<option value="'+friends[i].player_id+'">'+esc(friends[i].name)+'</option>';}
+    var sel=document.getElementById('friendSelect');
+    sel.innerHTML=h;
+    if(curFriend)sel.value=curFriend;
+  });
+}
+function currentKey(){return curCh===3?curFriend:curCh;}
+function getBuf(){
+  if(curCh===3){
+    if(!msgBuf[3][curFriend])msgBuf[3][curFriend]=[];
+    return msgBuf[3][curFriend];
+  }
+  return msgBuf[curCh];
+}
+function renderBox(){
+  var list=getBuf()||[];
+  var h='';
+  for(var i=0;i<list.length;i++){
+    var m=list[i];
+    var mine=m.sender_id===pid;
+    h+='<div class="msg'+(mine?' mine':'')+'"><div class="head">'+(mine?'我':esc(m.sender_name))+' '+esc(m.created_at||'')+'</div><div class="txt">'+esc(m.content)+'</div></div>';
+  }
+  var box=document.getElementById('chatBox');
+  box.innerHTML=h||'<div class="empty">暂无消息</div>';
+  box.scrollTop=box.scrollHeight;
+}
+function loadHistory(){
+  var url='/game/jwt/api/v1/chat/messages?channel='+curCh+'&player_id='+pid;
+  if(curCh===3){
+    if(!curFriend){document.getElementById('chatBox').innerHTML='<div class="empty">请先选择私聊好友</div>';return;}
+    url+='&receiver_id='+curFriend;
+  }
+  fetch(url,{headers:apiHeaders()})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.code!==0){document.getElementById('chatBox').innerHTML='<div class="empty">'+esc(d.message||'加载失败')+'</div>';return;}
+    var list=d.data||[];
+    if(curCh===3){msgBuf[3][curFriend]=list;}else{msgBuf[curCh]=list;}
+    renderBox();
+  });
+}
+function addMsg(m){
+  if(!m||!m.channel)return;
+  if(m.channel===3){
+    if(m.sender_id!==pid&&m.receiver_id!==pid)return;
+    var other=m.sender_id===pid?m.receiver_id:m.sender_id;
+    var key=String(other);
+    if(!msgBuf[3][key])msgBuf[3][key]=[];
+    msgBuf[3][key].push(m);
+    if(curCh===3&&String(curFriend)===key)renderBox();
+    return;
+  }
+  if(!msgBuf[m.channel])msgBuf[m.channel]=[];
+  msgBuf[m.channel].push(m);
+  if(curCh===m.channel)renderBox();
+}
+function connectWs(){
+  var proto=location.protocol==='https:'?'wss://':'ws://';
+  ws=new WebSocket(proto+location.host+'/game/jwt/api/v1/ws/chat?player_id='+pid);
+  ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat')addMsg(d.data);}catch(err){}};
+  ws.onclose=function(){setTimeout(connectWs,3000);};
+}
+function sendMsg(){
+  var content=document.getElementById('chatInput').value.trim();
+  if(!content){alert('请输入消息内容');return;}
+  var body={channel:curCh,content:content};
+  if(curCh===3){
+    if(!curFriend){alert('请先选择私聊好友');return;}
+    body.receiver_id=parseInt(curFriend);
+  }
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:body.receiver_id}));
+    document.getElementById('chatInput').value='';
+  }else{
+    fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
+    .then(function(r){return r.json()}).then(function(d){
+      if(d.code===0){document.getElementById('chatInput').value='';loadHistory();}
+      else{alert(d.message||'发送失败');}
+    }).catch(function(){alert('网络异常');});
+  }
+}
+(function(){
+  var tabs=document.querySelectorAll('.tabs .tab');
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].addEventListener('click',function(){
+      document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active');});
+      this.classList.add('active');
+      curCh=parseInt(this.getAttribute('data-ch'))||1;
+      document.getElementById('privateRow').style.display=curCh===3?'block':'none';
+      if(curCh===3)loadFriends();
+      loadHistory();
+    });
+  }
+  document.getElementById('friendSelect').addEventListener('change',function(){
+    curFriend=this.value;
+    if(curFriend&&!msgBuf[3][curFriend])msgBuf[3][curFriend]=[];
+    loadHistory();
+  });
+})();
+loadHistory();
+connectWs();
+setInterval(function(){if(!ws||ws.readyState!==1)loadHistory();},10000);
+</script>
+<script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+function handleLogout(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+  if(d.code!==0)return;
+  var p=d.data;
+  document.getElementById('topPlayerInfo').innerHTML=renderTopPlayer(p);
+  var el=function(i){return document.getElementById(i)};
+  if(el('sName'))el('sName').innerHTML=renderPlayerName(p);
+  if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
+  if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+});
+</script>
+</body></html>

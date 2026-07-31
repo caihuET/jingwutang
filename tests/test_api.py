@@ -184,6 +184,15 @@ class TestPageExists(unittest.TestCase):
     def test_tasks_page_exists(self):
         self.assertTrue(os.path.exists("frontend/pages/tasks.html"))
 
+    def test_friend_page_exists(self):
+        self.assertTrue(os.path.exists("frontend/pages/friend.html"))
+
+    def test_chat_page_exists(self):
+        self.assertTrue(os.path.exists("frontend/pages/chat.html"))
+
+    def test_guild_page_exists(self):
+        self.assertTrue(os.path.exists("frontend/pages/guild.html"))
+
 
 class TestStaticFiles(unittest.TestCase):
     """静态资源存在性测试"""
