@@ -79,13 +79,16 @@ def get_unread(player_id: int) -> Dict[str, object]:
     return result
 
 
-def mark_online(player_id: int) -> None:
-    """标记玩家在线，并加入在线集合"""
+def mark_online(player_id: int, conn_id: str) -> None:
+    """标记玩家在线，并记录连接 token"""
     client = get_redis()
     if client is None:
         return
     try:
+        conn_key = "chat:conn:{}".format(player_id)
         pipe = client.pipeline()
+        pipe.sadd(conn_key, conn_id)
+        pipe.expire(conn_key, 300)
         pipe.set("chat:online:{}".format(player_id), "1", ex=90)
         pipe.sadd("chat:online_ids", player_id)
         pipe.execute()
@@ -93,16 +96,20 @@ def mark_online(player_id: int) -> None:
         logger.warning("在线状态写入失败: %s", exc)
 
 
-def mark_offline(player_id: int) -> None:
-    """清除玩家在线状态"""
+def mark_offline(player_id: int, conn_id: str) -> None:
+    """移除连接 token，无剩余连接时清除在线状态"""
     client = get_redis()
     if client is None:
         return
     try:
-        pipe = client.pipeline()
-        pipe.delete("chat:online:{}".format(player_id))
-        pipe.srem("chat:online_ids", player_id)
-        pipe.execute()
+        conn_key = "chat:conn:{}".format(player_id)
+        client.srem(conn_key, conn_id)
+        if client.scard(conn_key) == 0:
+            pipe = client.pipeline()
+            pipe.delete(conn_key)
+            pipe.delete("chat:online:{}".format(player_id))
+            pipe.srem("chat:online_ids", player_id)
+            pipe.execute()
     except Exception as exc:
         logger.warning("在线状态清除失败: %s", exc)
 

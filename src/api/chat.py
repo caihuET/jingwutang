@@ -1,6 +1,7 @@
 """聊天 WebSocket 接口"""
 import asyncio
 import logging
+import uuid
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from src.models.database import get_db
@@ -63,13 +64,14 @@ async def chat_ws(websocket: WebSocket, token: str = "",
     player = db.query(Player).filter(Player.id == player_id).first()
     guild_id = player.guild_id if player else None
     await ws_manager.connect(websocket, player_id, guild_id)
-    mark_online(player_id)
+    conn_id = uuid.uuid4().hex
+    mark_online(player_id, conn_id)
     try:
         while True:
             data = await asyncio.wait_for(websocket.receive_json(), timeout=90)
             action = data.get("action")
             if action == "ping":
-                mark_online(player_id)
+                mark_online(player_id, conn_id)
                 await websocket.send_json({"type": "pong"})
                 continue
             if action == "send":
@@ -82,4 +84,4 @@ async def chat_ws(websocket: WebSocket, token: str = "",
         logger.exception("聊天连接异常断开: player_id=%s", player_id)
         await ws_manager.disconnect(player_id)
     finally:
-        mark_offline(player_id)
+        mark_offline(player_id, conn_id)

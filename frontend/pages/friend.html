@@ -202,6 +202,7 @@ function sparFriend(id){
 window.onFriendRequest=function(){loadRequests();};
 loadRequests();
 loadFriends();
+setInterval(loadFriends, 30000);
 loadRequestHistory();
 </script>
 <script>
