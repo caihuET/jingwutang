@@ -7,16 +7,18 @@ from config import config
 app = FastAPI(title="精武堂 API", root_path=config.APP_ROOT_PATH)
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     """应用启动时自动创建数据库表"""
     import logging
     logger = logging.getLogger(__name__)
     from src.models.database import init_db
+    from src.service.chat_ws import ws_manager
     try:
         init_db()
         logger.info("数据库表初始化完成")
     except Exception as e:
         logger.warning("数据库初始化失败，服务将继续运行: %s", e)
+    await ws_manager.start_listener()
 
 
 from fastapi.responses import JSONResponse

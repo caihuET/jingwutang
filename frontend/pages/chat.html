@@ -58,14 +58,12 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 <div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav">
-<a class="nav-item " href="game.html">江湖首页</a>
-<a class="nav-item " href="player.html">角色信息</a>
-<a class="nav-item " href="equipment.html">背包行囊</a>
-<a class="nav-item " href="skills.html">武学技能</a>
-<a class="nav-item " href="meridians.html">经脉修炼</a>
-<a class="nav-item " href="battle.html">闯荡江湖</a>
+<a class="nav-item " href="battle.html">历练</a>
+<a class="nav-item " href="equipment.html">装备</a>
+<a class="nav-item " href="skills.html">技能</a>
+<a class="nav-item " href="meridians.html">经脉</a>
 <a class="nav-item " href="tasks.html">任务</a>
-<a class="nav-item " href="ranking.html">排行榜</a>
+<a class="nav-item " href="ranking.html">排行</a>
 <a class="nav-item " href="shop.html">商城</a>
 <a class="nav-item " href="friend.html">好友</a>
 <a class="nav-item " href="guild.html">帮派</a>
@@ -94,6 +92,7 @@ var pid=parseInt(localStorage.getItem('player_id'))||1;
 var curCh=1;
 var curFriend='';
 var ws=null;
+var wsFail=0;
 var msgBuf={1:[],2:[],3:{}};
 function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -159,10 +158,15 @@ function addMsg(m){
   if(curCh===m.channel)renderBox();
 }
 function connectWs(){
+  if(ws&&ws.readyState===1)return;
   var proto=location.protocol==='https:'?'wss://':'ws://';
   ws=new WebSocket(proto+location.host+'/game/jwt/api/v1/ws/chat?player_id='+pid);
   ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat')addMsg(d.data);}catch(err){}};
-  ws.onclose=function(){setTimeout(connectWs,3000);};
+  ws.onopen=function(){wsFail=0;};
+  ws.onclose=function(){
+    wsFail+=1;
+    if(wsFail<=10)setTimeout(connectWs,3000);
+  };
 }
 function sendMsg(){
   var content=document.getElementById('chatInput').value.trim();
@@ -203,7 +207,7 @@ function sendMsg(){
 })();
 loadHistory();
 connectWs();
-setInterval(function(){if(!ws||ws.readyState!==1)loadHistory();},5000);
+setInterval(function(){if(!ws||ws.readyState!==1||curCh===3)loadHistory();},5000);
 </script>
 <script>
 var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}

@@ -98,6 +98,14 @@ class TestChatWebSocketManager(unittest.TestCase):
         self.assertEqual(len(target.sent), 1)
         self.assertEqual(len(me.sent), 0)
 
+    def test_publish_returns_false_without_redis(self):
+        manager = ChatWebSocketManager()
+
+        async def run():
+            return await manager._publish({"kind": "chat"})
+
+        self.assertFalse(asyncio.run(run()))
+
 
 if __name__ == "__main__":
     unittest.main()

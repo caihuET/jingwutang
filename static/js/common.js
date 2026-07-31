@@ -1,15 +1,16 @@
 var API_BASE = '/game/jwt/api/v1';
 
 var SIDEBAR_LINKS = [
-    {href:'/game/jwt/game.html', label:'江湖首页'},
-    {href:'/game/jwt/player.html', label:'角色信息'},
-    {href:'/game/jwt/equipment.html', label:'背包行囊'},
-    {href:'/game/jwt/skills.html', label:'武学技能'},
-    {href:'/game/jwt/meridians.html', label:'经脉修炼'},
-    {href:'/game/jwt/battle.html', label:'闯荡江湖'},
+    {href:'/game/jwt/battle.html', label:'历练'},
+    {href:'/game/jwt/equipment.html', label:'装备'},
+    {href:'/game/jwt/skills.html', label:'技能'},
+    {href:'/game/jwt/meridians.html', label:'经脉'},
     {href:'/game/jwt/tasks.html', label:'任务'},
-    {href:'/game/jwt/ranking.html', label:'排行榜'},
+    {href:'/game/jwt/ranking.html', label:'排行'},
     {href:'/game/jwt/shop.html', label:'商城'},
+    {href:'/game/jwt/friend.html', label:'好友'},
+    {href:'/game/jwt/guild.html', label:'帮派'},
+    {href:'/game/jwt/equip-guide.html', label:'装备说明'},
 ];
 
 function checkAuth() {
@@ -19,6 +20,7 @@ function checkAuth() {
 }
 
 function handleLogout() {
+    if (window._gcWs) { try { window._gcWs.close(); } catch (e) {} }
     localStorage.removeItem('token');
     localStorage.removeItem('user_id');
     localStorage.removeItem('player_id');
@@ -193,6 +195,11 @@ function initGlobalChat() {
     gcBadge(3);
     gcLoadHistory();
     gcConnect();
+    setInterval(function() {
+        if (!window._gcWs || window._gcWs.readyState !== 1 || window._gcChannel === 3) {
+            gcLoadHistory();
+        }
+    }, 5000);
 }
 
 function gcToggle() {
@@ -343,6 +350,7 @@ function gcSave() {
 }
 
 function gcConnect() {
+    if (window._gcWs && window._gcWs.readyState === 1) { return; }
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
     var url = proto + location.host + '/game/jwt/api/v1/ws/chat?player_id=' + window._gcPid;
     var ws = new WebSocket(url);
@@ -356,15 +364,11 @@ function gcConnect() {
         } catch (err) {}
     };
     ws.onopen = function() {
-        if (window._gcPoll) { clearInterval(window._gcPoll); window._gcPoll = null; }
+        window._gcFailCount = 0;
     };
     ws.onclose = function() {
-        if (!window._gcPoll) {
-            window._gcPoll = setInterval(function() {
-                if (!window._gcWs || window._gcWs.readyState !== 1) { gcLoadHistory(); }
-            }, 5000);
-        }
-        setTimeout(gcConnect, 3000);
+        window._gcFailCount = (window._gcFailCount || 0) + 1;
+        if (window._gcFailCount <= 10) { setTimeout(gcConnect, 3000); }
     };
 }
 
