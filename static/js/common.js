@@ -63,7 +63,7 @@ function qName(quality) {
 }
 
 function slotName(slot) {
-    var names = {1:'武器',2:'防具',3:'饰品',4:'坐骑'};
+    var names = {1:'武器',2:'头盔',3:'衣甲',4:'腰带',5:'靴子',6:'项链'};
     return names[slot] || '未知';
 }
 

@@ -1,5 +1,6 @@
 """排行服务"""
 from src.models.player import Player
+from src.service.player_service import PlayerService
 from src.utils.constants import SchoolType
 
 
@@ -8,6 +9,7 @@ class RankingService:
 
     def __init__(self, db):
         self.db = db
+        self.player_service = PlayerService(db)
 
     def get_ranking(self, kind: str, player_id: int,
                     page: int = 1, size: int = 20) -> dict:
@@ -36,20 +38,32 @@ class RankingService:
         }
 
     def _load_players(self, kind: str):
+        players = self.db.query(Player).all()
+        power_map = {
+            player.id: self.player_service.get_combat_power(player)
+            for player in players
+        }
         if kind == "combat":
-            return self.db.query(Player).order_by(
-                Player.combat_power.desc(), Player.level.desc()
-            ).all()
-        return self.db.query(Player).order_by(
-            Player.level.desc(), Player.combat_power.desc()
-        ).all()
+            players = sorted(
+                players,
+                key=lambda p: (power_map[p.id], p.level),
+                reverse=True,
+            )
+        else:
+            players = sorted(
+                players,
+                key=lambda p: (p.level, power_map[p.id]),
+                reverse=True,
+            )
+        return players
 
     def _brief(self, player, rank: int) -> dict:
+        combat_power = self.player_service.get_combat_power(player)
         return {
             "rank": rank,
             "player_id": player.id,
             "name": player.name,
             "level": player.level,
             "school": SchoolType.NAMES.get(player.school_id, "未知"),
-            "combat_power": player.combat_power,
+            "combat_power": combat_power,
         }

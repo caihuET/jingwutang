@@ -19,9 +19,20 @@ class SchoolType:
 class EquipSlot:
     """装备部位"""
     WEAPON = 1
-    ARMOR = 2
-    ACCESSORY = 3
-    MOUNT = 4
+    HELMET = 2
+    ARMOR = 3
+    BELT = 4
+    BOOTS = 5
+    NECKLACE = 6
+
+    NAMES = {
+        WEAPON: "武器",
+        HELMET: "头盔",
+        ARMOR: "衣甲",
+        BELT: "腰带",
+        BOOTS: "靴子",
+        NECKLACE: "项链",
+    }
 
 
 class EquipQuality:

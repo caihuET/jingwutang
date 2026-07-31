@@ -239,7 +239,28 @@ class BattleService:
 
         equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
 
-        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power)
+        # 经脉加成
+        meridian_hp = 0
+        meridian_atk = 0
+        meridian_def = 0
+        try:
+            from src.models.meridian import MeridianAcupoint
+            from src.repository.meridian_repo import MeridianRepository
+            mer_repo = MeridianRepository(self.db)
+            pms = mer_repo.get_all_player_meridians(player.id)
+            for pm in pms:
+                acups = self.db.query(MeridianAcupoint).filter(
+                    MeridianAcupoint.meridian_id == pm.meridian_id,
+                    MeridianAcupoint.position <= pm.current_acupoint
+                ).all()
+                for ap in acups:
+                    meridian_hp += ap.bonus_hp
+                    meridian_atk += ap.bonus_attack
+                    meridian_def += ap.bonus_defense
+        except Exception:
+            pass
+        meridian_power = meridian_atk + meridian_def * 2 + meridian_hp // 2
+        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power + meridian_power)
 
 
 

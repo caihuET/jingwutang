@@ -78,7 +78,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 var pid=localStorage.getItem('player_id')||1;
 var qualityNames=["","普通","优秀","精良","史诗","传说","红装"];
 var qualityCls=["","q-gray","q-green","q-blue","q-purple","q-orange","q-red"];
-var slotNames={1:"武器",2:"头冠",3:"衣甲",4:"腰带",5:"靴子",6:"项链"};
+var slotNames={1:"武器",2:"头盔",3:"衣甲",4:"腰带",5:"靴子",6:"项链"};
 function loadGuide(){
   document.getElementById('guideLoading').style.display='block';document.getElementById('guideContent').style.display='none';
   fetch('/game/jwt/api/v1/equipment/catalog',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})

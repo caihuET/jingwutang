@@ -125,10 +125,10 @@ function loadEquipment(){
     var equipped=items.filter(function(i){return i.is_equipped===1});
     var bag=items.filter(function(i){return i.is_equipped===0});
         // 动态显示已装备物品，支持任意槽位值
-    var slotNames={1:"武器",2:"防具",3:"饰品",4:"坐骑"};
+    var slotNames={1:"武器",2:"头盔",3:"衣甲",4:"腰带",5:"靴子",6:"项链"};
     var eh="";
     // 先显示标准槽位 (1-4)
-    for(var i=1;i<=4;i++){
+    for(var i=1;i<=6;i++){
       var eq=equipped.find(function(e){return e.slot===i});
       eh+='<div class="esi" id="'+(eq?'eq-item-'+eq.id:'')+'" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
       if(eq){

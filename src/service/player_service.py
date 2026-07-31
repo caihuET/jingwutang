@@ -307,8 +307,8 @@ class PlayerService:
             if battle_count:
                 ts.check_progress(player.id, "pve_battle", battle_count)
 
-    def _calc_combat_power(self, player) -> int:
-        """计算角色战力"""
+    def _calc_combat_power(self, player) -> int:
+        """计算角色战力"""
         from src.repository.equipment_repo import EquipmentRepository
         attr = self.repo.db.query(PlayerAttribute).filter(
             PlayerAttribute.player_id == player.id
@@ -330,8 +330,12 @@ class PlayerService:
         equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
         # 经脉加成
         meridian = self._calc_meridian_bonuses(player.id)
-        meridian_power = meridian["attack"] + meridian["defense"] * 2 + meridian["hp"] // 2
-        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power + meridian_power)
+        meridian_power = meridian["attack"] + meridian["defense"] * 2 + meridian["hp"] // 2
+        return int(level_power + str_power + agi_power + con_power + spi_power + equip_power + meridian_power)
+
+    def get_combat_power(self, player) -> int:
+        """对外提供角色战力计算"""
+        return self._calc_combat_power(player)
 
     def _calc_meridian_bonuses(self, player_id: int) -> dict:
         """计算经脉加成总和"""
