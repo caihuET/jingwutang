@@ -152,6 +152,7 @@ function initGlobalChat() {
         '.gc-friend-name{cursor:pointer;color:#1565c0}' +
         '.global-chat.gc-hide{display:none}' +
         '.gc-open-btn{position:fixed;left:212px;bottom:12px;padding:8px 16px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;border:1px solid #c9a96e;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;z-index:9998;display:none}' +
+        '.gc-open-badge{position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:10px;border-radius:8px;padding:0 5px;display:none;min-width:16px;text-align:center}' +
         '.friend-badge{background:#e53935;color:#fff;font-size:10px;border-radius:8px;padding:0 5px;margin-left:4px;display:inline-block;vertical-align:top}' +
         '@media(max-width:768px){' +
         '.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:300px;max-height:45vh}' +
@@ -177,6 +178,10 @@ function initGlobalChat() {
     openBtn.className = 'gc-open-btn';
     openBtn.textContent = '江湖聊天';
     openBtn.onclick = function() { gcToggle(); };
+    var openBadge = document.createElement('span');
+    openBadge.id = 'gcOpenBadge';
+    openBadge.className = 'gc-open-badge';
+    openBtn.appendChild(openBadge);
     document.body.appendChild(openBtn);
 
     document.getElementById('gcInput').addEventListener('keydown', function(e) {
@@ -272,6 +277,14 @@ function gcBadge(ch) {
     var n = window._gcUnread[ch] || 0;
     tab.style.display = n > 0 ? 'inline-block' : 'none';
     tab.textContent = n > 99 ? '99+' : n;
+}
+
+function gcOpenBadge() {
+    var badge = document.getElementById('gcOpenBadge');
+    if (!badge) { return; }
+    var n = window._gcUnread[3] || 0;
+    badge.style.display = n > 0 ? 'inline-block' : 'none';
+    badge.textContent = n > 99 ? '99+' : n;
 }
 
 function gcEscape(s) {
@@ -505,6 +518,7 @@ function refreshUnread() {
         gcBadge(1);
         gcBadge(2);
         gcBadge(3);
+        gcOpenBadge();
     });
 }
 
