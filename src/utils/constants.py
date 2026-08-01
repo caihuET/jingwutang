@@ -1,4 +1,5 @@
 """游戏常量定义"""
+import random
 
 
 class SchoolType:
@@ -213,3 +214,137 @@ PASSIVE_SKILL_EFFECTS = {
     "打狗心法": {"attack": 3, "lifesteal": 0.02},
     "圣火护体": {"reflect_rate": 0.10},
 }
+
+
+# 装备基础属性键与展示名
+BASE_STAT_KEYS = ("attack", "defense", "magic_attack", "magic_defense", "hp", "mp", "speed")
+
+STAT_NAMES = {
+    "attack": "外功攻击",
+    "defense": "外功防御",
+    "magic_attack": "内功攻击",
+    "magic_defense": "内功防御",
+    "hp": "生命",
+    "mp": "内力",
+    "speed": "速度",
+}
+
+
+def get_base_max_stamina(level: int) -> int:
+    """等级体力上限：100 + 每 10 级 +5，封顶 150"""
+    return min(150, 100 + (level // 10) * 5)
+
+
+# 强化成长率（按穿戴等级带，非强化等级）
+ENHANCE_RATE_BY_BAND = {1: 0.06, 5: 0.07, 15: 0.08, 25: 0.09, 40: 0.10, 60: 0.12}
+
+# 强化成长品质倍率
+ENHANCE_QUALITY_MULTIPLIER = {1: 1.00, 2: 1.05, 3: 1.10, 4: 1.15, 5: 1.20, 6: 1.25}
+
+
+def get_enhance_band(level_required: int) -> int:
+    """返回穿戴等级所属强化等级带"""
+    for band in (60, 40, 25, 15, 5, 1):
+        if level_required >= band:
+            return band
+    return 1
+
+
+def calc_enhance_stats(base_stats: dict, level_required: int, quality: int, enhance_level: int) -> dict:
+    """按穿戴等级带与品质计算强化累计属性"""
+    band = get_enhance_band(level_required)
+    rate = ENHANCE_RATE_BY_BAND.get(band, 0.06) * ENHANCE_QUALITY_MULTIPLIER.get(quality, 1.0)
+    result = {}
+    for key in BASE_STAT_KEYS:
+        base = int(base_stats.get(key) or 0)
+        result[key] = round(base * rate * enhance_level)
+    return result
+
+
+# 附加属性类型：1=外攻 2=外防 3=内攻 4=内防 5=速度 6=生命 7=内力 8=体力上限
+AFFIX_TYPES = {
+    1: "外功攻击",
+    2: "外功防御",
+    3: "内功攻击",
+    4: "内功防御",
+    5: "速度",
+    6: "生命",
+    7: "内力",
+    8: "体力上限",
+}
+
+AFFIX_STAT_KEYS = {
+    1: "attack",
+    2: "defense",
+    3: "magic_attack",
+    4: "magic_defense",
+    5: "speed",
+    6: "hp",
+    7: "mp",
+    8: "stamina",
+}
+
+# 各品质附加属性条数
+AFFIX_COUNT_BY_QUALITY = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+
+# 附加属性值域：品质 -> 类型 -> (最小值, 最大值)
+AFFIX_VALUE_RANGE = {
+    1: {1: (2, 4), 2: (1, 3), 3: (2, 4), 4: (1, 3), 5: (1, 1), 6: (5, 10), 7: (3, 6), 8: (1, 2)},
+    2: {1: (5, 9), 2: (3, 6), 3: (5, 9), 4: (3, 6), 5: (1, 2), 6: (12, 20), 7: (8, 14), 8: (2, 4)},
+    3: {1: (10, 18), 2: (6, 12), 3: (10, 18), 4: (6, 12), 5: (2, 3), 6: (25, 45), 7: (16, 28), 8: (4, 6)},
+    4: {1: (20, 32), 2: (12, 20), 3: (20, 32), 4: (12, 20), 5: (3, 5), 6: (50, 80), 7: (30, 50), 8: (6, 8)},
+    5: {1: (35, 55), 2: (22, 36), 3: (35, 55), 4: (22, 36), 5: (5, 7), 6: (90, 130), 7: (55, 85), 8: (8, 12)},
+    6: {1: (60, 100), 2: (38, 60), 3: (60, 100), 4: (38, 60), 5: (7, 10), 6: (140, 200), 7: (90, 130), 8: (10, 15)},
+}
+
+# 部位附加属性权重（值越大越容易随机到）
+AFFIX_SLOT_WEIGHTS = {
+    1: {1: 30, 3: 30, 5: 12, 7: 10, 6: 8, 2: 5, 4: 5, 8: 4},
+    2: {2: 26, 6: 24, 4: 22, 3: 6, 7: 6, 8: 6, 1: 5, 5: 5},
+    3: {6: 28, 2: 26, 4: 20, 1: 6, 3: 6, 7: 6, 5: 4, 8: 4},
+    4: {8: 24, 7: 22, 6: 18, 2: 16, 4: 10, 5: 8, 1: 2, 3: 2},
+    5: {5: 34, 2: 20, 4: 16, 6: 12, 7: 8, 8: 6, 1: 4, 3: 4},
+    6: {7: 24, 3: 22, 6: 16, 1: 12, 4: 12, 5: 8, 8: 4, 2: 4},
+}
+
+
+def generate_affixes(quality: int, slot: int, rng: random.Random = None) -> list:
+    """按品质和部位随机生成附加属性，同件装备不重复"""
+    rng = rng or random
+    count = AFFIX_COUNT_BY_QUALITY.get(quality, 1)
+    weights = AFFIX_SLOT_WEIGHTS.get(slot, AFFIX_SLOT_WEIGHTS[1])
+    pool = [t for t in AFFIX_TYPES if t in weights]
+    result = []
+    for _ in range(count):
+        if not pool:
+            break
+        total = sum(weights[t] for t in pool)
+        pick = rng.randint(1, total)
+        cursor = 0
+        chosen = pool[0]
+        for t in pool:
+            cursor += weights[t]
+            if pick <= cursor:
+                chosen = t
+                break
+        vmin, vmax = AFFIX_VALUE_RANGE.get(quality, {}).get(chosen, (1, 1))
+        result.append({
+            "affix_type": chosen,
+            "value": rng.randint(vmin, vmax),
+            "sort_order": len(result) + 1,
+        })
+        pool.remove(chosen)
+    return result
+
+
+def calc_equip_power(bonuses: dict) -> int:
+    """装备战力：攻击 + 内攻 + (防御+内防)*2 + 生命//2 + 内力//2 + 速度 + 体力//2"""
+    attack = bonuses.get("attack", 0)
+    magic_attack = bonuses.get("magic_attack", 0)
+    defense = bonuses.get("defense", 0)
+    magic_defense = bonuses.get("magic_defense", 0)
+    hp = bonuses.get("hp", 0)
+    mp = bonuses.get("mp", 0)
+    speed = bonuses.get("speed", 0)
+    stamina = bonuses.get("stamina", 0)
+    return int(attack + magic_attack + (defense + magic_defense) * 2 + hp // 2 + mp // 2 + speed + stamina // 2)

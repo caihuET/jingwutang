@@ -132,9 +132,10 @@ function loadEquipment(){
       var eq=equipped.find(function(e){return e.slot===i});
       eh+='<div class="esi" id="'+(eq?'eq-item-'+eq.id:'')+'" style="'+(eq?'border-style:solid;border-color:#c9a96e':'')+'">';
       if(eq){
-        eh+='<div style="font-weight:600" class="'+qCls(eq.quality)+'">'+eq.name+'</div>';
-        eh+='<div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[eq.quality]||"未知")+'</div>';
-        eh+='<div style="margin-top:4px;display:flex;gap:4px">';
+        eh+='<div style="font-weight:600" class="'+qCls(eq.quality)+'">'+eq.name+'</div>';
+        eh+='<div style="font-size:11px;color:#666">+'+(eq.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[eq.quality]||"未知")+'</div>';
+        eh+=statsHtml(eq)+affixHtml(eq);
+        eh+='<div style="margin-top:4px;display:flex;gap:4px">';
         eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',\'unequip\')">卸下</span>';
         eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+eq.id+',\'enhance\')">强化</span>';
         eh+="</div>";
@@ -148,9 +149,10 @@ function loadEquipment(){
       var e=equipped[j];
       if(e.slot<1||e.slot>6){
         eh+='<div class="esi" id="eq-item-'+e.id+'" style="border-style:solid;border-color:#c9a96e">';
-        eh+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
-        eh+='<div style="font-size:11px;color:#666">槽位'+e.slot+' | +'+(e.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[e.quality]||"未知")+'</div>';
-        eh+='<div style="margin-top:4px;display:flex;gap:4px">';
+        eh+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
+        eh+='<div style="font-size:11px;color:#666">槽位'+e.slot+' | +'+(e.enhance_level||0)+' '+(Array("","普通","优秀","精良","史诗","传说","红装")[e.quality]||"未知")+'</div>';
+        eh+=statsHtml(e)+affixHtml(e);
+        eh+='<div style="margin-top:4px;display:flex;gap:4px">';
         eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'unequip\')">卸下</span>';
         eh+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'enhance\')">强化</span>';
         eh+="</div></div>";
@@ -159,18 +161,31 @@ function loadEquipment(){
     document.getElementById('equippedSlots').innerHTML=eh;
     var bh='';
     for(var i=0;i<bag.length;i++){
-      var e=bag[i];
+      var e=bag[i];
       bh+='<div class="ec" id="bag-item-'+e.id+'"><div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
       bh+='<div class="nr"><span style="font-size:11px;color:#666">'+(qualityNames[e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>'; bh+='<div style="font-size:11px;color:#a08040;margin-top:2px">售价 '+e.sell_price+' 金币</div>';
-      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',&#39;equip&#39;)">装备</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#7f8c8d,#555);color:#c9a96e;border:none;border-radius:4px;cursor:pointer;margin-left:4px" onclick="doAction('+e.id+',&#39;sell&#39;)">出售</span></div></div>';
+      bh+=statsHtml(e)+affixHtml(e);
+      bh+='<div style="margin-top:6px;display:flex;gap:4px"><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',&#39;equip&#39;)">装备</span><span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#7f8c8d,#555);color:#c9a96e;border:none;border-radius:4px;cursor:pointer;margin-left:4px" onclick="doAction('+e.id+',&#39;sell&#39;)">出售</span></div></div>';
     }
     document.getElementById('bagItems').innerHTML=bh||'<div style="color:#999;font-size:13px">暂无装备</div>';
   }).catch(function(){document.getElementById('equipLoading').style.display='none';document.getElementById('equipError').style.display='block';document.getElementById('equipError').textContent='网络异常';});
 }
-function qCls(q){
-  return ["","q-gray","q-green","q-blue","q-purple","q-orange","q-red"][q]||"q-gray";
-}
-function doAction(id,action){
+function qCls(q){
+  return ["","q-gray","q-green","q-blue","q-purple","q-orange","q-red"][q]||"q-gray";
+}
+var statNames={attack:'外功攻击',defense:'外功防御',magic_attack:'内功攻击',magic_defense:'内功防御',hp:'生命',mp:'内力',speed:'速度'};
+function statsHtml(e){
+  var s=e.stats||{};var h='<div style="margin-top:4px;font-size:11px;color:#4a3f35">';
+  for(var k in statNames){var v=s[k]||0;if(v>0){h+=statNames[k]+' +'+v+'&nbsp;&nbsp;';}}
+  h+='</div>';return h;
+}
+function affixHtml(e){
+  var aff=e.affixes||[];if(aff.length===0){return '';}
+  var h='<div style="margin-top:2px;font-size:11px;color:#2d7d46">';
+  for(var i=0;i<aff.length;i++){h+=aff[i].name+' +'+aff[i].value+'&nbsp;&nbsp;';}
+  h+='</div>';return h;
+}
+function doAction(id,action){
   var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance',sell:'/game/jwt/api/v1/equipment/sell'};
   if(action==='sell'){
     var sellItem=equipItems.find(function(x){return x.id===id;});
@@ -217,6 +232,7 @@ function equippedItemHtml(e,resultText){
   var h='';
   h+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
   h+='<div style="font-size:11px;color:#666">+'+(e.enhance_level||0)+' '+(qualityNames[e.quality]||'未知')+'</div>';
+  h+=statsHtml(e)+affixHtml(e);
   h+='<div style="margin-top:4px;display:flex;gap:4px">';
   h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'unequip\')">卸下</span>';
   h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#2d7d46,#1e5c32);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'enhance\')">强化</span>';
@@ -231,6 +247,7 @@ function bagItemHtml(e,resultText){
   var h='';
   h+='<div style="font-weight:600" class="'+qCls(e.quality)+'">'+e.name+'</div>';
   h+='<div class="nr"><span style="font-size:11px;color:#666">'+(qualityNames[e.quality]||'未知')+'</span><span style="font-size:11px;color:#666">+'+e.enhance_level+'</span></div>';
+  h+=statsHtml(e)+affixHtml(e);
   h+='<div style="font-size:11px;color:#a08040;margin-top:2px">售价 '+e.sell_price+' 金币</div>';
   h+='<div style="margin-top:6px;display:flex;gap:4px">';
   h+='<span class="btn" style="padding:3px 8px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="doAction('+e.id+',\'equip\')">装备</span>';
@@ -256,7 +273,7 @@ fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'B
   if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
   if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
   if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
-  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+  if(el('sStamina'))el('sStamina').textContent=(p.stamina||0)+'/'+(p.max_stamina||0);
 });
 </script>
 

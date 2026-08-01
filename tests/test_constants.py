@@ -26,9 +26,11 @@ class TestConstantsValues(unittest.TestCase):
 
     def test_equip_slots(self):
         self.assertEqual(EquipSlot.WEAPON, 1)
-        self.assertEqual(EquipSlot.ARMOR, 2)
-        self.assertEqual(EquipSlot.ACCESSORY, 3)
-        self.assertEqual(EquipSlot.MOUNT, 4)
+        self.assertEqual(EquipSlot.HELMET, 2)
+        self.assertEqual(EquipSlot.ARMOR, 3)
+        self.assertEqual(EquipSlot.BELT, 4)
+        self.assertEqual(EquipSlot.BOOTS, 5)
+        self.assertEqual(EquipSlot.NECKLACE, 6)
 
     def test_equip_qualities(self):
         self.assertEqual(EquipQuality.GRAY, 1)

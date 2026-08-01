@@ -221,23 +221,10 @@ class BattleService:
 
         spi_power = (attr.spirit if attr else 10) * 2
 
-        equipped = self.equip_repo.get_equipped(player.id)
-
-        eq_attack = 0
-
-        eq_defense = 0
-
-        eq_hp = 0
-
-        for eq in equipped:
-
-            eq_attack += getattr(eq, "enhance_attack", 0) or 0
-
-            eq_defense += getattr(eq, "enhance_defense", 0) or 0
-
-            eq_hp += getattr(eq, "enhance_hp", 0) or 0
-
-        equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
+        from src.service.equipment_service import EquipmentService
+        from src.utils.constants import calc_equip_power
+        bonuses = EquipmentService(self.db).get_equipped_bonuses(player.id)
+        equip_power = calc_equip_power(bonuses)
 
         # 经脉加成
         meridian_hp = 0
@@ -343,19 +330,16 @@ class BattleService:
 
 
 
-        # 装备加成
-
-        equipped = self.equip_repo.get_equipped(player.id)
-
-        hp_bonus = 0
-
-        for eq in equipped:
-
-            base_stats["attack"] += getattr(eq, "enhance_attack", 0) or 0
-
-            base_stats["defense"] += getattr(eq, "enhance_defense", 0) or 0
-
-            hp_bonus += getattr(eq, "enhance_hp", 0) or 0
+        # 装备加成（基础 + 强化 + 附加属性）
+        from src.service.equipment_service import EquipmentService
+        equip_bonuses = EquipmentService(self.db).get_equipped_bonuses(player.id)
+        base_stats["attack"] += equip_bonuses["attack"]
+        base_stats["defense"] += equip_bonuses["defense"]
+        base_stats["magic_attack"] += equip_bonuses["magic_attack"]
+        base_stats["magic_defense"] += equip_bonuses["magic_defense"]
+        base_stats["speed"] += equip_bonuses["speed"]
+        hp_bonus = equip_bonuses["hp"]
+        mp_bonus = equip_bonuses["mp"]
 
         max_hp_extra = 0
 
@@ -420,7 +404,7 @@ class BattleService:
             name=player.name,
             level=player.level,
             hp=player.max_hp + int(max_hp_extra) + hp_bonus + meridian_hp + int(passive_bonus.get("max_hp", 0)),
-            mp=player.max_mp + int(max_mp_extra) + int(passive_bonus.get("max_mp", 0)),
+            mp=player.max_mp + int(max_mp_extra) + mp_bonus + int(passive_bonus.get("max_mp", 0)),
             attack=base_stats["attack"] + int(meridian_atk) + int(passive_bonus.get("attack", 0)),
             defense=base_stats["defense"] + int(meridian_def) + int(passive_bonus.get("defense", 0)),
             magic_attack=base_stats["magic_attack"] + int(passive_bonus.get("magic_attack", 0)),
@@ -489,8 +473,11 @@ class BattleService:
             player_id=player_id, equip_def_id=eq.id, slot=eq.slot,
             quality=quality, is_equipped=0, enhance_level=0, durability=100,
         )
-        self.equip_repo.db.add(pe)
-        self.equip_repo.db.commit()
+        self.equip_repo.db.add(pe)
+        self.equip_repo.db.flush()
+        from src.service.equipment_service import EquipmentService
+        EquipmentService(self.equip_repo.db).generate_affixes_for_equipment(pe)
+        self.equip_repo.db.commit()
         
         qn = {1: "普通", 2: "优秀", 3: "精良", 4: "史诗", 5: "传说", 6: "红装"}
         return {"name": eq.name, "quality": qn.get(quality), "slot": eq.slot}

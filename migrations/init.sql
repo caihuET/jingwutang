@@ -364,7 +364,8 @@ CREATE TABLE IF NOT EXISTS equipment_definitions (
     base_magic_defense INT DEFAULT 0,
 
 
-    base_hp INT DEFAULT 0,
+    base_hp INT DEFAULT 0,
+    base_mp INT DEFAULT 0,
 
 
     base_speed INT DEFAULT 0,
@@ -415,7 +416,11 @@ CREATE TABLE IF NOT EXISTS player_equipment (
     enhance_defense INT DEFAULT 0,
 
 
-    enhance_hp INT DEFAULT 0,
+    enhance_hp INT DEFAULT 0,
+    enhance_magic_attack INT DEFAULT 0,
+    enhance_magic_defense INT DEFAULT 0,
+    enhance_mp INT DEFAULT 0,
+    enhance_speed INT DEFAULT 0,
 
 
     durability INT DEFAULT 100,
@@ -723,7 +728,18 @@ INSERT INTO task_definitions (name, task_type, description, requirement_type, re
 
 ('武林高手', 4, '等级达到 60 级', 'reach_level', 60, 10000, 5000, 200, 1, 4),
 
-('六脉通达', 4, '经脉全部打通', 'breakthrough', 20, 8000, 0, 500, 1, 5);
+('六脉通达', 4, '经脉全部打通', 'breakthrough', 20, 8000, 0, 500, 1, 5);
+
+CREATE TABLE IF NOT EXISTS player_equipment_affixes (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    equip_id BIGINT UNSIGNED NOT NULL,
+    affix_type TINYINT NOT NULL,
+    value INT NOT NULL,
+    sort_order TINYINT DEFAULT 0,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    INDEX idx_equip_id (equip_id),
+    CONSTRAINT fk_equip_affix FOREIGN KEY (equip_id) REFERENCES player_equipment(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 

@@ -17,6 +17,7 @@ class EquipmentDefinition(Base):
     base_magic_attack = Column(Integer, default=0)
     base_magic_defense = Column(Integer, default=0)
     base_hp = Column(Integer, default=0)
+    base_mp = Column(Integer, default=0)
     base_speed = Column(Integer, default=0)
     max_gem_slots = Column(Integer, default=0)
     is_sellable = Column(Integer, default=1)
@@ -36,6 +37,22 @@ class PlayerEquipment(Base):
     enhance_level = Column(Integer, default=0)
     enhance_attack = Column(Integer, default=0)
     enhance_defense = Column(Integer, default=0)
+    enhance_magic_attack = Column(Integer, default=0)
+    enhance_magic_defense = Column(Integer, default=0)
     enhance_hp = Column(Integer, default=0)
+    enhance_mp = Column(Integer, default=0)
+    enhance_speed = Column(Integer, default=0)
     durability = Column(Integer, default=100)
+    created_at = Column(DateTime(6), default=func.now(), nullable=False)
+
+
+class PlayerEquipmentAffix(Base):
+    """角色装备附加属性"""
+    __tablename__ = "player_equipment_affixes"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    equip_id = Column(BigInteger, ForeignKey("player_equipment.id"), nullable=False)
+    affix_type = Column(Integer, nullable=False)
+    value = Column(Integer, nullable=False)
+    sort_order = Column(Integer, default=0)
     created_at = Column(DateTime(6), default=func.now(), nullable=False)

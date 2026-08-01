@@ -94,11 +94,18 @@ function loadGuide(){
     for(var i=0;i<groups.length;i++){
       var g=groups[i];
       if(!g.items||g.items.length===0)continue;
-      h+='<div class="card"><div class="card-title"><span class="badge '+qualityCls[g.quality]+'">'+g.quality_name+'</span>强化上限 +'+g.enhance_max+'</div>';
-      h+='<table class="table"><tr><th>装备名称</th><th>部位</th><th>等级需求</th><th>攻击</th><th>防御</th><th>生命</th></tr>';
+      h+='<div class="card"><div class="card-title"><span class="badge '+qualityCls[g.quality]+'">'+g.quality_name+'</span>强化上限 +'+g.enhance_max+' | 附加属性 '+g.affix_count+' 条</div>';
+      h+='<table class="table"><tr><th>装备名称</th><th>部位</th><th>等级需求</th><th>外攻</th><th>内攻</th><th>外防</th><th>内防</th><th>生命</th><th>内力</th><th>速度</th></tr>';
       for(var j=0;j<g.items.length;j++){
         var it=g.items[j];
-        h+='<tr><td class="'+qualityCls[g.quality]+'" style="font-weight:700">'+it.name+'</td><td class="slot-name">'+(slotNames[it.slot]||('部位'+it.slot))+'</td><td>Lv.'+it.level_required+'</td><td>'+it.base_attack+'</td><td>'+it.base_defense+'</td><td>'+it.base_hp+'</td></tr>';
+        var bs=it.base_stats||{};
+        h+='<tr><td class="'+qualityCls[g.quality]+'" style="font-weight:700">'+it.name+'</td><td class="slot-name">'+(slotNames[it.slot]||('部位'+it.slot))+'</td><td>Lv.'+it.level_required+'</td><td>'+(bs.attack||0)+'</td><td>'+(bs.magic_attack||0)+'</td><td>'+(bs.defense||0)+'</td><td>'+(bs.magic_defense||0)+'</td><td>'+(bs.hp||0)+'</td><td>'+(bs.mp||0)+'</td><td>'+(bs.speed||0)+'</td></tr>';
+      }
+      var ranges=g.affix_ranges||[];
+      if(ranges.length>0){
+        var rtxt='';
+        for(var r=0;r<ranges.length;r++){rtxt+=(rtxt?' | ':'')+ranges[r].name+' '+ranges[r].min_value+'~'+ranges[r].max_value;}
+        h+='<tr><td colspan="10" style="font-size:11px;color:#2d7d46">附加属性值域：'+rtxt+'</td></tr>';
       }
       h+='</table></div>';
     }
@@ -123,7 +130,7 @@ fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'B
   if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
   if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
   if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
-  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;
+  if(el('sStamina'))el('sStamina').textContent=(p.stamina||0)+'/'+(p.max_stamina||0);
 });
 </script>
 </body></html>

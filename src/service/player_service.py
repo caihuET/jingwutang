@@ -131,7 +131,7 @@ class PlayerService:
             "school_name": SchoolType.NAMES.get(player.school_id, "未知"),
             "exp_needed": EXP_TABLE[player.level] if player.level < 100 else 0,
             "exp_progress": round(player.exp / EXP_TABLE[player.level] * 100, 1) if player.level < 100 and EXP_TABLE[player.level] > 0 else 0,
-            "max_stamina": self._get_max_stamina(player.level),
+            "max_stamina": self._get_max_stamina(player),
             "free_points": player.free_points,
             "strength": attr.strength if attr else 10,
             "agility": attr.agility if attr else 10,
@@ -171,8 +171,12 @@ class PlayerService:
 
 
 
-    def _get_max_stamina(self, level: int) -> int:
-        return min(150, 100 + (level // 10) * 5)
+    def _get_max_stamina(self, player) -> int:
+        """计算角色体力上限（等级基础 + 装备体力附加）"""
+        from src.service.equipment_service import EquipmentService
+        from src.utils.constants import get_base_max_stamina
+        bonuses = EquipmentService(self.repo.db).get_equipped_bonuses(player.id)
+        return get_base_max_stamina(player.level) + bonuses.get("stamina", 0)
 
     def _apply_stamina_recovery(self, player):
         """离线体力恢复 (每 5 分钟 1 点)"""
@@ -180,7 +184,7 @@ class PlayerService:
         elapsed = max(0, int((now - player.updated_at).total_seconds()))
         recovered = int(elapsed / 300)
         if recovered > 0:
-            max_sta = self._get_max_stamina(player.level)
+            max_sta = self._get_max_stamina(player)
             player.stamina = min(max_sta, player.stamina + recovered)
             self.repo.db.commit()
 
@@ -196,12 +200,12 @@ class PlayerService:
         if player.ingot < cost:
             raise GameException(ErrorCode.INGOT_NOT_ENOUGH, "元宝不足")
         player.ingot -= cost
-        player.stamina = min(self._get_max_stamina(player.level), player.stamina + 60)
+        player.stamina = min(self._get_max_stamina(player), player.stamina + 60)
         player.daily_stamina_bought += 1
         self.repo.db.commit()
         return {
             "stamina": player.stamina,
-            "max_stamina": self._get_max_stamina(player.level),
+            "max_stamina": self._get_max_stamina(player),
             "ingot": player.ingot,
             "bought_today": player.daily_stamina_bought,
             "cost": cost,
@@ -309,8 +313,7 @@ class PlayerService:
 
     def _calc_combat_power(self, player) -> int:
         """计算角色战力"""
-        from src.repository.equipment_repo import EquipmentRepository
-        attr = self.repo.db.query(PlayerAttribute).filter(
+        attr = self.repo.db.query(PlayerAttribute).filter(
             PlayerAttribute.player_id == player.id
         ).first()
         level_power = player.level * 10
@@ -318,16 +321,10 @@ class PlayerService:
         agi_power = (attr.agility if attr else 10) * 1
         con_power = (attr.constitution if attr else 10) * 3
         spi_power = (attr.spirit if attr else 10) * 2
-        equip_repo = EquipmentRepository(self.repo.db)
-        equipped = equip_repo.get_equipped(player.id)
-        eq_attack = 0
-        eq_defense = 0
-        eq_hp = 0
-        for eq in equipped:
-            eq_attack += getattr(eq, "enhance_attack", 0) or 0
-            eq_defense += getattr(eq, "enhance_defense", 0) or 0
-            eq_hp += getattr(eq, "enhance_hp", 0) or 0
-        equip_power = eq_attack + eq_defense * 2 + eq_hp // 2
+        from src.service.equipment_service import EquipmentService
+        from src.utils.constants import calc_equip_power
+        bonuses = EquipmentService(self.repo.db).get_equipped_bonuses(player.id)
+        equip_power = calc_equip_power(bonuses)
         # 经脉加成
         meridian = self._calc_meridian_bonuses(player.id)
         meridian_power = meridian["attack"] + meridian["defense"] * 2 + meridian["hp"] // 2
