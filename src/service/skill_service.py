@@ -23,11 +23,22 @@ class SkillService:
         self.repo = SkillRepository(db)
 
     def get_skills(self, player_id: int) -> list:
+        """技能列表：新表/新列未就绪时自动降级为基础信息，避免整页空白"""
+        try:
+            return self._get_skills_detail(player_id)
+        except Exception:
+            return self._get_skills_legacy(player_id)
+
+    def _get_skills_detail(self, player_id: int) -> list:
         skills = self.repo.get_player_skills(player_id)
         skill_ids = [s.skill_id for s in skills]
         defs = self.repo.get_definitions_by_ids(skill_ids)
         effects_map = self.repo.get_effects_by_skill_ids(skill_ids)
-        stats = BattleService(self.repo.db).get_combat_stats(player_id)
+        stats = {}
+        try:
+            stats = BattleService(self.repo.db).get_combat_stats(player_id)
+        except Exception:
+            stats = {}
         result = []
         for s in skills:
             d = defs.get(s.skill_id)
@@ -52,6 +63,43 @@ class SkillService:
                 result[-1].update(
                     self._skill_meta(d, s, effects_map.get(s.skill_id, []), stats)
                 )
+        return result
+
+    def _get_skills_legacy(self, player_id: int) -> list:
+        """降级路径：仅查询旧字段，兼容尚未执行 010 迁移的库"""
+        from src.models.skill import SkillDefinition
+        skills = self.repo.get_player_skills(player_id)
+        skill_ids = [s.skill_id for s in skills]
+        defs = {}
+        if skill_ids:
+            rows = self.repo.db.query(
+                SkillDefinition.id,
+                SkillDefinition.name,
+                SkillDefinition.school_id,
+                SkillDefinition.skill_type,
+                SkillDefinition.description,
+            ).filter(SkillDefinition.id.in_(skill_ids)).all()
+            for row in rows:
+                defs[row[0]] = row
+        result = []
+        for s in skills:
+            d = defs.get(s.skill_id)
+            name = f"技能{s.skill_id}"
+            if d:
+                name = d[1]
+                if d[3] == SkillType.PASSIVE:
+                    name = get_passive_name(d[2] or 0, name)
+            result.append({
+                "id": s.id,
+                "skill_id": s.skill_id,
+                "name": name,
+                "skill_type": d[3] if d else 0,
+                "description": d[4] if d else "",
+                "level": s.level,
+                "proficiency": s.proficiency,
+                "slot_position": s.slot_position,
+                "is_learned": s.is_learned,
+            })
         return result
 
     def _skill_meta(self, d, s, effects, stats) -> dict:

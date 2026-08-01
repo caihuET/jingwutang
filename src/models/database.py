@@ -264,6 +264,13 @@ def init_db():
                     WHEN name IN ('武林至尊','武林高手') THEN 4
                     ELSE title_level END
             """))
+            conn.commit()
+    except Exception:
+        pass
+
+    # 技能距离/群攻补全（独立执行，避免被其他迁移失败中断）
+    try:
+        with engine.connect() as conn:
             conn.execute(text("UPDATE skill_definitions SET target_type=2, aoe_targets=3 WHERE name IN ('真武七截阵','天女散花','天罗地网','天下无狗','圣火焚天')"))
             conn.execute(text("UPDATE skill_definitions SET attack_range=1 WHERE name IN ('罗汉拳','金钟罩','金刚指','达摩杖','易筋经','般若掌','龙爪手','易筋锻骨','九阴白骨爪','降龙掌','擒龙功','铜锤手','龙战于野','亢龙有悔','烈焰刀','七伤拳','大光明拳','乾坤大挪移','乾坤逆转')"))
             conn.execute(text("UPDATE skill_definitions SET attack_range=2 WHERE name IN ('太极剑法','八卦掌','纯阳剑','真武七截阵','梯云纵','纯阳剑气','太乙玄门剑','紫霄神功','天女散花','飘雪穿云','慈航普渡','佛光普照','倚天剑法','九阳神功','回春术','迷魂散','打狗棒法','逍遥游','天下无狗','圣火令','圣火焚天','光明圣火令')"))
@@ -454,21 +461,19 @@ def init_db():
 
 
 
-    # 初始化技能附加效果（如果表为空，从 init.sql 提取）
+    # 技能附加效果补全（幂等，每次启动补齐缺失行）
     try:
         with engine.connect() as conn:
-            cnt = conn.execute(text("SELECT COUNT(*) FROM skill_effects")).scalar()
-            if cnt == 0:
-                sql_text = open("migrations/init.sql", "r", encoding="utf-8").read()
-                start = 0
-                for _ in range(100):
-                    si = sql_text.find("INSERT INTO skill_effects", start)
-                    if si < 0:
-                        break
-                    ei = sql_text.index(";", si) + 1
-                    conn.execute(text(sql_text[si:ei]))
-                    start = ei
-                conn.commit()
+            sql_text = open("migrations/init.sql", "r", encoding="utf-8").read()
+            start = 0
+            for _ in range(100):
+                si = sql_text.find("INSERT INTO skill_effects", start)
+                if si < 0:
+                    break
+                ei = sql_text.index(";", si) + 1
+                conn.execute(text(sql_text[si:ei]))
+                start = ei
+            conn.commit()
     except Exception:
         pass
     # 初始化装备定义（如果表为空）

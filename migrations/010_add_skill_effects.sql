@@ -7,6 +7,7 @@
 -- 风险: 仅新增列/表/更新与插入，不删除数据；重复执行结果一致（幂等）
 
 USE jingwutang;
+SET NAMES utf8mb4;
 
 -- 1. 新增列（不存在时才添加）
 SET @col_range = (SELECT COUNT(*) FROM information_schema.COLUMNS

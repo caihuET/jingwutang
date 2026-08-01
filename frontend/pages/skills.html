@@ -116,9 +116,13 @@ var pid=localStorage.getItem('player_id')||1;
 function loadSkills(){
   document.getElementById('skillLoading').style.display='block';document.getElementById('skillContent').style.display='none';
   fetch('/game/jwt/api/v1/skill/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
-  .then(function(r){return r.json()}).then(function(d){
-    document.getElementById('skillLoading').style.display='none';document.getElementById('skillContent').style.display='block';
-    if(d.code!==0)return;
+  .then(function(r){return r.json()}).then(function(d){
+    document.getElementById('skillLoading').style.display='none';document.getElementById('skillContent').style.display='block';
+    if(d.code!==0){
+      document.getElementById('skillList').innerHTML='<div style="color:#c0392b;font-size:13px;padding:20px;text-align:center">'+(d.message||'加载失败')+'</div>';
+      showToast(d.message||'加载失败','error');
+      return;
+    }
     var skills=d.data||[];window._allSkills=skills;
     var passive=skills.filter(function(s){return s.skill_type===5;});
     var active=skills.filter(function(s){return s.skill_type!==5;});
