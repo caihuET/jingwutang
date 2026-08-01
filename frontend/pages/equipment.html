@@ -205,8 +205,13 @@ function handleActionResult(id, action, d){
   if(action==='enhance'){
     var oldItem=equipItems.find(function(x){return x.id===id;});
     var oldLevel=oldItem?oldItem.enhance_level:0;
-    var newLevel=d.data&&d.data.new_level!==undefined?d.data.new_level:oldLevel;
-    if(oldItem){oldItem.enhance_level=newLevel;}
+    var newItem=d.data&&d.data.item;
+    if(newItem){
+      var idx=equipItems.findIndex(function(x){return x.id===id;});
+      if(idx>=0){equipItems[idx]=newItem;}
+      oldItem=newItem;
+    }
+    var newLevel=oldItem?oldItem.enhance_level:(d.data&&d.data.new_level!==undefined?d.data.new_level:oldLevel);
     var delta=newLevel-oldLevel;
     var resultText=d.data&&d.data.success?'强化成功 +1':(delta<0?'强化失败 -1':'强化失败');
     if(oldItem){

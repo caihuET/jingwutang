@@ -79,15 +79,15 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <body>
 <div class="topbar">
 <a href="game.html" style="color:inherit;text-decoration:none"><div class="logo">精武<span>堂</span></div></a>
-<div class="player">剑指苍穹 Lv.15</div>
+<div class="player" id="topPlayerInfo">加载中...</div>
 </div>
 <div class="game-body">
 <div class="sidebar">
-<div class="profile"><div class="avatar">*</div><div class="name">剑指苍穹</div><div class="info">Lv.15 武当 | 战力 2850</div></div>
+<div class="profile"><div class="avatar">*</div><div class="name" id="sName">加载中...</div><div class="info" id="sInfo">加载中...</div></div>
 <div class="stats">
-<div class="srow"><span>HP</span><span>320/320</span></div>
-<div class="srow"><span>MP</span><span>150/150</span></div>
-<div class="srow"><span>体力</span><span>72</span></div>
+<div class="srow"><span>HP</span><span id="sHp">-</span></div>
+<div class="srow"><span>MP</span><span id="sMp">-</span></div>
+<div class="srow"><span>体力</span><span id="sStamina">-</span></div>
 </div>
 <div class="nav">
 <a class="nav-item " href="battle.html">历练</a>
@@ -165,14 +165,13 @@ fetch("/game/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"B
   if(d.code!==0)return;
   var p=d.data;
   if(document.getElementById("merRep"))document.getElementById("merRep").textContent="修为: "+(p.reputation||0);
-  var sn=document.querySelector(".sidebar .profile .name");if(sn)sn.textContent=p.name;
-  var si=document.querySelector(".sidebar .profile .info");if(si)si.textContent="Lv."+p.level+" | "+p.school_name+" | 战力 "+(p.combat_power||0);
+  var sn=document.getElementById("sName");if(sn)sn.innerHTML=renderPlayerName(p);
+  var si=document.getElementById("sInfo");if(si)si.textContent="Lv."+p.level+" | "+p.school_name+" | 战力 "+(p.combat_power||0);
   var ehp=p.effective_max_hp||p.max_hp;
-  var hps=document.querySelector(".sidebar .stats .srow:nth-child(1) span:last-child");if(hps)hps.textContent=p.hp+"/"+ehp;
-  var mps=document.querySelector(".sidebar .stats .srow:nth-child(2) span:last-child");if(mps)mps.textContent=p.mp+"/"+p.max_mp;
-  var sts=document.querySelector(".sidebar .stats .srow:nth-child(3) span:last-child");if(sts)sts.textContent=p.stamina;
-  var tp=document.querySelector(".topbar .player");if(tp)tp.textContent=p.name+" Lv."+p.level;
-  loadMeridians();
+  var hps=document.getElementById("sHp");if(hps)hps.textContent=p.hp+"/"+ehp;
+  var mps=document.getElementById("sMp");if(mps)mps.textContent=p.mp+"/"+p.max_mp;
+  var sts=document.getElementById("sStamina");if(sts)sts.textContent=(p.stamina||0)+"/"+(p.max_stamina||0);
+  var tp=document.getElementById("topPlayerInfo");if(tp)tp.innerHTML=renderTopPlayer(p);
 });
 (function(){var t=localStorage.getItem("token");if(!t){window.location.href="/game/jwt/";}
 function h(){localStorage.removeItem("token");localStorage.removeItem("user_id");localStorage.removeItem("player_id");window.location.href="/game/jwt/";}

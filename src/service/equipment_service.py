@@ -169,7 +169,12 @@ class EquipmentService:
         self.repo.db.commit()
         if success:
             TaskService(self.repo.db).check_progress(player_id, "enhance_equip", 1)
-        return {"success": success, "new_level": eq.enhance_level}
+        affixes = self.repo.get_affixes(eq.id)
+        return {
+            "success": success,
+            "new_level": eq.enhance_level,
+            "item": self._build_equip_item(eq, defn, affixes),
+        }
 
     def _consume_stone(self, player_id: int) -> None:
         """消耗 1 个强化石"""
