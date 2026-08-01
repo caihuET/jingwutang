@@ -80,6 +80,46 @@ class SkillType:
     PASSIVE = 5
 
 
+class SkillRange:
+    """杀伤距离"""
+    NEAR = 1
+    MID = 2
+    FAR = 3
+    NAMES = {NEAR: "近身", MID: "中程", FAR: "远程"}
+
+
+class SkillTarget:
+    """技能目标范围"""
+    SINGLE = 1
+    AOE = 2
+    NAMES = {SINGLE: "单体", AOE: "群攻"}
+
+
+class SkillEffectType:
+    """技能效果类型"""
+    HEAL = "heal"
+    HEAL_OVER_TIME = "heal_over_time"
+    BURN = "burn"
+    POISON = "poison"
+    DEFENSE_UP = "defense_up"
+    DEFENSE_DOWN = "defense_down"
+    DODGE_UP = "dodge_up"
+    DODGE_DOWN = "dodge_down"
+    SPEED_UP = "speed_up"
+    SPEED_DOWN = "speed_down"
+    CRIT_UP = "crit_up"
+    MAX_HP_UP = "max_hp_up"
+    MAGIC_ATTACK_UP = "magic_attack_up"
+    REFLECT = "reflect"
+    SHIELD = "shield"
+    LIFESTEAL = "lifesteal"
+    ARMOR_PENETRATION = "armor_penetration"
+    GUARANTEED_HIT = "guaranteed_hit"
+    BACKLASH = "backlash"
+    STACK_DAMAGE = "stack_damage"
+    UNDYING = "undying"
+
+
 class ChatChannel:
     """聊天频道"""
     WORLD = 1
@@ -214,6 +254,66 @@ PASSIVE_SKILL_EFFECTS = {
     "打狗心法": {"attack": 3, "lifesteal": 0.02},
     "圣火护体": {"reflect_rate": 0.10},
 }
+
+
+# 技能效果展示名
+SKILL_EFFECT_NAMES = {
+    SkillEffectType.HEAL: "治疗",
+    SkillEffectType.HEAL_OVER_TIME: "持续治疗",
+    SkillEffectType.BURN: "灼烧",
+    SkillEffectType.POISON: "中毒",
+    SkillEffectType.DEFENSE_UP: "防御提升",
+    SkillEffectType.DEFENSE_DOWN: "破防",
+    SkillEffectType.DODGE_UP: "闪避提升",
+    SkillEffectType.DODGE_DOWN: "命中下降",
+    SkillEffectType.SPEED_UP: "加速",
+    SkillEffectType.SPEED_DOWN: "减速",
+    SkillEffectType.CRIT_UP: "暴击提升",
+    SkillEffectType.MAX_HP_UP: "生命上限提升",
+    SkillEffectType.MAGIC_ATTACK_UP: "内功提升",
+    SkillEffectType.REFLECT: "伤害反弹",
+    SkillEffectType.SHIELD: "护盾",
+    SkillEffectType.LIFESTEAL: "吸血",
+    SkillEffectType.ARMOR_PENETRATION: "无视防御",
+    SkillEffectType.GUARANTEED_HIT: "必中",
+    SkillEffectType.BACKLASH: "反噬",
+    SkillEffectType.STACK_DAMAGE: "愈战愈勇",
+    SkillEffectType.UNDYING: "保命",
+}
+
+# 群攻与熟练度规则
+SKILL_AOE_DAMAGE_MULTIPLIER = 0.7
+SKILL_AOE_MAX_TARGETS = 3
+SKILL_AOE_MIN_COOLDOWN = 2
+PROFICIENCY_BONUS_STEP = 50
+PROFICIENCY_BONUS_MAX = 10
+RANGE_DODGE_MODIFIER = {
+    SkillRange.NEAR: 1.2,
+    SkillRange.MID: 1.0,
+    SkillRange.FAR: 0.8,
+}
+
+
+def get_proficiency_bonus(proficiency: int) -> int:
+    """熟练加成：每 50 点熟练度 +1% 伤害/治疗，上限 10%"""
+    return min(PROFICIENCY_BONUS_MAX, proficiency // PROFICIENCY_BONUS_STEP)
+
+
+def calc_skill_power(base_damage: int, damage_per_level: int, level: int) -> int:
+    """技能威力系数（百分比）：基础 + 每级成长 x (等级-1)"""
+    return base_damage + damage_per_level * max(0, level - 1)
+
+
+def get_skill_cooldown(base_cooldown: int, target_type: int) -> int:
+    """群攻技能冷却在原基础上 +1，最低 2 回合"""
+    if target_type == SkillTarget.AOE:
+        return max(SKILL_AOE_MIN_COOLDOWN, base_cooldown + 1)
+    return base_cooldown
+
+
+def get_standard_monster_defense(level: int) -> int:
+    """技能页预估伤害使用的同等级标准怪防御"""
+    return int(8 + level * 1.5)
 
 
 # 装备基础属性键与展示名

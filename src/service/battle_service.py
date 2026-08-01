@@ -22,7 +22,16 @@ from src.models.player_attr import PlayerAttribute
 
 from src.utils.constants import ErrorCode
 
-from src.utils.constants import EXP_TABLE, BattleType, SkillType, PASSIVE_SKILL_EFFECTS
+from src.utils.constants import (
+    EXP_TABLE,
+    BattleType,
+    PASSIVE_SKILL_EFFECTS,
+    SKILL_AOE_MAX_TARGETS,
+    SkillRange,
+    SkillTarget,
+    calc_skill_power,
+    get_skill_cooldown,
+)
 from src.utils.constants import get_passive_name
 
 from src.service.task_service import TaskService
@@ -363,41 +372,17 @@ class BattleService:
 
 
 
-        # 出战技能
-
-        skills_data = self.skill_repo.get_slotted_skills(player.id)
-
-        skill_ids = [ps.skill_id for ps in skills_data]
-
-        skill_defs = {}
-
-        if skill_ids:
-
-            for sd in self.db.query(SkillDefinition).filter(SkillDefinition.id.in_(skill_ids)).all():
-
-                skill_defs[sd.id] = sd.name
-
-        skills = []
-
-        for ps in skills_data:
-
-            skills.append({
-
-                "id": ps.id,
-
-                "name": skill_defs.get(ps.skill_id, f"技能{ps.skill_id}"),
-
-                "skill_type": SkillType.PHYSICAL,
-
-                "base_damage": 100 + ps.level * 15,
-
-                "mp_cost": 10 + ps.level * 5,
-
-                "cooldown": 0,
-
-                "damage_type": 1,
-
-            })
+        # 出战技能（使用真实技能定义与附加效果）
+        skills_data = self.skill_repo.get_slotted_skills(player.id)
+        skill_ids = [ps.skill_id for ps in skills_data]
+        skill_defs = self.skill_repo.get_definitions_by_ids(skill_ids)
+        effects_map = self.skill_repo.get_effects_by_skill_ids(skill_ids)
+        skills = []
+        for ps in skills_data:
+            sd = skill_defs.get(ps.skill_id)
+            if not sd:
+                continue
+            skills.append(self._build_skill_unit(sd, ps, effects_map.get(ps.skill_id, [])))
 
 
 
@@ -424,6 +409,51 @@ class BattleService:
 
 
 
+
+
+    def get_combat_stats(self, player_id: int) -> dict:
+        """返回角色战斗面板，供技能页预估伤害使用"""
+        player = self.player_repo.get_by_id(player_id)
+        if not player:
+            return {}
+        unit = self._build_player_unit(player)
+        return {
+            "level": player.level,
+            "attack": unit.attack,
+            "magic_attack": unit.magic_attack,
+            "defense": unit.defense,
+            "magic_defense": unit.magic_defense,
+            "speed": unit.speed,
+        }
+
+    def _build_skill_unit(self, sd, ps, effects) -> dict:
+        """按技能定义与玩家等级构建战斗技能数据"""
+        return {
+            "id": ps.id,
+            "skill_id": sd.id,
+            "name": sd.name,
+            "skill_type": sd.skill_type,
+            "base_damage": calc_skill_power(sd.base_damage, sd.damage_per_level, ps.level),
+            "mp_cost": sd.mp_cost + sd.mp_cost_per_level * max(0, ps.level - 1),
+            "cooldown": get_skill_cooldown(sd.cooldown, sd.target_type),
+            "damage_type": sd.damage_type,
+            "target_type": sd.target_type or SkillTarget.SINGLE,
+            "attack_range": sd.attack_range or SkillRange.MID,
+            "aoe_targets": sd.aoe_targets or SKILL_AOE_MAX_TARGETS,
+            "proficiency": ps.proficiency,
+            "level": ps.level,
+            "effects": [self._format_skill_effect(e) for e in effects],
+        }
+
+    def _format_skill_effect(self, eff) -> dict:
+        """格式化技能附加效果供战斗引擎使用"""
+        return {
+            "effect_type": eff.effect_type,
+            "base_value": eff.base_value,
+            "value_per_level": eff.value_per_level,
+            "duration": eff.duration,
+            "target_type": eff.target_type,
+        }
     def _drop_equipment(self, player_id: int, map_id: int) -> dict:
         """战斗胜利后概率掉落装备（品质和等级与玩家等级、地图等级挂钩）"""
         from src.models.equipment import EquipmentDefinition, PlayerEquipment

@@ -136,9 +136,10 @@ function loadSkills(){
     for(var i=0;i<active.length;i++){
       var s=active[i];
       lh+='<div class="sitem"><div style="font-weight:700;color:#8b1a1a;font-size:14px">'+s.name+'</div>';
-      lh+='<div style="font-size:11px;color:#1565c0;font-weight:600;margin:2px 0">Lv.'+s.level+'</div>';
-      lh+='<div style="font-size:11px;color:#999">熟练度 '+s.proficiency+'</div>';
-      lh+='<div style="margin-top:4px;display:flex;gap:4px;justify-content:center"><span class="btn" style="padding:3px 10px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="openSlotSel(1,'+s.id+')">'+(s.slot_position?'卸下':'出战')+'</span></div></div>';
+      lh+='<div style="font-size:11px;color:#1565c0;font-weight:600;margin:2px 0">Lv.'+s.level+'</div>';
+      lh+='<div style="font-size:11px;color:#999">熟练度 '+s.proficiency+'</div>';
+      lh+=skillMetaHtml(s);
+      lh+='<div style="margin-top:4px;display:flex;gap:4px;justify-content:center"><span class="btn" style="padding:3px 10px;font-size:11px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;border:none;border-radius:4px;cursor:pointer" onclick="openSlotSel(1,'+s.id+')">'+(s.slot_position?'卸下':'出战')+'</span></div></div>';
     }
     document.getElementById('skillList').innerHTML=lh||'<div style="color:#999;font-size:13px">暂无技能</div>';
     var ph='';
@@ -147,13 +148,38 @@ function loadSkills(){
       ph+='<div class="sitem"><div style="font-weight:700;color:#8b1a1a;font-size:14px">'+ps.name+'</div>';
       ph+='<div style="font-size:11px;color:#1565c0;font-weight:600;margin:2px 0">Lv.'+ps.level+'</div>';
       ph+='<div style="font-size:11px;color:#999">熟练度 '+ps.proficiency+'</div>';
+      ph+=skillMetaHtml(ps);
       ph+='<div style="margin-top:4px;font-size:11px;color:#e91e63;font-weight:600">被动 · 常驻生效</div></div>';
     }
     document.getElementById('passiveSkillBlock').innerHTML=passive.length?
       '<div style="font-size:13px;color:#8b1a1a;font-weight:600;margin:12px 0 8px">被动技能（常驻生效，不占出战槽）</div><div class="sgrid">'+ph+'</div>':'';
-  });
-}
-function openSlotSel(slotIdx,skillId){
+  });
+}
+function skillMetaHtml(s){
+  var h='';
+  if(s.description){h+='<div style="font-size:11px;color:#4a3f35;margin-top:4px;line-height:1.5">'+s.description+'</div>';}
+  if(s.skill_type!==5){
+    h+='<div style="font-size:11px;color:#666;margin-top:4px">';
+    h+='杀伤距离：'+(s.attack_range_name||'中程');
+    h+='　目标：'+(s.target_name||'单体')+(s.target_type===2?('×'+(s.aoe_targets||3)):'');
+    h+='</div>';
+  }
+  if(s.power_text&&s.power_text!=='-'){
+    h+='<div style="font-size:11px;color:#a08040;margin-top:2px">威力 '+s.power_text+'　内力 '+s.mp_cost+(s.cooldown>0?('　冷却 '+s.cooldown+' 回合'):'')+'</div>';
+  }
+  if(s.proficiency_bonus>0&&s.skill_type!==5){
+    h+='<div style="font-size:11px;color:#2d7d46;margin-top:2px">熟练加成 +'+s.proficiency_bonus+'%</div>';
+  }
+  var effects=s.effects||[];
+  for(var j=0;j<effects.length;j++){
+    h+='<div style="font-size:11px;color:#8b1a1a;margin-top:2px">'+effects[j].text+'</div>';
+  }
+  if(s.damage_estimate){
+    h+='<div style="font-size:11px;color:#1565c0;margin-top:2px">预估伤害 '+s.damage_estimate.min+'~'+s.damage_estimate.max+'</div>';
+  }
+  return h;
+}
+function openSlotSel(slotIdx,skillId){
   if(skillId){
     var skills=window._allSkills||[];
     var slotted=skills.filter(function(s){return s.slot_position!==null});

@@ -31,6 +31,22 @@ class SkillDefinition(Base):
     mp_cost_per_level = Column(Integer, default=0)
     cooldown = Column(Integer, default=0)
     target_type = Column(SmallInteger, default=1)
+    attack_range = Column(SmallInteger, default=2)
+    aoe_targets = Column(SmallInteger, default=1)
     max_level = Column(Integer, default=10)
     unlock_level = Column(Integer, default=0)
     description = Column(String(256), nullable=False)
+
+
+class SkillEffect(Base):
+    """技能附加效果定义（治疗/灼烧/中毒/buff/debuff 等）"""
+    __tablename__ = "skill_effects"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    skill_id = Column(Integer, ForeignKey("skill_definitions.id"), nullable=False)
+    effect_type = Column(String(32), nullable=False)
+    base_value = Column(Integer, default=0)
+    value_per_level = Column(Integer, default=0)
+    duration = Column(Integer, default=0)
+    target_type = Column(SmallInteger, default=1)
+    sort_order = Column(Integer, default=0)
