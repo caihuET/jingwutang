@@ -42,7 +42,7 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 .empty{color:#999;font-size:12px;padding:20px 0;text-align:center}
 @media(max-width:768px){.sidebar{display:none}.content{padding:10px}.chat-box{min-height:0}.chat-input input[type=text]{font-size:16px}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=5"></script>
+<script src="/game/jwt/static/js/common.js?v=7"></script>
 </head>
 <body>
 <div class="topbar">
@@ -245,16 +245,35 @@ function markRead(ch,friendId){
       curCh=parseInt(this.getAttribute('data-ch'))||1;
       document.getElementById('privateHint').style.display=curCh===3?'block':'none';
       if(curCh===3)loadFriends();
+      if(curCh!==3){document.getElementById('chatInput').value='';}
       loadHistory();
     });
   }
   document.getElementById('chatBox').addEventListener('click',function(e){
     var target=e.target;
     if(target&&target.className==='friend-name'&&target.getAttribute('data-id')){
+      var name=target.textContent;
+      var friendId=friendsMap[name];
+      if(e.ctrlKey||e.metaKey){
+        if(!friendId){alert('只能给好友发送私聊');return;}
+        document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active');});
+        var privateTab=document.querySelector('.tabs .tab[data-ch="3"]');
+        if(privateTab){privateTab.classList.add('active');}
+        curCh=3;
+        document.getElementById('privateHint').style.display='block';
+        curFriend=String(friendId);
+        curFriendName=name;
+        loadFriends();
+        var input=document.getElementById('chatInput');
+        input.value='/'+name+' ';
+        input.focus();
+        loadHistory();
+        return;
+      }
       curFriend=target.getAttribute('data-id');
-      curFriendName=target.textContent;
+      curFriendName=name;
       var hint=document.getElementById('privateHint');
-      if(hint){hint.textContent='发送给：'+target.textContent+'（可输入 /好友名 内容 切换）';}
+      if(hint){hint.textContent='发送给：'+name+'（可输入 /好友名 内容 切换）';}
     }
   });
   document.getElementById('loadMoreBtn').addEventListener('click',loadMore);

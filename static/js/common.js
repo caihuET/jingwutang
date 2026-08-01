@@ -191,11 +191,29 @@ function initGlobalChat() {
     document.getElementById('gcBody').addEventListener('click', function(e) {
         var target = e.target;
         if (target && target.className === 'gc-friend-name' && target.getAttribute('data-id')) {
+            var name = target.textContent;
+            var friendId = window._gcFriends && window._gcFriends[name];
+            if (e.ctrlKey || e.metaKey) {
+                if (!friendId) {
+                    showFriendNotice('只能给好友发送私聊');
+                    return;
+                }
+                gcSwitch(3);
+                window._gcPrivateFriend = String(friendId);
+                window._gcPrivateName = name;
+                var gcInput = document.getElementById('gcInput');
+                gcInput.value = '/' + name + ' ';
+                gcInput.focus();
+                var hint = document.getElementById('gcFriendHint');
+                if (hint) { hint.textContent = '发送给：' + name + '（可输入 /好友名 内容 切换）'; }
+                gcSave();
+                return;
+            }
             window._gcPrivateFriend = target.getAttribute('data-id');
-            window._gcPrivateName = target.textContent;
+            window._gcPrivateName = name;
             var hint = document.getElementById('gcFriendHint');
-            if (hint) { hint.textContent = '发送给：' + target.textContent + '（可输入 /好友名 内容 切换）'; }
-            document.getElementById('gcInput').placeholder = '发送给 ' + target.textContent;
+            if (hint) { hint.textContent = '发送给：' + name + '（可输入 /好友名 内容 切换）'; }
+            document.getElementById('gcInput').placeholder = '发送给 ' + name;
             gcSave();
         }
     });
@@ -270,6 +288,10 @@ function gcSwitch(ch) {
     }
     document.getElementById('gcFriendRow').style.display = ch === 3 ? 'block' : 'none';
     if (ch === 3) { gcLoadFriends(); }
+    if (ch !== 3) {
+        var input = document.getElementById('gcInput');
+        if (input) { input.value = ''; }
+    }
     gcBadge(ch);
     gcLoadHistory();
     gcSave();
@@ -320,12 +342,16 @@ function gcLoadHistory() {
         }
         var data = d.data || {};
         var list = data.messages || [];
+        var chatEl = document.getElementById('globalChat');
+        var chatHidden = chatEl && chatEl.classList.contains('gc-hide');
         if (ch === 3) { window._gcPrivate = list; } else { window._gcMsgs[ch] = list; }
-        window._gcUnread[ch] = 0;
-        gcBadge(ch);
+        if (ch !== 3 || !chatHidden) {
+            window._gcUnread[ch] = 0;
+            gcBadge(ch);
+            gcMarkRead(ch, '');
+        }
         gcRender();
         gcSave();
-        gcMarkRead(ch, '');
     });
 }
 
@@ -354,7 +380,9 @@ function gcAddMsg(msg) {
     if (ch === 3) {
         if (msg.sender_id !== window._gcPid && msg.receiver_id !== window._gcPid) { return; }
         window._gcPrivate.push(msg);
-        if (window._gcChannel === 3) {
+        var chatEl = document.getElementById('globalChat');
+        var chatHidden = chatEl && chatEl.classList.contains('gc-hide');
+        if (window._gcChannel === 3 && !chatHidden) {
             gcRender();
             gcMarkRead(3, '');
         } else {
