@@ -85,12 +85,13 @@ INSERT INTO skill_definitions (name, school_id, skill_type, damage_type, base_da
 SELECT '大光明拳', 6, 2, 1, 200, 19, 18, 1, 1, 10, 15, 1, 1, '圣火令神功，造成外功伤害'
 WHERE NOT EXISTS (SELECT 1 FROM skill_definitions WHERE name='大光明拳' AND school_id=6);
 
--- 为所有玩家补发缺失技能（已学习的跳过）
+-- 为所有玩家补发本门派缺失技能（跨门派不补发，通用技能可补发）
 INSERT INTO player_skills (player_id, skill_id, level, proficiency, slot_position, is_learned)
 SELECT p.id, sd.id, 1, 0, NULL, 1
 FROM players p
-CROSS JOIN skill_definitions sd
-WHERE sd.name IN ('金刚指','达摩杖','易筋经','纯阳剑','真武七截阵','梯云纵','慈航普渡','九阴白骨爪','飘雪穿云','追心箭','机关术','迷魂散','逍遥游','擒龙功','铜锤手','乾坤大挪移','七伤拳','大光明拳')
+JOIN skill_definitions sd
+  ON sd.name IN ('金刚指','达摩杖','易筋经','纯阳剑','真武七截阵','梯云纵','慈航普渡','九阴白骨爪','飘雪穿云','追心箭','机关术','迷魂散','逍遥游','擒龙功','铜锤手','乾坤大挪移','七伤拳','大光明拳')
+  AND (sd.school_id = p.school_id OR sd.school_id IS NULL)
 AND NOT EXISTS (
     SELECT 1 FROM player_skills ps
     WHERE ps.player_id = p.id AND ps.skill_id = sd.id

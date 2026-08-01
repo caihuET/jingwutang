@@ -413,7 +413,7 @@ def init_db():
 
 
 
-                    "SELECT id FROM skill_definitions WHERE school_id = :s ORDER BY id"
+                    "SELECT id FROM skill_definitions WHERE (school_id = :s OR school_id IS NULL) ORDER BY id"
 
 
 
