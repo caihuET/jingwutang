@@ -157,6 +157,7 @@ function initGlobalChat() {
         '@media(max-width:768px){' +
         '.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:300px;max-height:45vh}' +
         '.gc-open-btn{left:8px;bottom:8px}' +
+        '.gc-input input[type=text]{font-size:16px}' +
         '}';
     document.head.appendChild(css);
 
@@ -254,6 +255,9 @@ function gcToggle() {
     if (!hidden) {
         gcLoadHistory();
         gcConnect();
+    } else {
+        var gcInput = document.getElementById('gcInput');
+        if (gcInput) { gcInput.blur(); }
     }
     gcSave();
 }
@@ -446,6 +450,7 @@ function gcSend() {
     if (window._gcWs && window._gcWs.readyState === 1) {
         window._gcWs.send(JSON.stringify({action: 'send', channel: ch, content: content, receiver_id: body.receiver_id, receiver_name: body.receiver_name}));
         gcResetInput(input, ch);
+        input.blur();
     } else {
         fetch('/game/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
             method: 'POST',
@@ -454,7 +459,7 @@ function gcSend() {
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.code === 0) { gcResetInput(input, ch); gcLoadHistory(); }
+            if (d.code === 0) { gcResetInput(input, ch); gcLoadHistory(); input.blur(); }
             else { alert(d.message || '发送失败'); }
         })
         .catch(function() { alert('网络异常'); });

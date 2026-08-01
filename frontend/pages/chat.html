@@ -42,7 +42,7 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 .empty{color:#999;font-size:12px;padding:20px 0;text-align:center}
 @media(max-width:768px){.sidebar{display:none}.content{padding:10px}.chat-box{min-height:0}.chat-input input[type=text]{font-size:16px}}
 </style>
-<script src="/game/jwt/static/js/common.js"></script>
+<script src="/game/jwt/static/js/common.js?v=4"></script>
 </head>
 <body>
 <div class="topbar">
@@ -195,10 +195,11 @@ function sendMsg(){
   if(ws&&ws.readyState===1){
     ws.send(JSON.stringify({action:'send',channel:curCh,content:content,receiver_id:receiverId,receiver_name:parsed?parsed.receiver_name:null}));
     resetInput(input,curCh);
+    input.blur();
   }else{
     fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
-      if(d.code===0){resetInput(input,curCh);loadHistory();}
+      if(d.code===0){resetInput(input,curCh);loadHistory();input.blur();}
       else{alert(d.message||'发送失败');}
     }).catch(function(){alert('网络异常');});
   }
