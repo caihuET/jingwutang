@@ -136,20 +136,20 @@ function loadInventory(){
 function buyItem(itemId){
   var qtyEl=document.getElementById('qty_'+itemId);
   var qty=qtyEl?parseInt(qtyEl.value)||1:1;
-  if(qty<1||qty>99){alert('购买数量需在 1-99 之间');return;}
+  if(qty<1||qty>99){showToast('购买数量需在 1-99 之间','error');return;}
   fetch('/game/jwt/api/v1/shop/buy?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:qty})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert('购买成功 x'+qty);loadShop();loadInventory();loadPlayer();}
-    else{alert(d.message||'购买失败');}
-  }).catch(function(){alert('网络异常');});
+    if(d.code===0){showToast('购买成功 x'+qty,'success');loadShop();loadInventory();loadPlayer();}
+    else{showToast(d.message||'购买失败','error');}
+  }).catch(function(){showToast('网络异常','error');});
 }
 
 function useItem(itemId){
   fetch('/game/jwt/api/v1/inventory/use?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:1})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert('使用成功');loadInventory();loadPlayer();}
-    else{alert(d.message||'使用失败');}
-  }).catch(function(){alert('网络异常');});
+    if(d.code===0){showToast('使用成功','success');loadInventory();loadPlayer();}
+    else{showToast(d.message||'使用失败','error');}
+  }).catch(function(){showToast('网络异常','error');});
 }
 
 function showErr(msg){

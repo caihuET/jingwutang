@@ -135,7 +135,7 @@ function selectMap(id){
   document.querySelectorAll('.map-item').forEach(function(d,i){d.style.borderColor='#d4c5a9';d.style.background='';if(i+1==id){d.style.borderColor='#8b1a1a';d.style.background='rgba(139,26,26,0.05)'}});
 }
 function startBattle(){
-  if(!selectedMap){alert('请选择目标');return;}
+  if(!selectedMap){showToast('请选择目标','error');return;}
   var area=document.getElementById('battleArea');
   area.style.display='block';area.innerHTML='战斗中...';
   document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';document.getElementById('skipBtn').disabled=false;document.getElementById('skipBtn').style.opacity='1';document.getElementById('skipBtn').style.cursor='pointer';skipFlag=false;

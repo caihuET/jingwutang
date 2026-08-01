@@ -184,7 +184,7 @@ function createGuild(){
 function joinGuild(id){
   fetch('/game/jwt/api/v1/guild/join?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({guild_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert(d.message||'申请已提交，等待帮主审核');}
+    if(d.code===0){showToast(d.message||'申请已提交，等待帮主审核','success');}
     else{showGuildErr(d.message||'加入失败');}
   }).catch(function(){showGuildErr('网络异常');});
 }

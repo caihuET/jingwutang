@@ -170,7 +170,7 @@ function connectWs(){
   var proto=location.protocol==='https:'?'wss://':'ws://';
   var token=encodeURIComponent(localStorage.getItem('token')||'');
   ws=new WebSocket(proto+location.host+'/game/jwt/api/v1/ws/chat?token='+token);
-  ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat'){addMsg(d.data);}else if(d.type==='error'){alert(d.message||'发送失败');}else if(d.type==='friend_request'){refreshFriendBadge();if(typeof window.onFriendRequest==='function'){window.onFriendRequest(d);}showFriendNotice(d.name?d.name+' 申请加你为好友':'收到新的好友申请');}else if(d.type==='friend_accepted'){if(typeof updateFriendCount==='function')updateFriendCount(1);showFriendNotice(d.name?d.name+' 已同意你的好友申请':'好友申请已通过');}}catch(err){}};
+  ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat'){addMsg(d.data);}else if(d.type==='error'){showToast(d.message||'发送失败','error');}else if(d.type==='friend_request'){refreshFriendBadge();if(typeof window.onFriendRequest==='function'){window.onFriendRequest(d);}showFriendNotice(d.name?d.name+' 申请加你为好友':'收到新的好友申请');}else if(d.type==='friend_accepted'){if(typeof updateFriendCount==='function')updateFriendCount(1);showFriendNotice(d.name?d.name+' 已同意你的好友申请':'好友申请已通过');}}catch(err){}};
   ws.onopen=function(){wsRetry=0;};
   ws.onclose=function(){
     var delay=Math.min(30000,1000*Math.pow(2,wsRetry));
@@ -181,7 +181,7 @@ function connectWs(){
 function sendMsg(){
   var input=document.getElementById('chatInput');
   var content=input.value.trim();
-  if(!content){alert('请输入消息内容');return;}
+  if(!content){showToast('请输入消息内容','error');return;}
   var receiverId=null;
   if(curCh===3){
     var parsed=parsePrivateTarget(content);
@@ -200,8 +200,8 @@ function sendMsg(){
     fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
       if(d.code===0){resetInput(input,curCh);loadHistory();input.blur();}
-      else{alert(d.message||'发送失败');}
-    }).catch(function(){alert('网络异常');});
+      else{showToast(d.message||'发送失败','error');}
+    }).catch(function(){showToast('网络异常','error');});
   }
 }
 function parsePrivateTarget(content){
@@ -215,7 +215,7 @@ function parsePrivateTarget(content){
     if(hint){hint.textContent='发送给：'+name+'（可输入 /好友名 内容 切换）';}
     return {receiver_id:friendId||null,receiver_name:name,content:match[2]};
   }
-  if(!curFriend){alert('请输入 /好友名 内容');return null;}
+  if(!curFriend){showToast('请输入 /好友名 内容','error');return null;}
   return {receiver_id:parseInt(curFriend),receiver_name:curFriendName||friendNameById(curFriend),content:content};
 }
 function friendNameById(id){
@@ -255,7 +255,7 @@ function markRead(ch,friendId){
       var name=target.textContent;
       var friendId=friendsMap[name];
       if(e.ctrlKey||e.metaKey){
-        if(!friendId){alert('只能给好友发送私聊');return;}
+        if(!friendId){showToast('只能给好友发送私聊','error');return;}
         document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active');});
         var privateTab=document.querySelector('.tabs .tab[data-ch="3"]');
         if(privateTab){privateTab.classList.add('active');}

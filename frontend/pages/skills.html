@@ -164,7 +164,7 @@ function openSlotSel(slotIdx,skillId){
     }else{
       if(allIds.indexOf(skillId)===-1){allIds.push(skillId);}
     }
-    if(allIds.length>4){alert("最多4个出战技能");return;}
+    if(allIds.length>4){showToast("最多4个出战技能",'error');return;}
     fetch('/game/jwt/api/v1/skill/slot?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({skill_ids:allIds})}).then(function(r){return r.json()}).then(function(d){if(d.code===0)loadSkills();});
   }
   else{loadSkills();}

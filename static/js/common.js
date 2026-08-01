@@ -33,7 +33,11 @@ function showToast(msg, type) {
     if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
     el.textContent = msg;
     el.className = 'toast show ' + (type || 'info');
-    setTimeout(function() { el.classList.remove('show'); }, 3000);
+    el.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;font-size:13px;z-index:10000;display:block;box-shadow:0 4px 20px rgba(0,0,0,.4);background:#2a2a5c;color:#f0e6d0;border:1px solid #3a3a7c;';
+    if (type === 'success') { el.style.background = '#1e5c32'; el.style.borderColor = '#2d7d46'; }
+    else if (type === 'error') { el.style.background = '#5c0e0e'; el.style.borderColor = '#8b1a1a'; }
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(function() { el.style.display = 'none'; }, 2000);
 }
 
 function showFriendNotice(msg) {
@@ -47,7 +51,7 @@ function showFriendNotice(msg) {
     el.textContent = msg;
     el.style.display = 'block';
     clearTimeout(window._friendNoticeTimer);
-    window._friendNoticeTimer = setTimeout(function() { el.style.display = 'none'; }, 4000);
+    window._friendNoticeTimer = setTimeout(function() { el.style.display = 'none'; }, 2000);
 }
 
 function showLoading(v) {
@@ -489,9 +493,9 @@ function gcSend() {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.code === 0) { gcResetInput(input, ch); gcLoadHistory(); input.blur(); }
-            else { alert(d.message || '发送失败'); }
+            else { showToast(d.message || '发送失败', 'error'); }
         })
-        .catch(function() { alert('网络异常'); });
+        .catch(function() { showToast('网络异常', 'error'); });
     }
 }
 

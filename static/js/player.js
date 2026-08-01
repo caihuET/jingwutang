@@ -111,5 +111,6 @@ function showToast(msg, type) {
     var el = document.getElementById('toast');
     el.textContent = msg;
     el.className = 'toast show ' + type;
-    setTimeout(function() { el.classList.remove('show'); }, 3000);
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
 }

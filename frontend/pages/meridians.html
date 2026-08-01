@@ -154,8 +154,8 @@ function loadMeridians(){
 function doBreakthrough(mid){
   fetch("/game/jwt/api/v1/meridian/breakthrough?player_id="+pid,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},body:JSON.stringify({meridian_id:mid})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){loadMeridians();}else{alert(d.message||"突破失败");}
-  }).catch(function(){alert("网络异常");});
+    if(d.code===0){loadMeridians();}else{showToast(d.message||"突破失败",'error');}
+  }).catch(function(){showToast("网络异常",'error');});
 }
 // Start loading meridian data immediately (independent of player info)
 loadMeridians();

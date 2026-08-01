@@ -163,7 +163,7 @@ function addFriend(){
   showFriendErr('');
   fetch('/game/jwt/api/v1/friend/add?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_name:name})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert('好友申请已发送');document.getElementById('friendName').value='';loadRequests();}
+    if(d.code===0){showToast('好友申请已发送','success');document.getElementById('friendName').value='';loadRequests();}
     else{showFriendErr(d.message||'操作失败');}
   }).catch(function(){showFriendErr('网络异常');});
 }
@@ -175,29 +175,29 @@ function respond(id,accept){
       updateFriendBadge(-1);
       loadRequests();loadFriends();
     }
-    else{alert(d.message||'操作失败');}
-  }).catch(function(){alert('网络异常');});
+    else{showToast(d.message||'操作失败','error');}
+  }).catch(function(){showToast('网络异常','error');});
 }
 function removeFriend(id){
   fetch('/game/jwt/api/v1/friend/remove?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){updateFriendCount(-1);loadFriends();}
-    else{alert(d.message||'操作失败');}
-  }).catch(function(){alert('网络异常');});
+    else{showToast(d.message||'操作失败','error');}
+  }).catch(function(){showToast('网络异常','error');});
 }
 function giftStamina(id){
   fetch('/game/jwt/api/v1/friend/gift-stamina?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert('已赠送 10 点体力');}
-    else{alert(d.message||'操作失败');}
-  }).catch(function(){alert('网络异常');});
+    if(d.code===0){showToast('已赠送 10 点体力','success');}
+    else{showToast(d.message||'操作失败','error');}
+  }).catch(function(){showToast('网络异常','error');});
 }
 function sparFriend(id){
   fetch('/game/jwt/api/v1/friend/spar?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
-    if(d.code===0){alert('切磋结果：'+(d.data.result==='win'?'胜利':'失败'));}
-    else{alert(d.message||'操作失败');}
-  }).catch(function(){alert('网络异常');});
+    if(d.code===0){showToast('切磋结果：'+(d.data.result==='win'?'胜利':'失败'),d.data.result==='win'?'success':'error');}
+    else{showToast(d.message||'操作失败','error');}
+  }).catch(function(){showToast('网络异常','error');});
 }
 window.onFriendRequest=function(){loadRequests();};
 loadRequests();
