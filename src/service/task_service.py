@@ -15,6 +15,7 @@ REQ_TYPES = [
     "reach_level", "kill_monster", "kill_boss", "pve_battle",
     "equip_item", "enhance_equip", "embed_gem", "breakthrough",
     "arena_battle", "add_friend", "join_guild", "skill_level",
+    "meridian_complete",
 ]
 
 
@@ -35,9 +36,34 @@ class TaskService:
                 continue
             self.repo.update_progress(pt.id, pt.progress + value)
 
+    def _refresh_daily(self, player_id: int) -> None:
+        """每日任务跨天自动重置"""
+        from src.models.task import PlayerTask, TaskDefinition
+        today = datetime.now().date()
+        rows = self.repo.db.query(PlayerTask, TaskDefinition).join(
+            TaskDefinition, TaskDefinition.id == PlayerTask.task_id
+        ).filter(
+            PlayerTask.player_id == player_id,
+            TaskDefinition.daily_refresh == 1,
+        ).all()
+        changed = False
+        for pt, td in rows:
+            if pt.daily_reset_date == today:
+                continue
+            pt.progress = 0
+            pt.status = 0
+            pt.completed_at = None
+            pt.daily_reset_date = today
+            changed = True
+        if changed:
+            self.repo.db.commit()
+
     def get_tasks(self, player_id: int, task_type: int = None) -> list:
         """获取所有任务（可用+已领取）"""
         from src.models.task import TaskDefinition
+        from src.repository.player_repo import PlayerRepository
+        self._refresh_daily(player_id)
+        player = PlayerRepository(self.repo.db).get_by_id(player_id)
         q = self.repo.db.query(TaskDefinition)
         if task_type:
             q = q.filter(TaskDefinition.task_type == task_type)
@@ -53,6 +79,8 @@ class TaskService:
                     "description": td.description,
                     "progress": pt.progress, "target": pt.target,
                     "status": pt.status, "accepted": True,
+                    "min_level": td.min_level,
+                    "unlocked": self._is_unlocked(player, td),
                     "rewards": {"exp": td.reward_exp, "gold": td.reward_gold, "reputation": td.reward_reputation},
                 })
             else:
@@ -61,9 +89,21 @@ class TaskService:
                     "description": td.description,
                     "progress": 0, "target": td.requirement_value,
                     "status": -1, "accepted": False,
+                    "min_level": td.min_level,
+                    "unlocked": self._is_unlocked(player, td),
                     "rewards": {"exp": td.reward_exp, "gold": td.reward_gold, "reputation": td.reward_reputation},
                 })
         return result
+
+    def _is_unlocked(self, player, td) -> bool:
+        """判断任务是否满足等级解锁条件"""
+        if not player:
+            return False
+        if player.level < (td.min_level or 1):
+            return False
+        if td.max_level is not None and player.level > td.max_level:
+            return False
+        return True
 
     def claim_reward(self, player_id: int, task_id: int) -> dict:
         """领取任务奖励"""

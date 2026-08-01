@@ -141,9 +141,11 @@ class BattleService:
 
         ts.check_progress(player_id, "pve_battle", 1)
 
-        if map_id in (2, 4):
+        if is_win and map_id in (2, 4):
 
-            ts.check_progress(player_id, "kill_boss", 1)
+            ts.check_progress(player_id, "kill_boss", 1)
+        if is_win and map_id not in (2, 4):
+            ts.check_progress(player_id, "kill_monster", 1)
 
         if is_win and leveled_up:
 

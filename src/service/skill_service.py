@@ -65,6 +65,8 @@ class SkillService:
                 skill_map[sid].slot_position = i + 1
 
         self.repo.db.commit()
+        from src.service.task_service import TaskService
+        TaskService(self.repo.db).check_progress(player_id, "skill_level", len(skill_ids))
         return True
 
     def add_proficiency(self, player_skill_id: int, amount: int = 1):

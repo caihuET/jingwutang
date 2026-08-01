@@ -150,6 +150,9 @@ class GuildService:
         else:
             application.status = GuildApplicationStatus.REJECTED
         self.repo.db.commit()
+        if accept:
+            from src.service.task_service import TaskService
+            TaskService(self.repo.db).check_progress(application.player_id, "join_guild", 1)
         return True
 
     def leave(self, player_id: int) -> bool:

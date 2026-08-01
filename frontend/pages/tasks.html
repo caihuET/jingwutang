@@ -120,10 +120,12 @@ function loadTasks(t){
     var tasks=d.data||[];var h='';
     for(var i=0;i<tasks.length;i++){
       var t=tasks[i];var pct=t.target>0?Math.round(t.progress/t.target*100):0;
-      var st={0:'进行中',1:'可领取',2:'已完成'}[t.status]||'未知';
+      var unlocked=t.unlocked!==false;
+      var st=unlocked?({0:'进行中',1:'可领取',2:'已完成'}[t.status]||'未知'):'未解锁';
       h+='<div class="ti"><div><div style="font-weight:600;font-size:13px;color:#8b1a1a">'+t.name+'</div><div style="font-size:11px;color:#666;margin:2px 0">'+t.description+'</div><div style="font-size:11px;color:#999">进度：'+t.progress+'/'+t.target+'</div><div class="prog" style="width:120px"><div class="f" style="width:'+pct+'%"></div></div></div>';
-      h+='<div style="text-align:right"><div style="font-size:11px;color:'+(t.status===1?'#2ecc71':'#999')+'">'+st+'</div>';
-      if(t.status===1){h+='<span class="btn btn-g" style="padding:3px 10px;font-size:11px;cursor:pointer" onclick="claimTask('+t.id+','+t.task_id+')">领取</span>';}
+      h+='<div style="text-align:right"><div style="font-size:11px;color:'+((unlocked&&t.status===1)?'#2ecc71':'#999')+'">'+st+'</div>';
+      if(unlocked&&t.status===1){h+='<span class="btn btn-g" style="padding:3px 10px;font-size:11px;cursor:pointer" onclick="claimTask('+t.id+','+t.task_id+')">领取</span>';}
+      if(!unlocked){h+='<div style="font-size:10px;color:#999;margin-top:2px">Lv.'+(t.min_level||0)+' 解锁</div>';}
       h+='</div></div>';
     }
     document.getElementById('taskList').innerHTML=h||'<div style="color:#999;font-size:13px;padding:20px;text-align:center">暂无任务</div>';

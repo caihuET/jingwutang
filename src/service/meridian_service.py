@@ -132,7 +132,10 @@ class MeridianService:
         # 通知任务系统
         try:
             from src.service.task_service import TaskService
-            TaskService(self.repo.db).check_progress(player_id, "breakthrough", 1)
+            ts = TaskService(self.repo.db)
+            ts.check_progress(player_id, "breakthrough", 1)
+            if pm.current_acupoint == md.acupoint_count:
+                ts.check_progress(player_id, "meridian_complete", 1)
         except Exception:
             pass
         return {

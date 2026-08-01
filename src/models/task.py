@@ -1,5 +1,5 @@
 """任务模型"""
-from sqlalchemy import Column, BigInteger, Integer, String, DateTime, Text, func, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, String, DateTime, Date, Text, func, ForeignKey
 from src.models.database import Base
 
 
@@ -35,4 +35,5 @@ class PlayerTask(Base):
     target = Column(Integer, nullable=False)
     status = Column(Integer, default=0)
     completed_at = Column(DateTime(6), nullable=True)
+    daily_reset_date = Column(Date, nullable=True)
     created_at = Column(DateTime(6), default=func.now(), nullable=False)

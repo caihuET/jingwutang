@@ -84,6 +84,11 @@ class SocialService:
         else:
             rel.status = FriendStatus.REJECTED
         self.repo.db.commit()
+        if accept:
+            from src.service.task_service import TaskService
+            ts = TaskService(self.repo.db)
+            ts.check_progress(applicant_id, "add_friend", 1)
+            ts.check_progress(player_id, "add_friend", 1)
         responder = self.player_repo.get_by_id(player_id)
         return {
             "name": responder.name if responder else "",

@@ -289,9 +289,10 @@ class PlayerService:
                     player_id=player.id,
                     task_id=td.id,
                     progress=0,
-                    target=td.requirement_value,
-                    status=0,
-                )
+                    target=td.requirement_value,
+                    status=0,
+                    daily_reset_date=datetime.now().date() if td.daily_refresh else None,
+                )
                 self.repo.db.add(pt)
                 need_commit = True
         if need_commit:

@@ -25,6 +25,7 @@ class TaskRepository:
             progress=0,
             target=task_def.requirement_value,
             status=0,
+            daily_reset_date=datetime.date.today() if task_def.daily_refresh else None,
         )
         self.db.add(pt)
         self.db.commit()
@@ -76,6 +77,7 @@ class TaskRepository:
                     progress=0,
                     target=td.requirement_value,
                     status=0,
+                    daily_reset_date=datetime.date.today() if td.daily_refresh else None,
                 )
                 self.db.add(pt)
         self.db.commit()
