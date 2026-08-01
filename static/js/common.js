@@ -153,7 +153,10 @@ function initGlobalChat() {
         '.global-chat.gc-hide{display:none}' +
         '.gc-open-btn{position:fixed;left:212px;bottom:12px;padding:8px 16px;background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;border:1px solid #c9a96e;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;z-index:9998;display:none}' +
         '.friend-badge{background:#e53935;color:#fff;font-size:10px;border-radius:8px;padding:0 5px;margin-left:4px;display:inline-block;vertical-align:top}' +
-        '@media(max-width:768px){.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:320px}}';
+        '@media(max-width:768px){' +
+        '.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:300px;max-height:45vh}' +
+        '.gc-open-btn{left:8px;bottom:8px}' +
+        '}';
     document.head.appendChild(css);
 
     var el = document.createElement('div');
@@ -211,6 +214,10 @@ function initGlobalChat() {
             tabs[t].classList.toggle('active', parseInt(tabs[t].getAttribute('data-ch')) === window._gcChannel);
         }
         document.getElementById('gcFriendRow').style.display = window._gcChannel === 3 ? 'block' : 'none';
+    }
+    if (!saved && window.innerWidth <= 768) {
+        el.classList.add('gc-hide');
+        document.getElementById('gcOpen').style.display = 'block';
     }
     gcRender();
     gcBadge(1);
@@ -585,7 +592,45 @@ function refreshFriendNav() {
     refreshFriendBadge();
 }
 
+function initMobileNav() {
+    var css = document.createElement('style');
+    css.textContent =
+        '.mobile-nav-btn{background:transparent;border:1px solid #c9a96e;color:#c9a96e;border-radius:4px;padding:4px 10px;font-size:16px;cursor:pointer;margin-right:10px;display:none}' +
+        '.mobile-nav-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:none}' +
+        '@media(max-width:768px){' +
+        '.mobile-nav-btn{display:inline-block}' +
+        '.sidebar.mobile-open{display:flex !important;position:fixed;top:50px;left:0;bottom:0;width:200px;z-index:1000}' +
+        '.mobile-nav-mask.show{display:block}' +
+        '}';
+    document.head.appendChild(css);
+    var topbar = document.querySelector('.topbar');
+    var sidebar = document.querySelector('.sidebar');
+    if (!topbar || !sidebar || window.innerWidth > 768) { return; }
+    var btn = document.createElement('button');
+    btn.id = 'mobileNavBtn';
+    btn.className = 'mobile-nav-btn';
+    btn.textContent = '☰';
+    btn.setAttribute('aria-label', '打开导航');
+    topbar.insertBefore(btn, topbar.firstChild);
+    var mask = document.createElement('div');
+    mask.id = 'mobileNavMask';
+    mask.className = 'mobile-nav-mask';
+    document.body.appendChild(mask);
+    function setOpen(open) {
+        sidebar.classList.toggle('mobile-open', open);
+        mask.classList.toggle('show', open);
+    }
+    btn.addEventListener('click', function() {
+        setOpen(!sidebar.classList.contains('mobile-open'));
+    });
+    mask.addEventListener('click', function() { setOpen(false); });
+    sidebar.addEventListener('click', function(e) {
+        if (e.target && e.target.closest && e.target.closest('a')) { setOpen(false); }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', initGlobalChat);
+document.addEventListener('DOMContentLoaded', initMobileNav);
 document.addEventListener('DOMContentLoaded', function() {
     refreshFriendNav();
     setInterval(refreshFriendBadge, 15000);

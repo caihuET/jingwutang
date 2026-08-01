@@ -7,7 +7,6 @@ from src.service.guild_service import GuildService
 
 router = APIRouter()
 
-
 @router.get("/guild/list")
 def guild_list(db: Session = Depends(get_db)):
     return {"code": 0, "data": GuildService(db).list_guilds(), "message": "ok"}
