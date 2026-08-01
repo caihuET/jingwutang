@@ -11,7 +11,7 @@ from src.service.social_service import SocialService
 from src.service.chat_ws import ws_manager
 from src.utils.errors import GameException
 from src.utils.security import verify_token
-from src.utils.redis_client import mark_offline, mark_online
+from src.utils.redis_client import is_session_valid, mark_offline, mark_online
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -23,6 +23,8 @@ def _auth_player(token: str, db: Session) -> int:
         payload = verify_token(token)
         user_id = payload.get("user_id")
         if not user_id:
+            return None
+        if not is_session_valid(user_id, token):
             return None
         player = PlayerRepository(db).get_by_user_id(user_id)
         return player.id if player else None

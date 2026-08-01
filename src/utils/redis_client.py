@@ -187,3 +187,31 @@ def check_rate_limit(player_id: int, limit: int = 20,
     except Exception as exc:
         logger.warning("限流检查失败: %s", exc)
         return True
+
+
+def set_session(user_id: int, token: str) -> None:
+    """记录用户当前登录 token，用于单点登录"""
+    client = get_redis()
+    if client is None:
+        return
+    try:
+        from config import config
+        client.set(
+            "session:{}".format(user_id), token,
+            ex=config.JWT_EXPIRE_HOURS * 3600,
+        )
+    except Exception as exc:
+        logger.warning("登录会话写入失败: %s", exc)
+
+
+def is_session_valid(user_id: int, token: str) -> bool:
+    """判断 token 是否仍是该用户当前有效会话"""
+    client = get_redis()
+    if client is None:
+        return True
+    try:
+        current = client.get("session:{}".format(user_id))
+        return bool(current) and current == token
+    except Exception as exc:
+        logger.warning("登录会话校验失败: %s", exc)
+        return True

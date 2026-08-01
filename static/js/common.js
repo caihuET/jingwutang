@@ -358,9 +358,10 @@ function gcAddMsg(msg) {
             gcRender();
             gcMarkRead(3, '');
         } else {
-            window._gcUnread[3] = (window._gcUnread[3] || 0) + 1;
-            gcBadge(3);
-            refreshUnread();
+        window._gcUnread[3] = (window._gcUnread[3] || 0) + 1;
+        gcBadge(3);
+        gcOpenBadge();
+        refreshUnread();
         }
         gcSave();
         return;
@@ -519,7 +520,11 @@ function refreshUnread() {
     .then(function(d) {
         if (d.code !== 0) { return; }
         var data = d.data || {};
-        window._gcUnread = {1: data.world || 0, 2: data.guild || 0, 3: data.private_total || 0};
+        window._gcUnread = {
+            1: data.world || 0,
+            2: data.guild || 0,
+            3: Math.max(window._gcUnread[3] || 0, data.private_total || 0)
+        };
         gcBadge(1);
         gcBadge(2);
         gcBadge(3);
@@ -648,8 +653,29 @@ function initMobileNav() {
     });
 }
 
+function checkSession() {
+    var token = localStorage.getItem('token');
+    if (!token) { return; }
+    fetch('/game/jwt/api/v1/auth/check?token=' + encodeURIComponent(token))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.code === 0 && d.data && d.data.valid === false) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('player_id');
+            sessionStorage.removeItem('gcState');
+            window.location.href = '/game/jwt/';
+        }
+    })
+    .catch(function() {});
+}
+
 document.addEventListener('DOMContentLoaded', initGlobalChat);
 document.addEventListener('DOMContentLoaded', initMobileNav);
+document.addEventListener('DOMContentLoaded', function() {
+    checkSession();
+    setInterval(checkSession, 60000);
+});
 document.addEventListener('DOMContentLoaded', function() {
     refreshFriendNav();
     setInterval(refreshFriendBadge, 15000);

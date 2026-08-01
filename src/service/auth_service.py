@@ -4,6 +4,7 @@ from src.utils.validators import validate_username, validate_password
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.repository.user_repo import UserRepository
+from src.utils.redis_client import set_session
 
 
 class AuthService:
@@ -33,4 +34,5 @@ class AuthService:
         if user.status != 1:
             raise GameException(ErrorCode.ACCOUNT_DISABLED, "账号已被禁用")
         token = create_token(user.id)
+        set_session(user.id, token)
         return {"token": token, "user_id": user.id}
