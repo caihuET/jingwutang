@@ -33,9 +33,9 @@ function showToast(msg, type) {
     if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
     el.textContent = msg;
     el.className = 'toast show ' + (type || 'info');
-    el.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;font-size:13px;z-index:10000;display:block;box-shadow:0 4px 20px rgba(0,0,0,.4);background:#2a2a5c;color:#f0e6d0;border:1px solid #3a3a7c;';
-    if (type === 'success') { el.style.background = '#1e5c32'; el.style.borderColor = '#2d7d46'; }
-    else if (type === 'error') { el.style.background = '#5c0e0e'; el.style.borderColor = '#8b1a1a'; }
+    el.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:6px;font-size:13px;z-index:10000;display:block;box-shadow:0 4px 16px rgba(0,0,0,.22);background:#45454d;color:#f5f5f4;border:1px solid #5b5b66;max-width:min(520px,calc(100vw - 32px));text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    if (type === 'success') { el.style.background = '#3d5a4a'; el.style.borderColor = '#55725f'; }
+    else if (type === 'error') { el.style.background = '#5d3d3d'; el.style.borderColor = '#77504f'; }
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(function() { el.style.display = 'none'; }, 2000);
 }
@@ -45,7 +45,7 @@ function showFriendNotice(msg) {
     if (!el) {
         el = document.createElement('div');
         el.id = 'friendNotice';
-        el.style.cssText = 'position:fixed;top:60px;right:16px;z-index:10001;background:#8b1a1a;color:#c9a96e;padding:10px 14px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.3);font-size:13px;display:none';
+        el.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:10001;background:#45454d;color:#f5f5f4;padding:10px 18px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.22);font-size:13px;display:none;border:1px solid #5b5b66;max-width:min(520px,calc(100vw - 32px));text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
         document.body.appendChild(el);
     }
     el.textContent = msg;
@@ -262,7 +262,10 @@ function initGlobalChat() {
     }, 25000);
     setInterval(refreshUnread, 15000);
     setInterval(function() {
-        if (!window._gcWs || window._gcWs.readyState !== 1 || window._gcChannel === 3) {
+        var chatEl = document.getElementById('globalChat');
+        if (!chatEl || chatEl.classList.contains('gc-hide')) { return; }
+        var unread = (window._gcUnread[1] || 0) + (window._gcUnread[2] || 0) + (window._gcUnread[3] || 0);
+        if (unread > 0 || !window._gcWs || window._gcWs.readyState !== 1) {
             gcLoadHistory();
         }
     }, 5000);
@@ -381,19 +384,23 @@ function gcRender() {
 function gcAddMsg(msg) {
     if (!msg || !msg.channel) { return; }
     var ch = msg.channel;
+    var chatEl = document.getElementById('globalChat');
+    var chatHidden = chatEl && chatEl.classList.contains('gc-hide');
+    var visible = !chatHidden && window._gcChannel === ch;
     if (ch === 3) {
         if (msg.sender_id !== window._gcPid && msg.receiver_id !== window._gcPid) { return; }
         window._gcPrivate.push(msg);
-        var chatEl = document.getElementById('globalChat');
-        var chatHidden = chatEl && chatEl.classList.contains('gc-hide');
-        if (window._gcChannel === 3 && !chatHidden) {
+        if (visible) {
             gcRender();
             gcMarkRead(3, '');
         } else {
-        window._gcUnread[3] = (window._gcUnread[3] || 0) + 1;
-        gcBadge(3);
-        gcOpenBadge();
-        refreshUnread();
+            window._gcUnread[3] = (window._gcUnread[3] || 0) + 1;
+            gcBadge(3);
+            gcOpenBadge();
+            refreshUnread();
+            if (msg.sender_id !== window._gcPid) {
+                showFriendNotice(msg.sender_name + ': ' + msg.content);
+            }
         }
         gcSave();
         return;
@@ -401,10 +408,14 @@ function gcAddMsg(msg) {
     if (!window._gcMsgs[ch]) { window._gcMsgs[ch] = []; }
     window._gcMsgs[ch].push(msg);
     if (window._gcMsgs[ch].length > 100) { window._gcMsgs[ch].shift(); }
-    if (window._gcChannel === ch) { gcRender(); }
+    if (visible) {
+        gcRender();
+        gcMarkRead(ch, '');
+    }
     else {
-        window._gcUnread[ch] = (window._gcUnread[ch] || 0) + 1;
-        gcBadge(ch);
+        if (msg.sender_id !== window._gcPid) {
+            showFriendNotice(msg.sender_name + ': ' + msg.content);
+        }
     }
     gcSave();
 }
@@ -553,8 +564,8 @@ function refreshUnread() {
         if (d.code !== 0) { return; }
         var data = d.data || {};
         window._gcUnread = {
-            1: data.world || 0,
-            2: data.guild || 0,
+            1: 0,
+            2: 0,
             3: Math.max(window._gcUnread[3] || 0, data.private_total || 0)
         };
         gcBadge(1);

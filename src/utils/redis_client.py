@@ -57,15 +57,13 @@ def clear_unread(player_id: int, field: Optional[str] = None) -> None:
 
 
 def get_unread(player_id: int) -> Dict[str, object]:
-    """获取玩家各频道未读数"""
+    """获取玩家未读数，世界/帮派不再累计，仅返回私聊"""
     result = {"world": 0, "guild": 0, "private_total": 0, "private": {}}
     client = get_redis()
     if client is None:
         return result
     try:
         raw = client.hgetall("chat:unread:{}".format(player_id))
-        result["world"] = int(raw.get("1", 0) or 0)
-        result["guild"] = int(raw.get("2", 0) or 0)
         private_total = 0
         for key, value in raw.items():
             if key.startswith("p:"):

@@ -3,13 +3,12 @@ import random
 from datetime import datetime
 from src.repository.social_repo import SocialRepository
 from src.repository.player_repo import PlayerRepository
-from src.repository.guild_repo import GuildRepository
 from src.utils.errors import GameException
 from src.utils.constants import ErrorCode
 from src.utils.constants import FriendStatus
 from src.utils.validators import check_sensitive_words
 from src.utils.redis_client import (
-    clear_unread, get_online_ids, get_read_cursor, incr_unread,
+    clear_unread, get_read_cursor, incr_unread,
     set_read_cursor, check_rate_limit,
 )
 from src.models.social import FriendRelation, ChatMessage
@@ -19,7 +18,6 @@ class SocialService:
     def __init__(self, db):
         self.repo = SocialRepository(db)
         self.player_repo = PlayerRepository(db)
-        self.guild_repo = GuildRepository(db)
 
     def get_friends(self, player_id: int) -> dict:
         relations = self.repo.get_relations(player_id, status=FriendStatus.ACCEPTED)
@@ -238,19 +236,9 @@ class SocialService:
 
     def _increase_unread(self, sender_id: int, channel: int,
                          guild_id: int, receiver_id: int = None):
-        """发送后按频道累计未读"""
+        """仅私聊频道累计未读，世界/帮派不记录红点"""
         if channel == 3 and receiver_id:
             incr_unread(receiver_id, "p:{}".format(sender_id))
-            return
-        if channel == 1:
-            for player_id in get_online_ids():
-                if player_id != sender_id:
-                    incr_unread(player_id, "1")
-            return
-        if channel == 2 and guild_id:
-            for member in self.guild_repo.get_guild_members(guild_id):
-                if member.player_id != sender_id:
-                    incr_unread(member.player_id, "2")
 
     def _mark_read(self, player_id: int, channel: int,
                    receiver_id: int, rows: list):
