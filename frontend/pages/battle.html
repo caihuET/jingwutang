@@ -134,42 +134,50 @@ function selectMap(id){
   selectedMap=id;
   document.querySelectorAll('.map-item').forEach(function(d,i){d.style.borderColor='#d4c5a9';d.style.background='';if(i+1==id){d.style.borderColor='#8b1a1a';d.style.background='rgba(139,26,26,0.05)'}});
 }
-function startBattle(){
+function startBattle(){
   if(!selectedMap){showToast('请选择目标','error');return;}
-  var area=document.getElementById('battleArea');
-  area.style.display='block';area.innerHTML='战斗中...';
-  document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';document.getElementById('skipBtn').disabled=false;document.getElementById('skipBtn').style.opacity='1';document.getElementById('skipBtn').style.cursor='pointer';skipFlag=false;
-  fetch('/game/jwt/api/v1/battle/pve',{
+  var area=document.getElementById('battleArea');
+  area.style.display='block';area.innerHTML='战斗中...';
+  document.getElementById('battleBtn').disabled=true;document.getElementById('battleBtn').style.opacity='0.5';document.getElementById('skipBtn').disabled=false;document.getElementById('skipBtn').style.opacity='1';document.getElementById('skipBtn').style.cursor='pointer';skipFlag=false;
+  var staCur=document.getElementById('staCur');
+  var sStamina=document.getElementById('sStamina');
+  if(staCur){var cur=parseInt(staCur.textContent)||0;staCur.textContent=Math.max(0,cur-10);}
+  if(sStamina){var cur=parseInt(sStamina.textContent)||0;sStamina.textContent=Math.max(0,cur-10);}
+  fetch('/game/jwt/api/v1/battle/pve',{
     method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
     body:JSON.stringify({map_id:selectedMap,player_id:parseInt(localStorage.getItem('player_id'))||1})
-  }).then(function(r){return r.json()}).then(function(d){
-    document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';
-    if(d.code!==0){area.innerHTML='<div style="color:#e74c3c">'+d.message+'</div>';return;}
-    var r=d.data;var html='';
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';
+    if(d.code!==0){area.innerHTML='<div style="color:#e74c3c">'+d.message+'</div>';refreshPlayerInfo();return;}
+    refreshPlayerInfo();
+    var r=d.data;var html='';
     html+='<div style="text-align:center;color:'+(r.result==='win'?'#2ecc71':'#e74c3c')+';font-size:16px;font-weight:700;margin-bottom:8px">'+(r.result==='win'?'胜利！':'败北')+'</div>';
     html+='<div style="color:#c9a96e;text-align:center;margin-bottom:8px">'+r.rounds+'回合 | 经验+'+r.exp_gained+' | 金币+'+r.gold_gained+'</div>';
     var rounds=r.log||[];var ri=0;(function nr(){if(ri>=rounds.length||skipFlag){document.getElementById('skipBtn').disabled=true;document.getElementById('skipBtn').style.opacity='0.6';area.innerHTML+=html;return;}var rd=rounds[ri];area.innerHTML+='<div style="color:#c9a96e">— 第 '+rd.round+' 回合 —</div>';for(var j=0;j<(rd.actions||[]).length;j++){var a=rd.actions[j];area.innerHTML+='<div style="padding-left:12px;color:#d4c5a9">'+a.actor+'使出『'+a.skill+'』';if(a.dodged){area.innerHTML+='，<span style="color:#3498db">被 '+a.target+' 闪避</span>';}else{area.innerHTML+='，对 '+a.target+' 造成 <span style="color:#e67e22">'+a.damage+'</span> 点伤害'+(a.critical?' <span style="color:#e74c3c;font-weight:700">【暴击】</span>':'');}area.innerHTML+='</div>';}ri++;setTimeout(nr,500);})();
-  }).catch(function(){document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';area.innerHTML='<div style="color:#e74c3c">网络异常</div>';});
-}
-renderMaps();
-</script></a></div></div><script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+  }).catch(function(){document.getElementById('battleBtn').disabled=false;document.getElementById('battleBtn').style.opacity='1';area.innerHTML='<div style="color:#e74c3c">网络异常</div>';refreshPlayerInfo();});
+}
+renderMaps();
+</script></a></div></div><script>
+var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
 function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
-var pid=localStorage.getItem('player_id')||1;
-fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
-.then(function(r){return r.json()})
-.then(function(d){
-  if(d.code!==0)return;
-  var p=d.data;
-  playerLevel=p.level||1;
-  renderMaps();
+var pid=localStorage.getItem('player_id')||1;
+function applyPlayerInfo(p){
+  if(!p)return;
+  playerLevel=p.level||1;
+  renderMaps();
   document.getElementById('topPlayerInfo').innerHTML=renderTopPlayer(p);
   var el=function(i){return document.getElementById(i)};
   if(el('sName'))el('sName').innerHTML=renderPlayerName(p);
   if(el('sInfo'))el('sInfo').textContent='Lv.'+(p.level||1)+' | 战力 '+(p.combat_power||0);
   if(el('sHp'))el('sHp').textContent=(p.hp||0)+'/'+(p.max_hp||0);
-  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
-  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;if(el('staCur'))el('staCur').textContent=p.stamina||0;if(el('staMax'))el('staMax').textContent=p.max_stamina||100;
-});
-</script>
+  if(el('sMp'))el('sMp').textContent=(p.mp||0)+'/'+(p.max_mp||0);
+  if(el('sStamina'))el('sStamina').textContent=p.stamina||0;if(el('staCur'))el('staCur').textContent=p.stamina||0;if(el('staMax'))el('staMax').textContent=p.max_stamina||100;
+}
+function refreshPlayerInfo(){
+  return fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+  .then(function(r){return r.json()})
+  .then(function(d){if(d.code===0)applyPlayerInfo(d.data);});
+}
+refreshPlayerInfo();
+</script>
 </body></html>

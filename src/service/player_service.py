@@ -102,8 +102,13 @@ class PlayerService:
         self._apply_level_hp_mp(player)
         self._check_new_skills(player)
         self._check_new_tasks(player)
-        meridian_bonuses = self._calc_meridian_bonuses(player_id)
-        attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
+        meridian_bonuses = self._calc_meridian_bonuses(player_id)
+        hp_bonus, mp_bonus = self._get_equip_hp_mp_bonuses(player_id)
+        effective_max_hp = player.max_hp + meridian_bonuses["hp"] + hp_bonus
+        effective_max_mp = player.max_mp + mp_bonus
+        effective_hp = min(effective_max_hp, player.hp + hp_bonus)
+        effective_mp = min(effective_max_mp, player.mp + mp_bonus)
+        attr = self.repo.db.query(PlayerAttribute).filter(PlayerAttribute.player_id == player_id).first()
         combat_power = self._calc_combat_power(player)
 
         vip_until = player.vip_until.isoformat() if player.vip_until else None
@@ -119,10 +124,10 @@ class PlayerService:
             "title": title_info,
             "level": player.level,
             "exp": player.exp,
-            "hp": player.hp,
-            "max_hp": player.max_hp,
-            "mp": player.mp,
-            "max_mp": player.max_mp,
+            "hp": effective_hp,
+            "max_hp": effective_max_hp,
+            "mp": effective_mp,
+            "max_mp": effective_max_mp,
             "stamina": player.stamina,
             "gold": player.gold,
             "ingot": player.ingot,
@@ -141,8 +146,10 @@ class PlayerService:
             "meridian_bonus_attack": meridian_bonuses["attack"],
             "meridian_bonus_defense": meridian_bonuses["defense"],
             "meridian_bonus_speed": meridian_bonuses["speed"],
-            "effective_max_hp": player.max_hp + meridian_bonuses["hp"],
-            "effective_max_mp": player.max_mp,
+            "effective_max_hp": effective_max_hp,
+            "effective_max_mp": effective_max_mp,
+            "hp_bonus": hp_bonus,
+            "mp_bonus": mp_bonus,
 
             "vip_until": vip_until,
         }
@@ -177,6 +184,12 @@ class PlayerService:
         from src.utils.constants import get_base_max_stamina
         bonuses = EquipmentService(self.repo.db).get_equipped_bonuses(player.id)
         return get_base_max_stamina(player.level) + bonuses.get("stamina", 0)
+
+    def _get_equip_hp_mp_bonuses(self, player_id: int) -> tuple:
+        """获取已穿戴装备提供的 HP/MP 加成"""
+        from src.service.equipment_service import EquipmentService
+        bonuses = EquipmentService(self.repo.db).get_equipped_bonuses(player_id)
+        return int(bonuses.get("hp", 0)), int(bonuses.get("mp", 0))
 
     def _apply_stamina_recovery(self, player):
         """离线体力恢复 (每 5 分钟 1 点)"""
