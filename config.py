@@ -32,6 +32,17 @@ class Config:
     APP_PORT = int(os.getenv("APP_PORT", "8000"))
     APP_ROOT_PATH = os.getenv("APP_ROOT_PATH", "/game/jwt")
 
+    # 微信登录
+    WECHAT_APP_ID = os.getenv("WECHAT_APP_ID", "")
+    WECHAT_APP_SECRET = os.getenv("WECHAT_APP_SECRET", "")
+
+    # Google 登录
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+
+    # 前端/回调公开地址
+    PUBLIC_APP_URL = os.getenv("PUBLIC_APP_URL", "http://localhost:8000/game/jwt")
+
     # 静态文件
     STATIC_DIR = os.path.join(BASE_DIR, "static")
     TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")

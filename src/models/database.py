@@ -248,6 +248,16 @@ def init_db():
                  "ALTER TABLE skill_definitions ADD COLUMN attack_range TINYINT DEFAULT 2 AFTER target_type"),
                 ("skill_definitions", "aoe_targets",
                  "ALTER TABLE skill_definitions ADD COLUMN aoe_targets TINYINT DEFAULT 1 AFTER attack_range"),
+                ("users", "oauth_provider",
+                 "ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(16) NULL"),
+                ("users", "oauth_id",
+                 "ALTER TABLE users ADD COLUMN oauth_id VARCHAR(64) NULL"),
+                ("users", "oauth_name",
+                 "ALTER TABLE users ADD COLUMN oauth_name VARCHAR(32) NULL"),
+                ("users", "oauth_avatar",
+                 "ALTER TABLE users ADD COLUMN oauth_avatar VARCHAR(512) NULL"),
+                ("users", "email",
+                 "ALTER TABLE users ADD COLUMN email VARCHAR(128) NULL"),
             ]
             for table_name, column_name, ddl in migrate_cols:
                 cnt = conn.execute(text(
@@ -256,6 +266,15 @@ def init_db():
                 ), {"t": table_name, "c": column_name}).scalar()
                 if not cnt:
                     conn.execute(text(ddl))
+            oauth_idx = conn.execute(text(
+                "SELECT COUNT(*) FROM information_schema.STATISTICS "
+                "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' "
+                "AND INDEX_NAME='uk_oauth'"
+            )).scalar()
+            if not oauth_idx:
+                conn.execute(text(
+                    "CREATE UNIQUE INDEX uk_oauth ON users (oauth_provider, oauth_id)"
+                ))
             conn.execute(text("""
                 UPDATE title_definitions SET title_level = CASE
                     WHEN name='江湖侠客' THEN 1

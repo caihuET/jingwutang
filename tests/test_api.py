@@ -190,6 +190,9 @@ class TestPageExists(unittest.TestCase):
     def test_chat_page_exists(self):
         self.assertTrue(os.path.exists("frontend/pages/chat.html"))
 
+    def test_oauth_callback_page_exists(self):
+        self.assertTrue(os.path.exists("frontend/pages/oauth-callback.html"))
+
     def test_guild_page_exists(self):
         self.assertTrue(os.path.exists("frontend/pages/guild.html"))
 

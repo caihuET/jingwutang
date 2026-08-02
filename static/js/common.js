@@ -144,7 +144,8 @@ function initGlobalChat() {
         '.gc-body{flex:1;overflow-y:auto;padding:8px 10px;font-size:12px}' +
         '.gc-msg{margin-bottom:6px}' +
         '.gc-msg .head{color:#8b1a1a;font-size:11px}' +
-        '.gc-msg .txt{color:#2c1810;word-break:break-all;white-space:pre-wrap}' +
+        '.gc-msg .txt{display:inline-block;max-width:85%;color:#2c1810;word-break:break-all;white-space:pre-wrap}' +
+        '.gc-msg.mine{text-align:right}' +
         '.gc-msg.mine .head,.gc-msg.mine .txt{text-align:right}' +
         '.gc-empty{color:#999;font-size:12px;text-align:center;padding:20px 0}' +
         '.gc-input{display:flex;gap:6px;padding:6px;border-top:1px solid #d4c5a9;flex-shrink:0}' +

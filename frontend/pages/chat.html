@@ -32,7 +32,8 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .msg .head{color:#6b5b4e;font-size:11px}
 .msg .head b{color:#8b1a1a}
 .msg.mine .head,.msg.mine .txt{text-align:right}
-.msg .txt{white-space:pre-wrap;word-break:break-all}
+.msg .txt{display:inline-block;max-width:85%;white-space:pre-wrap;word-break:break-all;text-align:left}
+.msg.mine{text-align:right}
 .friend-name{cursor:pointer;color:#1565c0}
 .chat-input{display:flex;gap:8px;flex-shrink:0}
 .chat-input input[type=text]{flex:1;padding:8px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:13px;outline:none}
@@ -42,7 +43,7 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 .empty{color:#999;font-size:12px;padding:20px 0;text-align:center}
 @media(max-width:768px){.sidebar{display:none}.content{padding:10px}.chat-box{min-height:0}.chat-input input[type=text]{font-size:16px}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=10"></script>
+<script src="/game/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
