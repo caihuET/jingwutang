@@ -14,7 +14,7 @@ from src.utils.constants import (
     get_skill_cooldown,
     get_standard_monster_defense,
 )
-from src.utils.constants import get_passive_name
+from src.utils.constants import PASSIVE_SKILL_DESCRIPTIONS, get_passive_name
 from src.service.battle_service import BattleService
 
 
@@ -43,16 +43,18 @@ class SkillService:
         for s in skills:
             d = defs.get(s.skill_id)
             name = f"技能{s.skill_id}"
+            description = d.description if d else ""
             if d:
                 name = d.name
                 if d.skill_type == SkillType.PASSIVE:
                     name = get_passive_name(d.school_id or 0, d.name)
+                    description = PASSIVE_SKILL_DESCRIPTIONS.get(name, description)
             result.append({
                 "id": s.id,
                 "skill_id": s.skill_id,
                 "name": name,
                 "skill_type": d.skill_type if d else 0,
-                "description": d.description if d else "",
+                "description": description,
                 "level": s.level,
                 "proficiency": s.proficiency,
                 "slot_position": s.slot_position,
@@ -85,16 +87,18 @@ class SkillService:
         for s in skills:
             d = defs.get(s.skill_id)
             name = f"技能{s.skill_id}"
+            description = d[4] if d else ""
             if d:
                 name = d[1]
                 if d[3] == SkillType.PASSIVE:
                     name = get_passive_name(d[2] or 0, name)
+                    description = PASSIVE_SKILL_DESCRIPTIONS.get(name, description)
             result.append({
                 "id": s.id,
                 "skill_id": s.skill_id,
                 "name": name,
                 "skill_type": d[3] if d else 0,
-                "description": d[4] if d else "",
+                "description": description,
                 "level": s.level,
                 "proficiency": s.proficiency,
                 "slot_position": s.slot_position,

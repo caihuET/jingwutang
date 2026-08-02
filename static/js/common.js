@@ -133,7 +133,7 @@ function initGlobalChat() {
     var css = document.createElement('style');
     css.id = 'gcStyle';
     css.textContent =
-        '.global-chat{position:fixed;left:212px;bottom:12px;width:480px;height:380px;background:white;border:1px solid #c9a96e;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;flex-direction:column;z-index:9999;overflow:hidden}' +
+        '.global-chat{position:fixed;left:212px;bottom:12px;width:480px;height:285px;background:white;border:1px solid #c9a96e;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;flex-direction:column;z-index:9999;overflow:hidden}' +
         '.gc-head{background:linear-gradient(90deg,#1a1a2e,#2c2c44);color:#c9a96e;padding:6px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0}' +
         '.gc-head .gc-title{font-weight:700;font-size:13px;margin-right:auto}' +
         '.gc-tabs{display:flex;gap:2px}' +
@@ -159,7 +159,7 @@ function initGlobalChat() {
         '.gc-open-badge{position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:10px;border-radius:8px;padding:0 5px;display:none;min-width:16px;text-align:center}' +
         '.friend-badge{background:#e53935;color:#fff;font-size:10px;border-radius:8px;padding:0 5px;margin-left:4px;display:inline-block;vertical-align:top}' +
         '@media(max-width:768px){' +
-        '.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:300px;max-height:45vh}' +
+        '.global-chat{left:8px;right:8px;width:auto;bottom:8px;height:225px;max-height:45vh}' +
         '.gc-open-btn{left:8px;bottom:8px}' +
         '.gc-input input[type=text]{font-size:16px}' +
         '}';
@@ -494,7 +494,8 @@ function gcSend() {
     if (window._gcWs && window._gcWs.readyState === 1) {
         window._gcWs.send(JSON.stringify({action: 'send', channel: ch, content: content, receiver_id: body.receiver_id, receiver_name: body.receiver_name}));
         gcResetInput(input, ch);
-        input.blur();
+        input.focus();
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
     } else {
         fetch('/game/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
             method: 'POST',
@@ -503,7 +504,12 @@ function gcSend() {
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.code === 0) { gcResetInput(input, ch); gcLoadHistory(); input.blur(); }
+            if (d.code === 0) {
+                gcResetInput(input, ch);
+                input.focus();
+                try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+                gcLoadHistory();
+            }
             else { showToast(d.message || '发送失败', 'error'); }
         })
         .catch(function() { showToast('网络异常', 'error'); });

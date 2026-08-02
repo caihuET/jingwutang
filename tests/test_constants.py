@@ -7,6 +7,7 @@ from src.utils.constants import (
     ErrorCode, EXP_TABLE, ENHANCE_RATES,
     SchoolType, EquipSlot, EquipQuality, TaskType, BattleType,
     SkillType, PASSIVE_SKILL_UNLOCK_LEVEL, PASSIVE_SKILL_EFFECTS,
+    PASSIVE_SKILL_DESCRIPTIONS,
     FriendStatus,
 )
 
@@ -124,6 +125,9 @@ class TestPassiveSkills(unittest.TestCase):
 
     def test_passive_effects_cover_six_schools(self):
         self.assertEqual(len(PASSIVE_SKILL_EFFECTS), 6)
+
+    def test_passive_descriptions_cover_six_schools(self):
+        self.assertEqual(len(PASSIVE_SKILL_DESCRIPTIONS), 6)
 
 
 class TestFriendStatus(unittest.TestCase):
