@@ -106,6 +106,45 @@ class TestChatWebSocketManager(unittest.TestCase):
 
         self.assertFalse(asyncio.run(run()))
 
+    def test_broadcast_delivers_locally_when_redis_publish_succeeds(self):
+        manager = ChatWebSocketManager()
+        a = FakeWebSocket()
+        b = FakeWebSocket()
+
+        async def fake_publish(event):
+            return True
+
+        manager._publish = fake_publish
+
+        async def run():
+            await manager.connect(a, 1, None)
+            await manager.connect(b, 2, None)
+            await manager.broadcast(1, 1, None, {"content": "hi"})
+
+        asyncio.run(run())
+        self.assertEqual(len(a.sent), 1)
+        self.assertEqual(len(b.sent), 1)
+
+    def test_duplicate_event_is_delivered_once(self):
+        manager = ChatWebSocketManager()
+        a = FakeWebSocket()
+
+        async def run():
+            await manager.connect(a, 1, None)
+            event = {
+                "kind": "chat",
+                "channel": 1,
+                "sender_id": 2,
+                "guild_id": None,
+                "message": {"content": "hi"},
+                "event_id": "same-event",
+            }
+            await manager._deliver_event(event)
+            await manager._deliver_event(event)
+
+        asyncio.run(run())
+        self.assertEqual(len(a.sent), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

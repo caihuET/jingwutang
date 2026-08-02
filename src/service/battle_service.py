@@ -27,6 +27,7 @@ from src.utils.constants import (
     BattleType,
     PASSIVE_SKILL_EFFECTS,
     SKILL_AOE_MAX_TARGETS,
+    SkillType,
     SkillRange,
     SkillTarget,
     calc_skill_power,
