@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
-    document.getElementById('wechatLogin').addEventListener('click', function() { startOAuth('wechat'); });
-    document.getElementById('googleLogin').addEventListener('click', function() { startOAuth('google'); });
 });
 
 function switchTab(e) {
@@ -31,24 +29,6 @@ function hideError() {
     var el = document.getElementById('errorMsg');
     el.textContent = '';
     el.classList.remove('show');
-}
-
-async function startOAuth(provider) {
-    hideError();
-    showLoading();
-    try {
-        var res = await fetch(API_BASE + '/auth/oauth/' + provider + '/url');
-        var data = await res.json();
-        if (data.code === 0 && data.data && data.data.url) {
-            window.location.href = data.data.url;
-        } else {
-            showError(data.message || '第三方登录暂不可用');
-            hideLoading();
-        }
-    } catch (err) {
-        showError('网络异常，请稍后重试');
-        hideLoading();
-    }
 }
 
 function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }

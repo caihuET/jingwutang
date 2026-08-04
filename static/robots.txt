@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /game/jwt/
+Disallow: /game/jwt/api/
+
+Sitemap: https://xui6.bbbus.top/sitemap.xml

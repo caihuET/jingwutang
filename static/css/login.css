@@ -16,13 +16,6 @@ input:focus{border-color:#c9a96e;box-shadow:0 0 0 3px rgba(201,169,110,0.15)}
 .btn{width:100%;padding:10px;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:2px;background:linear-gradient(135deg,#8b1a1a,#5c0e0e);color:#c9a96e;transition:background .2s}
 .btn:hover{background:linear-gradient(135deg,#b22222,#8b1a1a)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
-.oauth-divider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:#a08a6e;font-size:12px;letter-spacing:2px}
-.oauth-divider::before,.oauth-divider::after{content:'';flex:1;height:1px;background:#d4c5a9}
-.oauth-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.oauth-btn{width:100%;padding:10px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:1px;transition:opacity .2s}
-.oauth-btn:hover{opacity:.85}
-.oauth-btn.wechat{background:linear-gradient(135deg,#07c160,#059a4d);color:#fff}
-.oauth-btn.google{background:#fff;color:#3c4043;border:1px solid #dadce0}
 .error-msg{text-align:center;font-size:13px;color:#c0392b;margin-top:12px;min-height:20px;line-height:1.5;display:none}
 .error-msg.show{display:block}
 .loading-overlay{display:none;position:absolute;inset:0;background:rgba(240,230,208,.75);justify-content:center;align-items:center;z-index:10;border-radius:12px}
