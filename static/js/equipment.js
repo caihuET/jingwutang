@@ -1,4 +1,4 @@
-var API_BASE = '/game/jwt/api/v1';
+var API_BASE = '/jwt/api/v1';
 
 document.addEventListener('DOMContentLoaded', function() {
     if (!checkAuth()) return;

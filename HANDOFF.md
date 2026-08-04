@@ -32,7 +32,7 @@
 
 ## 三、部署与运维要点
 - 后端代码改动后：`docker compose restart app nginx`；镜像方式部署则 `docker compose up -d --build`。
-- 宿主机 nginx 的 `default.conf` 已合并 `/game/jwt/` 与 `/surveillance/`，`/game/jwt/` 必须保留 Upgrade 头。
+- 宿主机 nginx 的 `default.conf` 已合并 `/jwt/` 与 `/surveillance/`，`/jwt/` 必须保留 Upgrade 头。
 - Redis 承载未读、在线、单点登录；不可用时相关能力降级，不影响基础收发。
 - 前端静态资源缓存为 1 小时，更新 JS 后需同步提升 `common.js?v=` 版本号。
 
@@ -40,7 +40,7 @@
 - `pytest`：105 passed，13 failed（本地无 MySQL，环境问题）。
 - `tests/test_chat_ws.py` + `tests/test_imports.py`：15 passed。
 - `node --check`、`py_compile` 均通过。
-- 线上 `/game/jwt/api/v1/health` 返回 200，WebSocket 404 已消失。
+- 线上 `/jwt/api/v1/health` 返回 200，WebSocket 404 已消失。
 
 ## 五、已知问题与待办
 - 排行实时计算战力，玩家量大后性能待优化，建议补 Redis 排序缓存。

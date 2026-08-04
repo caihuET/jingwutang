@@ -1,8 +1,8 @@
-var API_BASE = '/game/jwt/api/v1';
+var API_BASE = '/jwt/api/v1';
 
 document.addEventListener('DOMContentLoaded', function() {
     var token = localStorage.getItem('token');
-    if (!token) { window.location.href = '/game/jwt/'; return; }
+    if (!token) { window.location.href = '/jwt/'; return; }
     loadPlayerInfo();
     loadTitles();
 });

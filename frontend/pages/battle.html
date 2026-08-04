@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂历练 - 武侠战斗，经验金币与装备掉落</title>
 <meta name="description" content="精武堂历练玩法，选择地图挑战山贼与首领，获得经验、金币与装备掉落，提升角色战力。">
 <meta name="keywords" content="精武堂,历练,武侠战斗,网页游戏,经验金币,装备掉落">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/battle.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/battle.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂历练 - 武侠战斗">
 <meta property="og:description" content="选择地图挑战山贼与首领，获得经验、金币与装备掉落。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/battle.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/battle.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂历练 - 武侠战斗">
 <meta name="twitter:description" content="选择地图挑战山贼与首领，获得经验、金币与装备掉落。">
@@ -86,7 +86,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .auth-card .btn{width:100%;margin-top:4px}
 @media(max-width:768px){.sidebar{display:none}.grid{grid-template-columns:1fr}.el{grid-template-columns:1fr}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -155,7 +155,7 @@ function startBattle(){
   var sStamina=document.getElementById('sStamina');
   if(staCur){var cur=parseInt(staCur.textContent)||0;staCur.textContent=Math.max(0,cur-10);}
   if(sStamina){var cur=parseInt(sStamina.textContent)||0;sStamina.textContent=Math.max(0,cur-10);}
-  fetch('/game/jwt/api/v1/battle/pve',{
+  fetch('/jwt/api/v1/battle/pve',{
     method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},
     body:JSON.stringify({map_id:selectedMap,player_id:parseInt(localStorage.getItem('player_id'))||1})
   }).then(function(r){return r.json()}).then(function(d){
@@ -170,8 +170,8 @@ function startBattle(){
 }
 renderMaps();
 </script></a></div></div><script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/jwt/';}
 var pid=localStorage.getItem('player_id')||1;
 function applyPlayerInfo(p){
   if(!p)return;
@@ -186,7 +186,7 @@ function applyPlayerInfo(p){
   if(el('sStamina'))el('sStamina').textContent=p.stamina||0;if(el('staCur'))el('staCur').textContent=p.stamina||0;if(el('staMax'))el('staMax').textContent=p.max_stamina||100;
 }
 function refreshPlayerInfo(){
-  return fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+  return fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
   .then(function(r){return r.json()})
   .then(function(d){if(d.code===0)applyPlayerInfo(d.data);});
 }

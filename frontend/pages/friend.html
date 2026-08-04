@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂好友系统 - 好友切磋/赠送体力/实时聊天</title>
 <meta name="description" content="精武堂好友系统，添加好友、赠送体力、好友切磋与实时聊天。">
 <meta name="keywords" content="精武堂,好友系统,好友切磋,赠送体力,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/friend.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/friend.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂好友系统 - 好友切磋/实时聊天">
 <meta property="og:description" content="添加好友、赠送体力、好友切磋与实时聊天。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/friend.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/friend.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂好友系统 - 好友切磋/实时聊天">
 <meta name="twitter:description" content="添加好友、赠送体力、好友切磋与实时聊天。">
@@ -47,7 +47,7 @@ input[type=text]{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;fon
 .empty{color:#999;font-size:12px;padding:6px 0}
 @media(max-width:768px){.sidebar{display:none}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -105,7 +105,7 @@ var pid=localStorage.getItem('player_id')||1;
 function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
 function showFriendErr(msg){var el=document.getElementById('friendError');el.style.display='block';el.textContent=msg;}
 function loadRequests(){
-  fetch('/game/jwt/api/v1/friend/requests?player_id='+pid,{headers:apiHeaders()})
+  fetch('/jwt/api/v1/friend/requests?player_id='+pid,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('requestList').textContent=d.message||'加载失败';return;}
     var list=d.data&&d.data.requests||[];
@@ -120,13 +120,13 @@ function loadRequests(){
   }).catch(function(){document.getElementById('requestList').textContent='网络异常';});
 }
 function loadFriends(){
-  fetch('/game/jwt/api/v1/friend/list?player_id='+pid,{headers:apiHeaders()})
+  fetch('/jwt/api/v1/friend/list?player_id='+pid,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('friendList').textContent=d.message||'加载失败';return;}
     var list=d.data&&d.data.friends||[];
     var ids=[];
     for(var i=0;i<list.length;i++){ids.push(list[i].player_id);}
-    fetch('/game/jwt/api/v1/chat/online?player_ids='+ids.join(','),{headers:apiHeaders()})
+    fetch('/jwt/api/v1/chat/online?player_ids='+ids.join(','),{headers:apiHeaders()})
     .then(function(r){return r.json()})
     .then(function(od){
       var onlineMap=od.data||{};
@@ -155,7 +155,7 @@ function loadFriends(){
   }).catch(function(){document.getElementById('friendList').textContent='网络异常';});
 }
 function loadRequestHistory(){
-  fetch('/game/jwt/api/v1/friend/request-history?player_id='+pid,{headers:apiHeaders()})
+  fetch('/jwt/api/v1/friend/request-history?player_id='+pid,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('historyList').textContent=d.message||'加载失败';return;}
     var list=d.data&&d.data.requests||[];
@@ -173,14 +173,14 @@ function addFriend(){
   var name=document.getElementById('friendName').value.trim();
   if(!name){showFriendErr('请输入玩家昵称');return;}
   showFriendErr('');
-  fetch('/game/jwt/api/v1/friend/add?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_name:name})})
+  fetch('/jwt/api/v1/friend/add?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_name:name})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){showToast('好友申请已发送','success');document.getElementById('friendName').value='';loadRequests();}
     else{showFriendErr(d.message||'操作失败');}
   }).catch(function(){showFriendErr('网络异常');});
 }
 function respond(id,accept){
-  fetch('/game/jwt/api/v1/friend/respond?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id,accept:accept})})
+  fetch('/jwt/api/v1/friend/respond?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id,accept:accept})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){
       if(accept){updateFriendCount(1);}
@@ -191,21 +191,21 @@ function respond(id,accept){
   }).catch(function(){showToast('网络异常','error');});
 }
 function removeFriend(id){
-  fetch('/game/jwt/api/v1/friend/remove?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
+  fetch('/jwt/api/v1/friend/remove?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){updateFriendCount(-1);loadFriends();}
     else{showToast(d.message||'操作失败','error');}
   }).catch(function(){showToast('网络异常','error');});
 }
 function giftStamina(id){
-  fetch('/game/jwt/api/v1/friend/gift-stamina?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
+  fetch('/jwt/api/v1/friend/gift-stamina?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){showToast('已赠送 10 点体力','success');}
     else{showToast(d.message||'操作失败','error');}
   }).catch(function(){showToast('网络异常','error');});
 }
 function sparFriend(id){
-  fetch('/game/jwt/api/v1/friend/spar?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
+  fetch('/jwt/api/v1/friend/spar?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({player_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){showToast('切磋结果：'+(d.data.result==='win'?'胜利':'失败'),d.data.result==='win'?'success':'error');}
     else{showToast(d.message||'操作失败','error');}
@@ -218,9 +218,9 @@ setInterval(loadFriends, 30000);
 loadRequestHistory();
 </script>
 <script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
-fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/jwt/';}
+fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
 .then(function(r){return r.json()})
 .then(function(d){
   if(d.code!==0)return;

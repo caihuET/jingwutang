@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂经脉修炼 - 突破穴位/生命攻击防御加成</title>
 <meta name="description" content="精武堂经脉系统，突破穴位获得生命、攻击、防御与速度加成，提升角色战力。">
 <meta name="keywords" content="精武堂,经脉修炼,经脉系统,穴位突破,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/meridians.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/meridians.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂经脉修炼 - 突破穴位">
 <meta property="og:description" content="突破穴位获得生命、攻击、防御与速度加成。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/meridians.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/meridians.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂经脉修炼 - 突破穴位">
 <meta name="twitter:description" content="突破穴位获得生命、攻击、防御与速度加成。">
@@ -86,7 +86,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .auth-card .btn{width:100%;margin-top:4px}
 @media(max-width:768px){.sidebar{display:none}.grid{grid-template-columns:1fr}.el{grid-template-columns:1fr}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -127,7 +127,7 @@ var pid=localStorage.getItem("player_id")||1;
 function loadMeridians(){
   var ld=document.getElementById("merLoading");
   if(ld)ld.style.display="block";
-  fetch("/game/jwt/api/v1/meridian/list?player_id="+pid,{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}})
+  fetch("/jwt/api/v1/meridian/list?player_id="+pid,{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}})
   .then(function(r){return r.json()}).then(function(d){
     if(ld)ld.style.display="none";
     var g=document.getElementById("merGrid");if(!g)return;
@@ -164,7 +164,7 @@ function loadMeridians(){
   }).catch(function(){if(ld)ld.style.display="none";var g=document.getElementById("merGrid");if(g)g.innerHTML="<div style=color:#c0392b>网络异常</div>";});
 }
 function doBreakthrough(mid){
-  fetch("/game/jwt/api/v1/meridian/breakthrough?player_id="+pid,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},body:JSON.stringify({meridian_id:mid})})
+  fetch("/jwt/api/v1/meridian/breakthrough?player_id="+pid,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},body:JSON.stringify({meridian_id:mid})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){loadMeridians();}else{showToast(d.message||"突破失败",'error');}
   }).catch(function(){showToast("网络异常",'error');});
@@ -172,7 +172,7 @@ function doBreakthrough(mid){
 // Start loading meridian data immediately (independent of player info)
 loadMeridians();
 // Also fetch player info for sidebar and reputation
-fetch("/game/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}})
+fetch("/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}})
 .then(function(r){return r.json()}).then(function(d){
   if(d.code!==0)return;
   var p=d.data;
@@ -185,8 +185,8 @@ fetch("/game/jwt/api/v1/player/info?player_id="+pid,{headers:{"Authorization":"B
   var sts=document.getElementById("sStamina");if(sts)sts.textContent=(p.stamina||0)+"/"+(p.max_stamina||0);
   var tp=document.getElementById("topPlayerInfo");if(tp)tp.innerHTML=renderTopPlayer(p);
 });
-(function(){var t=localStorage.getItem("token");if(!t){window.location.href="/game/jwt/";}
-function h(){localStorage.removeItem("token");localStorage.removeItem("user_id");localStorage.removeItem("player_id");window.location.href="/game/jwt/";}
+(function(){var t=localStorage.getItem("token");if(!t){window.location.href="/jwt/";}
+function h(){localStorage.removeItem("token");localStorage.removeItem("user_id");localStorage.removeItem("player_id");window.location.href="/jwt/";}
 var tb=document.querySelector(".topbar");if(tb){var btn=document.createElement("button");btn.textContent="退出";btn.style.cssText="background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px";btn.onclick=h;tb.appendChild(btn);}
 })();
 </script>

@@ -10,7 +10,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       JWT_SECRET: jingwutang-prod-secret-2026
-      APP_ROOT_PATH: /game/jwt
+      APP_ROOT_PATH: /jwt
     expose:
       - "8000"
     volumes:
@@ -27,8 +27,8 @@ services:
       - "9001:9001"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./frontend:/usr/share/nginx/html/game/jwt/frontend:ro
-      - ./static:/usr/share/nginx/html/game/jwt/static:ro
+      - ./frontend:/usr/share/nginx/html/jwt/frontend:ro
+      - ./static:/usr/share/nginx/html/jwt/static:ro
     depends_on:
       - app
     restart: always

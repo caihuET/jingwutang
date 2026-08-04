@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂装备说明 - 装备品质/词条/强化指南</title>
 <meta name="description" content="精武堂装备说明，了解装备品质、基础属性、强化规则与附加词条。">
 <meta name="keywords" content="精武堂,装备说明,装备品质,词条属性,装备强化,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/equip-guide.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/equip-guide.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂装备说明 - 装备品质/词条/强化">
 <meta property="og:description" content="了解装备品质、基础属性、强化规则与附加词条。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/equip-guide.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/equip-guide.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂装备说明 - 装备品质/词条/强化">
 <meta name="twitter:description" content="了解装备品质、基础属性、强化规则与附加词条。">
@@ -49,7 +49,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-bottom:10px}
 @media(max-width:768px){.sidebar{display:none}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -93,7 +93,7 @@ var qualityCls=["","q-gray","q-green","q-blue","q-purple","q-orange","q-red"];
 var slotNames={1:"武器",2:"头盔",3:"衣甲",4:"腰带",5:"靴子",6:"项链"};
 function loadGuide(){
   document.getElementById('guideLoading').style.display='block';document.getElementById('guideContent').style.display='none';
-  fetch('/game/jwt/api/v1/equipment/catalog',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  fetch('/jwt/api/v1/equipment/catalog',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     document.getElementById('guideLoading').style.display='none';
     if(d.code!==0){document.getElementById('guideError').style.display='block';document.getElementById('guideError').textContent=d.message||'加载失败';return;}
@@ -128,10 +128,10 @@ function loadGuide(){
 loadGuide();
 </script>
 <script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/jwt/';}
 var pid=localStorage.getItem('player_id')||1;
-fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
 .then(function(r){return r.json()})
 .then(function(d){
   if(d.code!==0)return;

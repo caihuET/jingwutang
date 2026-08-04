@@ -1,4 +1,4 @@
-var API_BASE = '/game/jwt/api/v1';
+var API_BASE = '/jwt/api/v1';
 var MONSTERS = {1:{name:'山贼甲',level:3,hp:60,exp:30,gold:15},2:{name:'山贼头目',level:5,hp:100,exp:60,gold:30},3:{name:'青云山贼',level:8,hp:150,exp:100,gold:45},4:{name:'山寇首领',level:12,hp:250,exp:180,gold:80}};
 
 document.addEventListener('DOMContentLoaded', function() {

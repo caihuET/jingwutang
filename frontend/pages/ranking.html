@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂排行榜 - 战力/等级/财富排行</title>
 <meta name="description" content="精武堂排行系统，查看全服战力、等级与财富排行，竞争江湖排名。">
 <meta name="keywords" content="精武堂,排行榜,战力排行,等级排行,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/ranking.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/ranking.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂排行榜 - 战力/等级/财富">
 <meta property="og:description" content="查看全服战力、等级与财富排行，竞争江湖排名。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/ranking.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/ranking.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂排行榜 - 战力/等级/财富">
 <meta name="twitter:description" content="查看全服战力、等级与财富排行，竞争江湖排名。">
@@ -86,7 +86,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .auth-card .btn{width:100%;margin-top:4px}
 @media(max-width:768px){.sidebar{display:none}.grid{grid-template-columns:1fr}.el{grid-template-columns:1fr}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -130,7 +130,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 <span class="btn btn-g" onclick="changePage(1)">下一页</span>
 </div>
 </div></div><script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
 var pid=parseInt(localStorage.getItem('player_id'))||1;
 var kind='level';
 var page=1;
@@ -139,7 +139,7 @@ var totalPages=1;
 function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function loadRanking(){
-  fetch('/game/jwt/api/v1/ranking/'+kind+'?player_id='+pid+'&page='+page+'&size='+pageSize,{headers:apiHeaders()})
+  fetch('/jwt/api/v1/ranking/'+kind+'?player_id='+pid+'&page='+page+'&size='+pageSize,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('rankBody').innerHTML='<tr><td colspan="5">'+esc(d.message||'加载失败')+'</td></tr>';return;}
     var data=d.data||{};
@@ -158,7 +158,7 @@ function loadRanking(){
   }).catch(function(){document.getElementById('rankBody').innerHTML='<tr><td colspan="5">网络异常</td></tr>';});
 }
 function loadMarquee(){
-  fetch('/game/jwt/api/v1/ranking/marquee',{headers:apiHeaders()})
+  fetch('/jwt/api/v1/ranking/marquee',{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0)return;
     var list=(d.data&&d.data.list)||[];
@@ -191,10 +191,10 @@ function changePage(delta){
     var btn=document.createElement('button');
     btn.textContent='退出';
     btn.style.cssText='background:transparent;border:1px solid #c9a96e;color:#c9a96e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:12px';
-    btn.onclick=function(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');sessionStorage.removeItem('gcState');window.location.href='/game/jwt/';};
+    btn.onclick=function(){localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');sessionStorage.removeItem('gcState');window.location.href='/jwt/';};
     tb.appendChild(btn);
   }
-fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:apiHeaders()})
+fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:apiHeaders()})
 .then(function(r){return r.json()})
 .then(function(d){
   if(d.code!==0)return;

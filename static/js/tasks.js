@@ -1,4 +1,4 @@
-﻿var API_BASE = '/game/jwt/api/v1';
+var API_BASE = '/jwt/api/v1';
 
 document.addEventListener('DOMContentLoaded', function() {
     if (!checkAuth()) return;
@@ -48,7 +48,7 @@ function renderTasks(tasks) {
     document.getElementById('taskList').innerHTML = html;
 }
 
-function acceptTask(id,taskId){showToast('棰嗗彇涓?..','info');fetch('/game/jwt/api/v1/task/accept',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({task_id:taskId,player_id:parseInt(localStorage.getItem("player_id"))||1})}).then(function(r){return r.json()}).then(function(d){if(d.code===0){showToast('棰嗗彇鎴愬姛','success');loadTasks();}else{showToast(d.message||'棰嗗彇澶辫触','error');}}).catch(function(){showToast('缃戠粶寮傚父','error');});}function claimTask(id, taskId) {
+function acceptTask(id,taskId){showToast('棰嗗彇涓?..','info');fetch('/jwt/api/v1/task/accept',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({task_id:taskId,player_id:parseInt(localStorage.getItem("player_id"))||1})}).then(function(r){return r.json()}).then(function(d){if(d.code===0){showToast('棰嗗彇鎴愬姛','success');loadTasks();}else{showToast(d.message||'棰嗗彇澶辫触','error');}}).catch(function(){showToast('缃戠粶寮傚父','error');});}function claimTask(id, taskId) {
     showToast('棰嗗彇涓?..', 'info');
     fetch(API_BASE + '/task/claim', {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},

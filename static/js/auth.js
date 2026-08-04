@@ -1,4 +1,4 @@
-const API_BASE = '/game/jwt/api/v1';
+const API_BASE = '/jwt/api/v1';
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.tab').forEach(function(tab) {
@@ -58,9 +58,9 @@ async function handleLogin(e) {
             .then(function(pd) {
                 if (pd.data && pd.data.player_id) {
                     localStorage.setItem('player_id', pd.data.player_id);
-                    window.location.href = '/game/jwt/game.html';
+                    window.location.href = '/jwt/game.html';
                 } else {
-                    window.location.href = '/game/jwt/create.html';
+                    window.location.href = '/jwt/create.html';
                 }
             })
             .catch(function() { showError('网络异常，请重试'); });

@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂聊天 - 世界/帮派/私聊实时消息</title>
 <meta name="description" content="精武堂实时聊天系统，世界频道、帮派频道与私聊，与江湖玩家实时交流。">
 <meta name="keywords" content="精武堂,聊天系统,世界频道,帮派频道,私聊,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/chat.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/chat.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂聊天 - 世界/帮派/私聊">
 <meta property="og:description" content="世界频道、帮派频道与私聊，与江湖玩家实时交流。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/chat.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/chat.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂聊天 - 世界/帮派/私聊">
 <meta name="twitter:description" content="世界频道、帮派频道与私聊，与江湖玩家实时交流。">
@@ -55,7 +55,7 @@ select{padding:7px 10px;border:1px solid #d4c5a9;border-radius:6px;font-size:12p
 .empty{color:#999;font-size:12px;padding:20px 0;text-align:center}
 @media(max-width:768px){.sidebar{display:none}.content{padding:10px}.chat-box{min-height:0}.chat-input input[type=text]{font-size:16px}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -114,7 +114,7 @@ var msgBuf={1:[],2:[],3:[]};
 function apiHeaders(){return {'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')};}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function loadFriends(){
-  fetch('/game/jwt/api/v1/friend/list?player_id='+pid,{headers:apiHeaders()})
+  fetch('/jwt/api/v1/friend/list?player_id='+pid,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0)return;
     var friends=d.data&&d.data.friends||[];
@@ -144,7 +144,7 @@ function renderBox(){
   box.scrollTop=box.scrollHeight;
 }
 function loadHistory(beforeId){
-  var url='/game/jwt/api/v1/chat/messages?channel='+curCh+'&player_id='+pid+'&limit=20';
+  var url='/jwt/api/v1/chat/messages?channel='+curCh+'&player_id='+pid+'&limit=20';
   if(beforeId){url+='&before_id='+beforeId;}
   return fetch(url,{headers:apiHeaders()})
   .then(function(r){return r.json()}).then(function(d){
@@ -182,7 +182,7 @@ function connectWs(){
   if(ws&&ws.readyState===1)return;
   var proto=location.protocol==='https:'?'wss://':'ws://';
   var token=encodeURIComponent(localStorage.getItem('token')||'');
-  ws=new WebSocket(proto+location.host+'/game/jwt/api/v1/ws/chat?token='+token);
+  ws=new WebSocket(proto+location.host+'/jwt/api/v1/ws/chat?token='+token);
   ws.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.type==='chat'){addMsg(d.data);}else if(d.type==='error'){showToast(d.message||'发送失败','error');}else if(d.type==='friend_request'){refreshFriendBadge();if(typeof window.onFriendRequest==='function'){window.onFriendRequest(d);}showFriendNotice(d.name?d.name+' 申请加你为好友':'收到新的好友申请');}else if(d.type==='friend_accepted'){if(typeof updateFriendCount==='function')updateFriendCount(1);showFriendNotice(d.name?d.name+' 已同意你的好友申请':'好友申请已通过');}}catch(err){}};
   ws.onopen=function(){wsRetry=0;};
   ws.onclose=function(){
@@ -211,7 +211,7 @@ function sendMsg(){
     input.focus();
     try{input.setSelectionRange(input.value.length,input.value.length);}catch(e){}
   }else{
-    fetch('/game/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
+    fetch('/jwt/api/v1/chat/send?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify(body)})
     .then(function(r){return r.json()}).then(function(d){
       if(d.code===0){resetInput(input,curCh);input.focus();try{input.setSelectionRange(input.value.length,input.value.length);}catch(e){}loadHistory();}
       else{showToast(d.message||'发送失败','error');}
@@ -247,7 +247,7 @@ function resetInput(input,ch){
   }
 }
 function markRead(ch,friendId){
-  fetch('/game/jwt/api/v1/chat/read?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({channel:ch,friend_id:friendId||null})})
+  fetch('/jwt/api/v1/chat/read?player_id='+pid,{method:'POST',headers:apiHeaders(),body:JSON.stringify({channel:ch,friend_id:friendId||null})})
   .then(function(r){return r.json()});
 }
 (function(){
@@ -299,9 +299,9 @@ setInterval(function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({action:
 setInterval(function(){if(!ws||ws.readyState!==1||curCh===3)loadHistory();},5000);
 </script>
 <script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
-fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/jwt/';}
+fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
 .then(function(r){return r.json()})
 .then(function(d){
   if(d.code!==0)return;

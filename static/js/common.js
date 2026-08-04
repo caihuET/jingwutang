@@ -1,21 +1,21 @@
-var API_BASE = '/game/jwt/api/v1';
+var API_BASE = '/jwt/api/v1';
 
 var SIDEBAR_LINKS = [
-    {href:'/game/jwt/battle.html', label:'历练'},
-    {href:'/game/jwt/equipment.html', label:'装备'},
-    {href:'/game/jwt/skills.html', label:'技能'},
-    {href:'/game/jwt/meridians.html', label:'经脉'},
-    {href:'/game/jwt/tasks.html', label:'任务'},
-    {href:'/game/jwt/ranking.html', label:'排行'},
-    {href:'/game/jwt/shop.html', label:'商城'},
-    {href:'/game/jwt/friend.html', label:'好友'},
-    {href:'/game/jwt/guild.html', label:'帮派'},
-    {href:'/game/jwt/equip-guide.html', label:'装备说明'},
+    {href:'/jwt/battle.html', label:'历练'},
+    {href:'/jwt/equipment.html', label:'装备'},
+    {href:'/jwt/skills.html', label:'技能'},
+    {href:'/jwt/meridians.html', label:'经脉'},
+    {href:'/jwt/tasks.html', label:'任务'},
+    {href:'/jwt/ranking.html', label:'排行'},
+    {href:'/jwt/shop.html', label:'商城'},
+    {href:'/jwt/friend.html', label:'好友'},
+    {href:'/jwt/guild.html', label:'帮派'},
+    {href:'/jwt/equip-guide.html', label:'装备说明'},
 ];
 
 function checkAuth() {
     var t = localStorage.getItem('token');
-    if (!t) { window.location.href = '/game/jwt/'; return false; }
+    if (!t) { window.location.href = '/jwt/'; return false; }
     return true;
 }
 
@@ -25,7 +25,7 @@ function handleLogout() {
     localStorage.removeItem('user_id');
     localStorage.removeItem('player_id');
     sessionStorage.removeItem('gcState');
-    window.location.href = '/game/jwt/';
+    window.location.href = '/jwt/';
 }
 
 function showToast(msg, type) {
@@ -326,7 +326,7 @@ function gcEscape(s) {
 }
 
 function gcLoadFriends() {
-    fetch('/game/jwt/api/v1/friend/list?player_id=' + window._gcPid, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+    fetch('/jwt/api/v1/friend/list?player_id=' + window._gcPid, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
     .then(function(r) { return r.json(); })
     .then(function(d) {
         var friends = d.data && d.data.friends || [];
@@ -339,7 +339,7 @@ function gcLoadFriends() {
 
 function gcLoadHistory() {
     var ch = window._gcChannel;
-    var url = '/game/jwt/api/v1/chat/messages?channel=' + ch + '&player_id=' + window._gcPid;
+    var url = '/jwt/api/v1/chat/messages?channel=' + ch + '&player_id=' + window._gcPid;
     url += '&limit=20';
     fetch(url, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
     .then(function(r) { return r.json(); })
@@ -451,7 +451,7 @@ function gcConnect() {
     if (window._gcWs && window._gcWs.readyState === 1) { return; }
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
     var token = encodeURIComponent(localStorage.getItem('token') || '');
-    var url = proto + location.host + '/game/jwt/api/v1/ws/chat?token=' + token;
+    var url = proto + location.host + '/jwt/api/v1/ws/chat?token=' + token;
     var ws = new WebSocket(url);
     window._gcWs = ws;
     ws.onmessage = function(e) {
@@ -498,7 +498,7 @@ function gcSend() {
         input.focus();
         try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
     } else {
-        fetch('/game/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
+        fetch('/jwt/api/v1/chat/send?player_id=' + window._gcPid, {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token')},
             body: JSON.stringify(body)
@@ -553,7 +553,7 @@ function gcResetInput(input, ch) {
 }
 
 function gcMarkRead(ch, friendId) {
-    fetch('/game/jwt/api/v1/chat/read?player_id=' + window._gcPid, {
+    fetch('/jwt/api/v1/chat/read?player_id=' + window._gcPid, {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token')},
         body: JSON.stringify({channel: ch, friend_id: friendId || null})
@@ -563,7 +563,7 @@ function gcMarkRead(ch, friendId) {
 }
 
 function refreshUnread() {
-    fetch('/game/jwt/api/v1/chat/unread?player_id=' + window._gcPid, {
+    fetch('/jwt/api/v1/chat/unread?player_id=' + window._gcPid, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
     })
     .then(function(r) { return r.json(); })
@@ -637,7 +637,7 @@ function updateFriendBadge(delta) {
 
 function refreshFriendBadge() {
     var pid = parseInt(localStorage.getItem('player_id')) || 1;
-    fetch('/game/jwt/api/v1/friend/requests?player_id=' + pid, {
+    fetch('/jwt/api/v1/friend/requests?player_id=' + pid, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
     })
     .then(function(r) { return r.json(); })
@@ -655,7 +655,7 @@ function refreshFriendNav() {
     var nav = friendNav();
     if (!nav) { return; }
     var pid = parseInt(localStorage.getItem('player_id')) || 1;
-    fetch('/game/jwt/api/v1/friend/list?player_id=' + pid, {
+    fetch('/jwt/api/v1/friend/list?player_id=' + pid, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
     })
     .then(function(r) { return r.json(); })
@@ -706,7 +706,7 @@ function initMobileNav() {
 function checkSession() {
     var token = localStorage.getItem('token');
     if (!token) { return; }
-    fetch('/game/jwt/api/v1/auth/check?token=' + encodeURIComponent(token))
+    fetch('/jwt/api/v1/auth/check?token=' + encodeURIComponent(token))
     .then(function(r) { return r.json(); })
     .then(function(d) {
         if (d.code === 0 && d.data && d.data.valid === false) {
@@ -714,7 +714,7 @@ function checkSession() {
             localStorage.removeItem('user_id');
             localStorage.removeItem('player_id');
             sessionStorage.removeItem('gcState');
-            window.location.href = '/game/jwt/';
+            window.location.href = '/jwt/';
         }
     })
     .catch(function() {});

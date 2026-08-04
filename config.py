@@ -30,10 +30,10 @@ class Config:
     # 应用
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"
     APP_PORT = int(os.getenv("APP_PORT", "8000"))
-    APP_ROOT_PATH = os.getenv("APP_ROOT_PATH", "/game/jwt")
+    APP_ROOT_PATH = os.getenv("APP_ROOT_PATH", "/jwt")
 
     # 前端/回调公开地址
-    PUBLIC_APP_URL = os.getenv("PUBLIC_APP_URL", "http://localhost:8000/game/jwt")
+    PUBLIC_APP_URL = os.getenv("PUBLIC_APP_URL", "https://www.bbbus.top/jwt")
 
     # 静态文件
     STATIC_DIR = os.path.join(BASE_DIR, "static")

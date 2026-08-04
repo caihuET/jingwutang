@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂装备系统 - 装备强化/词条属性/红装养成</title>
 <meta name="description" content="精武堂装备系统，装备强化、附加词条、红装养成，实时提升角色战力。">
 <meta name="keywords" content="精武堂,装备系统,装备强化,词条属性,红装,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/equipment.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/equipment.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂装备系统 - 装备强化/词条属性">
 <meta property="og:description" content="装备强化、附加词条、红装养成，实时提升角色战力。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/equipment.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/equipment.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂装备系统 - 装备强化/词条属性">
 <meta name="twitter:description" content="装备强化、附加词条、红装养成，实时提升角色战力。">
@@ -86,7 +86,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .auth-card .btn{width:100%;margin-top:4px}
 @media(max-width:768px){.sidebar{display:none}.grid{grid-template-columns:1fr}.el{grid-template-columns:1fr}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -128,7 +128,7 @@ var equipItems=[];
 var qualityNames=Array("","普通","优秀","精良","史诗","传说","红装");
 function loadEquipment(){
   document.getElementById('equipLoading').style.display='block';document.getElementById('equipContent').style.display='none';
-  fetch('/game/jwt/api/v1/equipment/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  fetch('/jwt/api/v1/equipment/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     document.getElementById('equipLoading').style.display='none';document.getElementById('equipContent').style.display='block';
     if(d.code!==0){showToast(d.message||'加载失败','error');return;}
@@ -198,7 +198,7 @@ function affixHtml(e){
   h+='</div>';return h;
 }
 function doAction(id,action){
-  var urls={equip:'/game/jwt/api/v1/equipment/equip',unequip:'/game/jwt/api/v1/equipment/unequip',enhance:'/game/jwt/api/v1/equipment/enhance',sell:'/game/jwt/api/v1/equipment/sell'};
+  var urls={equip:'/jwt/api/v1/equipment/equip',unequip:'/jwt/api/v1/equipment/unequip',enhance:'/jwt/api/v1/equipment/enhance',sell:'/jwt/api/v1/equipment/sell'};
   fetch((urls[action]||urls.equip)+'?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({equip_id:id})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){handleActionResult(id,action,d);}
@@ -271,10 +271,10 @@ function bagItemHtml(e,resultText){
   return h;
 }
 </script><script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/jwt/';}
 var pid=localStorage.getItem('player_id')||1;
-fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
+fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+token}})
 .then(function(r){return r.json()})
 .then(function(d){
   if(d.code!==0)return;

@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="/game/jwt/favicon.ico">
+<link rel="icon" href="/jwt/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>精武堂商城 - 道具/强化石/称号购买</title>
 <meta name="description" content="精武堂商城，购买体力药、经验加成、强化石、称号等道具，助力武侠养成。">
 <meta name="keywords" content="精武堂,商城,游戏道具,强化石,称号,武侠网页游戏">
-<link rel="canonical" href="https://xui6.bbbus.top/game/jwt/shop.html">
+<link rel="canonical" href="https://www.bbbus.top/jwt/shop.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="精武堂">
 <meta property="og:title" content="精武堂商城 - 道具/强化石/称号">
 <meta property="og:description" content="购买体力药、经验加成、强化石、称号等道具。">
-<meta property="og:url" content="https://xui6.bbbus.top/game/jwt/shop.html">
+<meta property="og:url" content="https://www.bbbus.top/jwt/shop.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="精武堂商城 - 道具/强化石/称号">
 <meta name="twitter:description" content="购买体力药、经验加成、强化石、称号等道具。">
@@ -54,7 +54,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:#f5f0e8;color:#2c1810;h
 .inv-item .btns{display:flex;gap:6px}
 @media(max-width:768px){.sidebar{display:none}}
 </style>
-<script src="/game/jwt/static/js/common.js?v=11"></script>
+<script src="/jwt/static/js/common.js?v=11"></script>
 </head>
 <body>
 <div class="topbar">
@@ -107,7 +107,7 @@ var curCat=0;
 
 function loadShop(){
   document.getElementById('shopLoading').style.display='block';
-  fetch('/game/jwt/api/v1/shop/list?category='+curCat,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  fetch('/jwt/api/v1/shop/list?category='+curCat,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     document.getElementById('shopLoading').style.display='none';
     if(d.code!==0){showErr(d.message||'加载失败');return;}
@@ -127,7 +127,7 @@ function loadShop(){
 }
 
 function loadInventory(){
-  fetch('/game/jwt/api/v1/inventory/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  fetch('/jwt/api/v1/inventory/list?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0){document.getElementById('invList').textContent='加载失败';return;}
     var items=d.data||[];
@@ -149,7 +149,7 @@ function buyItem(itemId){
   var qtyEl=document.getElementById('qty_'+itemId);
   var qty=qtyEl?parseInt(qtyEl.value)||1:1;
   if(qty<1||qty>99){showToast('购买数量需在 1-99 之间','error');return;}
-  fetch('/game/jwt/api/v1/shop/buy?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:qty})})
+  fetch('/jwt/api/v1/shop/buy?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:qty})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){showToast('购买成功 x'+qty,'success');loadShop();loadInventory();loadPlayer();}
     else{showToast(d.message||'购买失败','error');}
@@ -157,7 +157,7 @@ function buyItem(itemId){
 }
 
 function useItem(itemId){
-  fetch('/game/jwt/api/v1/inventory/use?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:1})})
+  fetch('/jwt/api/v1/inventory/use?player_id='+pid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({item_id:itemId,quantity:1})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code===0){showToast('使用成功','success');loadInventory();loadPlayer();}
     else{showToast(d.message||'使用失败','error');}
@@ -170,7 +170,7 @@ function showErr(msg){
 }
 
 function loadPlayer(){
-  fetch('/game/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+  fetch('/jwt/api/v1/player/info?player_id='+pid,{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
   .then(function(r){return r.json()}).then(function(d){
     if(d.code!==0)return;
     var p=d.data;
@@ -200,7 +200,7 @@ loadInventory();
 loadPlayer();
 </script>
 <script>
-var token=localStorage.getItem('token');if(!token){window.location.href='/game/jwt/';}
-function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/game/jwt/';}
+var token=localStorage.getItem('token');if(!token){window.location.href='/jwt/';}
+function handleLogout(){sessionStorage.removeItem('gcState');localStorage.removeItem('token');localStorage.removeItem('user_id');localStorage.removeItem('player_id');window.location.href='/jwt/';}
 </script>
 </body></html>
